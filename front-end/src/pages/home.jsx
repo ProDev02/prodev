@@ -1,0 +1,253 @@
+"use client";
+
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+    ShoppingCart,
+    Heart,
+    User,
+    Search,
+    Menu,
+    Utensils,
+    Smartphone,
+    Sofa,
+    ShowerHead,
+    Shirt,
+    Tv,
+    Cookie,
+    Facebook,
+    Instagram,
+    MessageCircle
+} from "lucide-react";
+
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
+import Footer from "./footer";
+
+
+export default function HomePage() {
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const navigate = useNavigate();
+
+    const categories = [
+        { name: "Snack", icon: <Cookie size={32} className="mx-auto text-gray-700" /> },
+        { name: "Food & Drinks", icon: <Utensils size={32} className="mx-auto text-gray-700" /> },
+        { name: "Smartphones", icon: <Smartphone size={32} className="mx-auto text-gray-700" /> },
+        { name: "Furniture", icon: <Sofa size={32} className="mx-auto text-gray-700" /> },
+        { name: "Shower", icon: <ShowerHead size={32} className="mx-auto text-gray-700" /> },
+        { name: "Clothing", icon: <Shirt size={32} className="mx-auto text-gray-700" /> },
+        { name: "Electronics", icon: <Tv size={32} className="mx-auto text-gray-700" /> },
+    ];
+
+    const popularProducts = [
+        { id: 1, name: "Samsung Galaxy S22 Ultra", price: "฿30,000", image: "/images/products/s22.png", category: "Electronics" },
+        { id: 2, name: "Shower Curtain Waterproof", price: "฿500", image: "/images/products/shower-curtain.png", category: "Shower" },
+        { id: 3, name: "Smart Watch T500", price: "฿1,200", image: "/images/products/watch.png", category: "Electronics" },
+        { id: 4, name: "Laptop ASUS VivoBook", price: "฿25,000", image: "/images/products/laptop.png", category: "Electronics" },
+        { id: 5, name: "Headphones JBL Tune", price: "฿3,000", image: "/images/products/headphones.png", category: "Electronics" },
+        { id: 6, name: "Headphones JBL Tune", price: "฿3,000", image: "/images/products/headphones.png", category: "Electronics" },
+    ];
+
+    const bestSellers = [
+        { id: 1, name: "หมูสามชั้นสไลด์", price: "฿199", image: "/images/products/pork1.png", category: "Meat" },
+        { id: 2, name: "นมถั่วเหลือง Lactasoy", price: "฿20", image: "/images/products/lactasoy.png", category: "Beverages" },
+        { id: 3, name: "สบู่ Protex", price: "฿45", image: "/images/products/protex.png", category: "Shower" },
+        { id: 4, name: "หมูสันนอกสไลด์", price: "฿199", image: "/images/products/pork2.png", category: "Meat" },
+        { id: 5, name: "หมูสามชั้นหมัก", price: "฿220", image: "/images/products/pork3.png", category: "Meat" },
+        { id: 6, name: "หมูสันคอสไลด์", price: "฿199", image: "/images/products/pork4.png", category: "Meat" },
+    ];
+
+    return (
+        <div className="font-sans bg-white">
+            {/* Navbar */}
+            <header className="w-full border-b shadow-sm relative">
+                <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
+                    <div className="flex items-center space-x-2">
+                        <img
+                            src="/images/WholeCart_logo.png"
+                            alt="WholeCart Logo"
+                            className="h-12 md:h-14 w-auto cursor-pointer"
+                        />
+                    </div>
+
+                    <div className="flex flex-1 max-w-lg mx-6">
+                        <input
+                            type="text"
+                            placeholder="Search for products"
+                            className="w-full border border-gray-300 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
+                        />
+                        <button className="bg-green-600 text-white px-4 rounded-r-lg">
+                            <Search size={20} />
+                        </button>
+                    </div>
+
+                    <div className="flex items-center space-x-4 relative">
+                        <Heart className="text-gray-600 cursor-pointer" />
+                        <ShoppingCart className="text-gray-600 cursor-pointer" />
+
+                        <div className="relative">
+                            <button onClick={() => setDropdownOpen(!dropdownOpen)}>
+                                <User className="text-gray-600 cursor-pointer" />
+                            </button>
+                            {dropdownOpen && (
+                                <div className="absolute right-0 mt-2 w-40 bg-white border rounded-lg shadow-lg py-2 z-50">
+                                    <p
+                                        className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                                        onClick={() => navigate("/signin")}
+                                    >
+                                        👤 login
+                                    </p>
+                                    <p
+                                        className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                                        onClick={() => navigate("/signup")}
+                                    >
+                                        👥 register
+                                    </p>
+                                    <p
+                                        className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                                        onClick={() => navigate("/signin-admin")}
+                                    >
+                                        🛠 login admin
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        <button className="flex items-center bg-green-600 text-white px-4 py-2 rounded-lg space-x-2">
+                            <Menu size={18} />
+                            <span>All categories</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            {/* Banner */}
+            {/* Banner */}
+            <section className="max-w-7xl mx-auto px-6 py-10">
+                <Swiper
+                    spaceBetween={0}
+                    slidesPerView={1}
+                    modules={[Autoplay, Pagination]}
+                    autoplay={{ delay: 5000, disableOnInteraction: false }}
+                    loop={true}
+                    pagination={{ clickable: true }}
+                >
+                    <SwiperSlide>
+                        <img src="/images/banner/banner.png" alt="Banner" className="w-full rounded-lg cursor-pointer" />
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <img src="/images/banner/banner2.jpeg" alt="Banner 2" className="w-full rounded-lg cursor-pointer" />
+                    </SwiperSlide>
+                    <SwiperSlide>
+                        <img src="/images/banner/banner3.jpeg" alt="Banner 3" className="w-full rounded-lg cursor-pointer" />
+                    </SwiperSlide>
+                </Swiper>
+            </section>
+
+            {/* Featured Categories */}
+            <section className="max-w-7xl mx-auto px-6 py-10">
+                <h2 className="text-xl font-semibold mb-6">Featured Categories</h2>
+                <Swiper spaceBetween={20} slidesPerView={6}>
+                    {categories.map((cat) => (
+                        <SwiperSlide key={cat.name}>
+                            <div className="border rounded-lg p-4 cursor-pointer flex flex-col items-center text-center
+                                            hover:shadow-lg hover:border-green-600 transition">
+                                {cat.icon}
+                                <p className="mt-2 text-gray-700">{cat.name}</p>
+                            </div>
+                        </SwiperSlide>
+                    ))}
+                </Swiper>
+            </section>
+
+            {/* Popular Products */}
+            <section className="max-w-7xl mx-auto px-6 py-10">
+                <h2 className="text-xl font-semibold mb-6">Popular Products</h2>
+                <Swiper spaceBetween={20}
+                        slidesPerView={5}
+                        modules={[Pagination]}
+                        pagination={{ clickable: true }}
+                        loop={false}
+                        autoplay={false}
+                >
+                    {popularProducts.map((p) => (
+                        <SwiperSlide key={p.id}>
+                            <div className="border rounded-lg overflow-hidden flex flex-col transition
+                                            hover:shadow-lg hover:border-green-600">
+                                <img src={p.image} alt={p.name} className="w-full h-40 object-contain p-4" />
+                                <div className="p-4 flex flex-col flex-grow">
+                                    <h3 className="text-sm font-medium mb-2">{p.name}</h3>
+                                    <p className="text-xs text-gray-500 mt-1">{p.category}</p>
+                                    <div className="mt-auto flex items-center justify-between">
+                                        <p className="text-gray-800 font-semibold">{p.price}</p>
+                                        <button className="bg-green-600 text-white px-3 py-1 rounded-md text-sm">
+                                            + Add
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </SwiperSlide>
+                    ))}
+                </Swiper>
+            </section>
+
+            {/*fruits & vegetable*/}
+            <section className="max-w-7xl mx-auto px-6 py-10">
+                <div className="grid grid-cols-2 gap-6">
+                    <div className="relative rounded-lg overflow-hidden cursor-pointer">
+                        <img src="/images/banner/banner4.png" alt="Fresh Fruits" className="w-full h-48 object-cover hover:scale-105 transition" />
+                        <div className="absolute top-4 left-4 text-white">
+                            <h3 className="text-lg font-bold text-black">Fresh Fruits</h3>
+                            <p className="text-sm text-gray-600">Get up to 25% off</p>
+                            <button className="mt-2 bg-black text-white px-3 py-1 text-sm rounded">Shop now</button>
+                        </div>
+                    </div>
+                    <div className="relative rounded-lg overflow-hidden cursor-pointer">
+                        <img src="/images/banner/banner5.png" alt="Foods & Vegetables" className="w-full h-48 object-cover hover:scale-105 transition" />
+                        <div className="absolute top-4 left-4 text-white">
+                            <h3 className="text-lg font-bold text-black">Foods & Vegetables</h3>
+                            <p className="text-sm  text-gray-600">Get up to 30% off</p>
+                            <button className="mt-2 bg-black text-white px-3 py-1 text-sm rounded">Shop now</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Best Selling Products */}
+            <section className="max-w-7xl mx-auto px-6 py-10">
+                <h2 className="text-xl font-semibold mb-6">Best Selling Products</h2>
+                <div className="grid grid-cols-5 gap-6">
+                    {bestSellers.map((p) => (
+                        <div key={p.id} className="border rounded-lg overflow-hidden flex flex-col transition
+                                                   hover:shadow-lg hover:border-green-600">
+                            <img src={p.image} alt={p.name} className="w-full h-40 object-contain p-4" />
+                            <div className="p-4 flex flex-col flex-grow">
+                                <h3 className="text-sm font-medium">{p.name}</h3>
+                                <p className="text-xs text-gray-500 mt-1">{p.category}</p>
+                                <div className="mt-2 flex items-center justify-between">
+                                    <p className="text-green-600 font-semibold">{p.price}</p>
+                                    <span className="text-xs text-green-600 font-medium">In stock</span>
+                                </div>
+                                <button className="mt-3 w-full bg-green-600 text-white py-1 rounded-lg text-sm">
+                                    Add to Cart
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/*view more*/}
+                <div className="mt-6 text-center">
+                    <button className="bg-black text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">
+                        View More
+                    </button>
+                </div>
+            </section>
+
+            {/* Footer */}
+            <Footer />
+        </div>
+    );
+}
