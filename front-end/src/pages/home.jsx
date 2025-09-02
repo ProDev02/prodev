@@ -3,11 +3,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-    ShoppingCart,
-    Heart,
-    User,
-    Search,
-    Menu,
     Utensils,
     Smartphone,
     Sofa,
@@ -22,15 +17,18 @@ import { Autoplay, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
+import CartSidebarWrapper from "./shopcart/CartSidebarWrapper";
+import Navbar from "./navbar";
 import Footer from "./footer";
-import CartSidebar from "./shopcart/CartSidebar";
+
 
 export default function HomePage() {
-    const [dropdownOpen, setDropdownOpen] = useState(false);
     const [isCartOpen, setIsCartOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState("shopcart");
+
     const [cartItems, setCartItems] = useState([
         { id: 1, name: "Be Nice Shower Cream, Perfect Elastic Formula, 450 ml.", price: 109, qty: 1, stock: 5, image: "/images/products/showercream.png", warning: false },
-        { id: 2, name: "Protex Lavender Ice Freeze Soap Bar 60 g.", price: 57, qty: 3, stock: 3, image: "/images/products/protex.png", warning: false },
+        { id: 2, name: "Protex Lavender Ice Freeze Soap Bar 60 g.", price: 19, qty: 3, stock: 3, image: "/images/products/protex.png", warning: false },
         { id: 3, name: "KFC BamBam BOX Menu TheBox special", price: 159, qty: 1, stock: 20, image: "/images/products/kfc.png", warning: false },
     ]);
 
@@ -67,8 +65,6 @@ export default function HomePage() {
         setCartItems(prev => prev.filter(item => item.id !== id));
     };
 
-    const totalCartQty = cartItems.length;
-
     // ข้อมูล category และ products
     const categories = [
         { name: "Snack", icon: <Cookie size={32} className="mx-auto text-gray-700" /> },
@@ -99,147 +95,112 @@ export default function HomePage() {
     ];
 
     return (
-        <div className="font-sans bg-white">
-            {/* Navbar */}
-            <header className="w-full border-b shadow-sm relative">
-                <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
-                    <div className="flex items-center space-x-2">
-                        <img src="/images/WholeCart_logo.png" alt="WholeCart Logo" className="h-12 md:h-14 w-auto cursor-pointer" />
-                    </div>
+        <div className="font-sans bg-white relative">
+            {/* Blur wrapper */}
+            <div className={`${isCartOpen ? "blur-sm pointer-events-none" : ""} transition-all duration-300`}>
+                {/* Navbar */}
+                <Navbar cartItems={cartItems} onCartOpen={() => setIsCartOpen(true)} />
 
-                    <div className="flex flex-1 max-w-lg mx-6">
-                        <input type="text" placeholder="Search for products"
-                               className="w-full border border-gray-300 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600" />
-                        <button className="bg-green-600 text-white px-4 rounded-r-lg"><Search size={20} /></button>
-                    </div>
+                <main className={`${isCartOpen ? "blur-sm" : ""}`}>
+                    {/* Banner */}
+                    <section className="max-w-7xl mx-auto px-6 py-10">
+                        <Swiper spaceBetween={0} slidesPerView={1} modules={[Autoplay, Pagination]} autoplay={{ delay: 5000, disableOnInteraction: false }} loop={true} pagination={{ clickable: true }}>
+                            <SwiperSlide><img src="/images/banner/banner.png" alt="Banner" className="w-full rounded-lg cursor-pointer" /></SwiperSlide>
+                            <SwiperSlide><img src="/images/banner/banner2.jpeg" alt="Banner 2" className="w-full rounded-lg cursor-pointer" /></SwiperSlide>
+                            <SwiperSlide><img src="/images/banner/banner3.jpeg" alt="Banner 3" className="w-full rounded-lg cursor-pointer" /></SwiperSlide>
+                        </Swiper>
+                    </section>
 
-                    <div className="flex items-center space-x-4 relative">
-                        <Heart className="text-gray-600 cursor-pointer" />
-                        <div className="relative">
-                            <ShoppingCart className="text-gray-600 cursor-pointer" onClick={() => setIsCartOpen(true)} />
-                            {totalCartQty > 0 && (
-                                <span className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">{totalCartQty}</span>
-                            )}
-                        </div>
+                    {/* Featured Categories */}
+                    <section className="max-w-7xl mx-auto px-6 py-10">
+                        <h2 className="text-xl font-semibold mb-6">Featured Categories</h2>
+                        <Swiper spaceBetween={20} slidesPerView={6}>
+                            {categories.map((cat) => (
+                                <SwiperSlide key={cat.name}>
+                                    <div className="border rounded-lg p-4 cursor-pointer flex flex-col items-center text-center hover:shadow-lg hover:border-green-600 transition">
+                                        {cat.icon}
+                                        <p className="mt-2 text-gray-700">{cat.name}</p>
+                                    </div>
+                                </SwiperSlide>
+                            ))}
+                        </Swiper>
+                    </section>
 
-                        <div className="relative">
-                            <button onClick={() => setDropdownOpen(!dropdownOpen)}>
-                                <User className="text-gray-600 cursor-pointer" />
-                            </button>
-                            {dropdownOpen && (
-                                <div className="absolute right-0 mt-2 w-40 bg-white border rounded-lg shadow-lg py-2 z-50">
-                                    <p className="px-4 py-2 cursor-pointer hover:bg-gray-100" onClick={() => navigate("/signin")}>👤 login</p>
-                                    <p className="px-4 py-2 cursor-pointer hover:bg-gray-100" onClick={() => navigate("/signup")}>👥 register</p>
-                                    <p className="px-4 py-2 cursor-pointer hover:bg-gray-100" onClick={() => navigate("/signin-admin")}>🛠 login admin</p>
+                    {/* Popular Products */}
+                    <section className="max-w-7xl mx-auto px-6 py-10">
+                        <h2 className="text-xl font-semibold mb-6">Popular Products</h2>
+                        <Swiper spaceBetween={20} slidesPerView={5} modules={[Pagination]} pagination={{ clickable: true }} loop={false} autoplay={false}>
+                            {popularProducts.map((p) => (
+                                <SwiperSlide key={p.id}>
+                                    <div className="border rounded-lg overflow-hidden flex flex-col transition hover:shadow-lg hover:border-green-600">
+                                        <img src={p.image} alt={p.name} className="w-full h-40 object-contain p-4" />
+                                        <div className="p-4 flex flex-col flex-grow">
+                                            <h3 className="text-sm font-medium mb-2">{p.name}</h3>
+                                            <p className="text-xs text-gray-500 mt-1">{p.category}</p>
+                                            <div className="mt-auto flex items-center justify-between">
+                                                <p className="text-gray-800 font-semibold">{p.price}</p>
+                                                <button className="bg-green-600 text-white px-3 py-1 rounded-md text-sm">+ Add</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </SwiperSlide>
+                            ))}
+                        </Swiper>
+                    </section>
+
+                    {/* Fruits & Vegetable */}
+                    <section className="max-w-7xl mx-auto px-6 py-10">
+                        <div className="grid grid-cols-2 gap-6">
+                            <div className="relative rounded-lg overflow-hidden cursor-pointer">
+                                <img src="/images/banner/banner4.png" alt="Fresh Fruits" className="w-full h-48 object-cover hover:scale-105 transition" />
+                                <div className="absolute top-4 left-4 text-white">
+                                    <h3 className="text-lg font-bold text-black">Fresh Fruits</h3>
+                                    <p className="text-sm text-gray-600">Get up to 25% off</p>
+                                    <button className="mt-2 bg-black text-white px-3 py-1 text-sm rounded">Shop now</button>
                                 </div>
-                            )}
-                        </div>
-
-                        <button className="flex items-center bg-green-600 text-white px-4 py-2 rounded-lg space-x-2">
-                            <Menu size={18} />
-                            <span>All categories</span>
-                        </button>
-                    </div>
-                </div>
-            </header>
-
-            {/* Banner */}
-            <section className="max-w-7xl mx-auto px-6 py-10">
-                <Swiper spaceBetween={0} slidesPerView={1} modules={[Autoplay, Pagination]} autoplay={{ delay: 5000, disableOnInteraction: false }} loop={true} pagination={{ clickable: true }}>
-                    <SwiperSlide><img src="/images/banner/banner.png" alt="Banner" className="w-full rounded-lg cursor-pointer" /></SwiperSlide>
-                    <SwiperSlide><img src="/images/banner/banner2.jpeg" alt="Banner 2" className="w-full rounded-lg cursor-pointer" /></SwiperSlide>
-                    <SwiperSlide><img src="/images/banner/banner3.jpeg" alt="Banner 3" className="w-full rounded-lg cursor-pointer" /></SwiperSlide>
-                </Swiper>
-            </section>
-
-            {/* Featured Categories */}
-            <section className="max-w-7xl mx-auto px-6 py-10">
-                <h2 className="text-xl font-semibold mb-6">Featured Categories</h2>
-                <Swiper spaceBetween={20} slidesPerView={6}>
-                    {categories.map((cat) => (
-                        <SwiperSlide key={cat.name}>
-                            <div className="border rounded-lg p-4 cursor-pointer flex flex-col items-center text-center hover:shadow-lg hover:border-green-600 transition">
-                                {cat.icon}
-                                <p className="mt-2 text-gray-700">{cat.name}</p>
                             </div>
-                        </SwiperSlide>
-                    ))}
-                </Swiper>
-            </section>
+                            <div className="relative rounded-lg overflow-hidden cursor-pointer">
+                                <img src="/images/banner/banner5.png" alt="Foods & Vegetables" className="w-full h-48 object-cover hover:scale-105 transition" />
+                                <div className="absolute top-4 left-4 text-white">
+                                    <h3 className="text-lg font-bold text-black">Foods & Vegetables</h3>
+                                    <p className="text-sm text-gray-600">Get up to 30% off</p>
+                                    <button className="mt-2 bg-black text-white px-3 py-1 text-sm rounded">Shop now</button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
 
-            {/* Popular Products */}
-            <section className="max-w-7xl mx-auto px-6 py-10">
-                <h2 className="text-xl font-semibold mb-6">Popular Products</h2>
-                <Swiper spaceBetween={20} slidesPerView={5} modules={[Pagination]} pagination={{ clickable: true }} loop={false} autoplay={false}>
-                    {popularProducts.map((p) => (
-                        <SwiperSlide key={p.id}>
-                            <div className="border rounded-lg overflow-hidden flex flex-col transition hover:shadow-lg hover:border-green-600">
-                                <img src={p.image} alt={p.name} className="w-full h-40 object-contain p-4" />
-                                <div className="p-4 flex flex-col flex-grow">
-                                    <h3 className="text-sm font-medium mb-2">{p.name}</h3>
-                                    <p className="text-xs text-gray-500 mt-1">{p.category}</p>
-                                    <div className="mt-auto flex items-center justify-between">
-                                        <p className="text-gray-800 font-semibold">{p.price}</p>
-                                        <button className="bg-green-600 text-white px-3 py-1 rounded-md text-sm">+ Add</button>
+                    {/* Best Selling Products */}
+                    <section className="max-w-7xl mx-auto px-6 py-10">
+                        <h2 className="text-xl font-semibold mb-6">Best Selling Products</h2>
+                        <div className="grid grid-cols-5 gap-6">
+                            {bestSellers.map((p) => (
+                                <div key={p.id} className="border rounded-lg overflow-hidden flex flex-col transition hover:shadow-lg hover:border-green-600">
+                                    <img src={p.image} alt={p.name} className="w-full h-40 object-contain p-4" />
+                                    <div className="p-4 flex flex-col flex-grow">
+                                        <h3 className="text-sm font-medium">{p.name}</h3>
+                                        <p className="text-xs text-gray-500 mt-1">{p.category}</p>
+                                        <div className="mt-2 flex items-center justify-between">
+                                            <p className="text-green-600 font-semibold">{p.price}</p>
+                                            <span className="text-xs text-green-600 font-medium">In stock</span>
+                                        </div>
+                                        <button className="mt-3 w-full bg-green-600 text-white py-1 rounded-lg text-sm">Add to Cart</button>
                                     </div>
                                 </div>
-                            </div>
-                        </SwiperSlide>
-                    ))}
-                </Swiper>
-            </section>
-
-            {/* Fruits & Vegetable */}
-            <section className="max-w-7xl mx-auto px-6 py-10">
-                <div className="grid grid-cols-2 gap-6">
-                    <div className="relative rounded-lg overflow-hidden cursor-pointer">
-                        <img src="/images/banner/banner4.png" alt="Fresh Fruits" className="w-full h-48 object-cover hover:scale-105 transition" />
-                        <div className="absolute top-4 left-4 text-white">
-                            <h3 className="text-lg font-bold text-black">Fresh Fruits</h3>
-                            <p className="text-sm text-gray-600">Get up to 25% off</p>
-                            <button className="mt-2 bg-black text-white px-3 py-1 text-sm rounded">Shop now</button>
+                            ))}
                         </div>
-                    </div>
-                    <div className="relative rounded-lg overflow-hidden cursor-pointer">
-                        <img src="/images/banner/banner5.png" alt="Foods & Vegetables" className="w-full h-48 object-cover hover:scale-105 transition" />
-                        <div className="absolute top-4 left-4 text-white">
-                            <h3 className="text-lg font-bold text-black">Foods & Vegetables</h3>
-                            <p className="text-sm text-gray-600">Get up to 30% off</p>
-                            <button className="mt-2 bg-black text-white px-3 py-1 text-sm rounded">Shop now</button>
+                        <div className="mt-6 text-center">
+                            <button className="bg-black text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">View More</button>
                         </div>
-                    </div>
-                </div>
-            </section>
+                    </section>
+                </main>
 
-            {/* Best Selling Products */}
-            <section className="max-w-7xl mx-auto px-6 py-10">
-                <h2 className="text-xl font-semibold mb-6">Best Selling Products</h2>
-                <div className="grid grid-cols-5 gap-6">
-                    {bestSellers.map((p) => (
-                        <div key={p.id} className="border rounded-lg overflow-hidden flex flex-col transition hover:shadow-lg hover:border-green-600">
-                            <img src={p.image} alt={p.name} className="w-full h-40 object-contain p-4" />
-                            <div className="p-4 flex flex-col flex-grow">
-                                <h3 className="text-sm font-medium">{p.name}</h3>
-                                <p className="text-xs text-gray-500 mt-1">{p.category}</p>
-                                <div className="mt-2 flex items-center justify-between">
-                                    <p className="text-green-600 font-semibold">{p.price}</p>
-                                    <span className="text-xs text-green-600 font-medium">In stock</span>
-                                </div>
-                                <button className="mt-3 w-full bg-green-600 text-white py-1 rounded-lg text-sm">Add to Cart</button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-                <div className="mt-6 text-center">
-                    <button className="bg-black text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">View More</button>
-                </div>
-            </section>
-
-            {/* Footer */}
-            <Footer />
+                {/* Footer */}
+                <Footer />
+            </div>
 
             {/* Cart Sidebar */}
-            <CartSidebar
+            <CartSidebarWrapper
                 isCartOpen={isCartOpen}
                 onClose={() => setIsCartOpen(false)}
                 cartItems={cartItems}
@@ -247,6 +208,7 @@ export default function HomePage() {
                 decreaseQty={decreaseQty}
                 removeItem={removeItem}
             />
+
         </div>
     );
 }

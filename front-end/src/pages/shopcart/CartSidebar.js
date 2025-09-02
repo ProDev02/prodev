@@ -1,17 +1,23 @@
 "use client";
-
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { X, Minus, Plus, Trash2, List, CreditCard } from "lucide-react";
 import OrderTab from "./OrderSidebar";
 
 export default function CartSidebar({ isCartOpen, onClose, cartItems, increaseQty, decreaseQty, removeItem }) {
-
-    const total = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0);
     const [activeTab, setActiveTab] = useState("shopcart");
+    const navigate = useNavigate();
+    const total = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0);
 
     return (
         <>
-            {isCartOpen && <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} />}
+            {/* Overlay */}
+            <div
+                className={`fixed inset-0 bg-black/30 backdrop-blur-sm z-40 transition-opacity duration-300 ${isCartOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
+                onClick={onClose}
+            />
+
+            {/* Sidebar */}
             <div className={`fixed top-0 right-0 w-96 h-full bg-white shadow-lg z-50 transform transition-transform duration-300 flex flex-col ${isCartOpen ? "translate-x-0" : "translate-x-full"}`}>
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b">
@@ -21,12 +27,18 @@ export default function CartSidebar({ isCartOpen, onClose, cartItems, increaseQt
 
                 {/* Tabs */}
                 <div className="flex items-center gap-2 px-6 py-2 border-b text-sm">
-                    <button onClick={() => setActiveTab("shopcart")} className={`flex items-center space-x-1 ${activeTab === "shopcart" ? "text-green-600 font-medium" : "text-gray-500"}`}>
+                    <button
+                        onClick={() => setActiveTab("shopcart")}
+                        className={`flex items-center space-x-1 ${activeTab === "shopcart" ? "text-green-600 font-medium" : "text-gray-500"}`}
+                    >
                         <List size={16} />
                         <span>ShopCart</span>
                     </button>
                     <span>/</span>
-                    <button onClick={() => setActiveTab("order")} className={`flex items-center space-x-1 ${activeTab === "order" ? "text-green-600 font-medium" : "text-gray-500"}`}>
+                    <button
+                        onClick={() => setActiveTab("order")}
+                        className={`flex items-center space-x-1 ${activeTab === "order" ? "text-green-600 font-medium" : "text-gray-500"}`}
+                    >
                         <List size={16} />
                         <span>Order</span>
                     </button>
@@ -34,8 +46,8 @@ export default function CartSidebar({ isCartOpen, onClose, cartItems, increaseQt
 
                 {/* Content */}
                 <div className="flex-1 p-6 space-y-6 overflow-y-auto">
-                    {activeTab === "shopcart" && (
-                        cartItems.length > 0 ? (
+                    {activeTab === "shopcart" &&
+                        (cartItems.length > 0 ? (
                             cartItems.map(item => (
                                 <div key={item.id} className="flex flex-col space-y-1 pb-4 border-b">
                                     <div className="flex items-start space-x-4">
@@ -60,26 +72,26 @@ export default function CartSidebar({ isCartOpen, onClose, cartItems, increaseQt
                                 </div>
                             ))
                         ) : (
-                            <div className="text-center text-gray-500 mt-10">
-                                🛒 Your cart is empty.
-                            </div>
-                        )
-                    )}
-                    {activeTab === "order" && (
-                        <OrderTab
-                            orders={[
-                                { id: 1, name: "Be Nice Shower Cream, Perfect Elastic Formula, 450 ml.", qty: 1, price: 109, status: "pending", image: "/images/products/showercream.png" },
-                                { id: 2, name: "KFC BamBam BOX Menu TheBox special", qty: 1, price: 159, status: "pending", image: "/images/products/kfc.png" },
-                                { id: 3, name: "Protex Lavender Ice Freeze Soap Bar 60 g.", qty: 3, price: 57, status: "fulfilled", image: "/images/products/protex.png" },
-                            ]}
-                        />
-                    )}
+                            <div className="text-center text-gray-500 mt-10">🛒 Your cart is empty.</div>
+                        ))
+                    }
+
+                    {activeTab === "order" &&
+                        <OrderTab orders={[
+                            { id: 1, name: "Be Nice Shower Cream, Perfect Elastic Formula, 450 ml.", qty: 1, price: 109, status: "pending", image: "/images/products/showercream.png" },
+                            { id: 2, name: "KFC BamBam BOX Menu TheBox special", qty: 1, price: 159, status: "pending", image: "/images/products/kfc.png" },
+                            { id: 3, name: "Protex Lavender Ice Freeze Soap Bar 60 g.", qty: 3, price: 57, status: "fulfilled", image: "/images/products/protex.png" },
+                        ]}/>
+                    }
                 </div>
 
                 {/* Footer */}
-                {activeTab === "shopcart" && (
+                {activeTab === "shopcart" && cartItems.length > 0 && (
                     <div className="p-4 border-t bg-white">
-                        <button className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg text-base font-medium">
+                        <button
+                            className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg text-base font-medium"
+                            onClick={() => navigate("/payment")}
+                        >
                             <CreditCard size={18} /> Payment ฿{total}
                         </button>
                     </div>
