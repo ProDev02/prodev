@@ -1,52 +1,28 @@
 "use client";
 
-import { useState, useEffect  } from "react";
-import { useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Utensils, Smartphone, Sofa, ShowerHead, Shirt, Tv, Cookie } from "lucide-react";
 import Navbar from "../navbar";
 import Footer from "../footer";
 import CartSidebarWrapper from "../shopcart/CartSidebarWrapper";
 
 export default function SearchPage() {
+    const navigate = useNavigate();
+
     const [isCartOpen, setIsCartOpen] = useState(false);
 
-    // Cart items
     const [cartItems, setCartItems] = useState([
         { id: 1, name: "Be Nice Shower Cream, Perfect Elastic Formula, 450 ml.", price: 109, qty: 1, stock: 5, image: "/images/products/showercream.png", warning: false },
         { id: 2, name: "Protex Lavender Ice Freeze Soap Bar 60 g.", price: 19, qty: 3, stock: 3, image: "/images/products/protex.png", warning: false },
         { id: 3, name: "KFC BamBam BOX Menu TheBox special", price: 159, qty: 1, stock: 20, image: "/images/products/kfc.png", warning: false },
     ]);
 
-    // Cart functions
-    const increaseQty = (id) => {
-        setCartItems(prev =>
-            prev.map(item => {
-                if (item.id === id) {
-                    if (item.qty + 1 > item.stock) return { ...item, warning: true };
-                    return { ...item, qty: item.qty + 1, warning: false };
-                }
-                return item;
-            })
-        );
-    };
+    // เพิ่ม/ลด/ลบใน cart
+    const increaseQty = (id) => setCartItems(prev => prev.map(item => item.id === id ? { ...item, qty: Math.min(item.qty + 1, item.stock) } : item));
+    const decreaseQty = (id) => setCartItems(prev => prev.map(item => item.id === id ? { ...item, qty: Math.max(item.qty - 1, 1) } : item));
+    const removeItem = (id) => setCartItems(prev => prev.filter(item => item.id !== id));
 
-    const decreaseQty = (id) => {
-        setCartItems(prev =>
-            prev.map(item => {
-                if (item.id === id) {
-                    const newQty = Math.max(item.qty - 1, 1);
-                    return { ...item, qty: newQty, warning: false };
-                }
-                return item;
-            })
-        );
-    };
-
-    const removeItem = (id) => {
-        setCartItems(prev => prev.filter(item => item.id !== id));
-    };
-
-    // Categories
     const categories = [
         { name: "All", icon: null },
         { name: "Snack", icon: <Cookie size={18} /> },
@@ -58,7 +34,6 @@ export default function SearchPage() {
         { name: "Electronics", icon: <Tv size={18} /> },
     ];
 
-    // Price ranges
     const priceRanges = [
         { label: "$1–$249", min: 1, max: 249 },
         { label: "$250–$1,049", min: 250, max: 1049 },
@@ -67,7 +42,6 @@ export default function SearchPage() {
         { label: "$5,000–$10,000", min: 5000, max: 10000 },
     ];
 
-    // Sample products
     const products = [
         { id: 1, name: "Be Nice Shower Cream", desc: "Perfect Elastic Formula, 450 ml", price: 109, image: "/images/products/showercream.png", category: "Shower" },
         { id: 2, name: "Protex Soap Bar", desc: "Lavender Ice Freeze 60 g", price: 19, image: "/images/products/protex.png", category: "Shower" },
@@ -83,7 +57,6 @@ export default function SearchPage() {
         { id: 12, name: "Coffee Maker", desc: "Automatic drip", price: 199, image: "/images/products/showercream.png", category: "Food & Drinks" },
     ];
 
-    // Filter states
     const location = useLocation();
     const defaultCategory = location.state?.category || "All";
     const [selectedCategory, setSelectedCategory] = useState(defaultCategory);
@@ -131,16 +104,17 @@ export default function SearchPage() {
                 <Navbar cartItems={cartItems} onCartOpen={() => setIsCartOpen(true)} />
 
                 <main className="max-w-7xl mx-auto px-6 py-6 flex gap-8">
-                    {/* Sidebar */}
                     <aside className="w-1/4">
-                        <h3 className="text-gray-600 text-sm mb-2">Categories</h3>
+                        <div className="text-sm text-gray-500 mb-4">
+                            <span className="cursor-pointer hover:text-green-600" onClick={() => navigate("/")}>Home</span> / {selectedCategory}
+                        </div>
+
+                        <h3 className="text-gray-600 text-sm mb-2 font-semibold">Categories</h3>
                         <ul className="mb-6">
                             {categories.map(c => (
                                 <li
                                     key={c.name}
-                                    className={`px-3 py-2 rounded-md mb-1 cursor-pointer ${
-                                        selectedCategory === c.name ? "bg-green-500 text-white" : "hover:bg-gray-100"
-                                    }`}
+                                    className={`px-3 py-2 rounded-md mb-1 cursor-pointer ${selectedCategory === c.name ? "bg-green-500 text-white" : "hover:bg-gray-100"}`}
                                     onClick={() => handleCategoryClick(c.name)}
                                 >
                                     <div className="flex items-center gap-2">
@@ -167,7 +141,6 @@ export default function SearchPage() {
                         </div>
                     </aside>
 
-                    {/* Products */}
                     <section className="flex-1">
                         <h2 className="text-2xl font-semibold mb-6">
                             {selectedCategory === "All" ? "All Products" : selectedCategory}
@@ -178,7 +151,12 @@ export default function SearchPage() {
                                 {paginatedProducts.map(p => (
                                     <div
                                         key={p.id}
-                                        className="border rounded-lg overflow-hidden flex flex-col transition hover:shadow-lg hover:border-green-600"
+                                        className="border rounded-lg overflow-hidden flex flex-col transition hover:shadow-lg hover:border-green-600 cursor-pointer"
+                                        onClick={() =>
+                                            navigate(`/product/mock`, {
+                                                state: { product: p, products }, // ส่ง product ที่เลือกไปเลย
+                                            })
+                                        }
                                     >
                                         <img
                                             src={p.image}
@@ -190,7 +168,18 @@ export default function SearchPage() {
                                             <p className="text-xs text-gray-500 mt-1">{p.category}</p>
                                             <div className="mt-auto flex items-center justify-between">
                                                 <p className="text-gray-800 font-semibold">${p.price.toFixed(2)}</p>
-                                                <button className="bg-green-600 text-white px-3 py-1 rounded-md text-sm">
+                                                <button
+                                                    className="bg-green-600 text-white px-3 py-1 rounded-md text-sm"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        const exist = cartItems.find(c => c.id === p.id);
+                                                        if (exist) {
+                                                            setCartItems(prev => prev.map(c => c.id === p.id ? { ...c, qty: c.qty + 1 } : c));
+                                                        } else {
+                                                            setCartItems(prev => [...prev, { ...p, qty: 1, stock: 10 }]);
+                                                        }
+                                                    }}
+                                                >
                                                     + Add
                                                 </button>
                                             </div>
@@ -202,32 +191,19 @@ export default function SearchPage() {
                             <p className="text-gray-500">No products found.</p>
                         )}
 
-                        {/* Pagination */}
                         {paginatedProducts.length > 0 && (
                             <div className="flex justify-center mt-8 gap-2">
-                                <button
-                                    className="px-3 py-1 border rounded"
-                                    onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                                >
-                                    &lt;
-                                </button>
+                                <button className="px-3 py-1 border rounded" onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}>&lt;</button>
                                 {Array.from({ length: totalPages }, (_, i) => (
                                     <button
                                         key={i}
-                                        className={`px-3 py-1 border rounded ${
-                                            currentPage === i + 1 ? "bg-green-600 text-white" : ""
-                                        }`}
+                                        className={`px-3 py-1 border rounded ${currentPage === i + 1 ? "bg-green-600 text-white" : ""}`}
                                         onClick={() => setCurrentPage(i + 1)}
                                     >
                                         {i + 1}
                                     </button>
                                 ))}
-                                <button
-                                    className="px-3 py-1 border rounded"
-                                    onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                                >
-                                    &gt;
-                                </button>
+                                <button className="px-3 py-1 border rounded" onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}>&gt;</button>
                             </div>
                         )}
                     </section>

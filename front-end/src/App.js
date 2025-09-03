@@ -7,7 +7,10 @@ import SignInAdmin from "./pages/login/login_admin";
 import PaymentPage from "./pages/shopcart/Payment"
 import FavoriteListPage from "./pages/favorite";
 import SearchPage from "./pages/search/Search";
+import DetailProductPage from "./pages/detail/DetailProduct";
 
+//admin
+import AdminDashboard from "./pages/admin/AdminDashboard";
 function App() {
     return (
         <BrowserRouter>
@@ -20,6 +23,10 @@ function App() {
                 <Route path="/payment" element={<PaymentPage />} />
                 <Route path="/favorite" element={<FavoriteListPage />} />
                 <Route path="/search" element={<SearchPage />} />
+                <Route path="/product/mock" element={<DetailProductPage />} />
+
+                {/*admin*/}
+                <Route path="/admin-dashboard" element={<AdminDashboard />} />
             </Routes>
         </BrowserRouter>
     );
