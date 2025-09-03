@@ -6,6 +6,7 @@ import SignInAdmin from "./pages/login/login_admin";
 
 import PaymentPage from "./pages/shopcart/Payment"
 import FavoriteListPage from "./pages/favorite";
+import SearchPage from "./pages/search/Search";
 
 function App() {
     return (
@@ -18,6 +19,7 @@ function App() {
 
                 <Route path="/payment" element={<PaymentPage />} />
                 <Route path="/favorite" element={<FavoriteListPage />} />
+                <Route path="/search" element={<SearchPage />} />
             </Routes>
         </BrowserRouter>
     );

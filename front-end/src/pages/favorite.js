@@ -14,6 +14,10 @@ export default function FavoriteListPage() {
         { id: 1, name: "Be Nice Shower Cream, Perfect Elastic Formula, 450 ml.", price: 109, image: "/images/products/showercream.png", inStock: true },
         { id: 2, name: "Protex Lavender Ice Freeze Soap Bar 60 g.", price: 57, image: "/images/products/protex.png", inStock: false },
         { id: 3, name: "KFC BamBam BOX Menu TheBox special", price: 159, image: "/images/products/kfc.png", inStock: true },
+        { id: 4, name: "Chocolate Chip Cookie", price: 49, image: "/images/products/protex.png", inStock: true },
+        { id: 5, name: "iPhone 15", price: 999, image: "/images/products/kfc.png", inStock: true },
+        { id: 6, name: "Modern Sofa", price: 1200, image: "/images/products/showercream.png", inStock: true },
+        { id: 7, name: "Shampoo Set", price: 89, image: "/images/products/protex.png", inStock: true },
     ]);
 
     const [cartItems, setCartItems] = useState([
@@ -43,6 +47,15 @@ export default function FavoriteListPage() {
     const removeItem = (id) => setCartItems(prev => prev.filter(item => item.id !== id));
     const removeFavorite = (id) => setFavorites(prev => prev.filter(item => item.id !== id));
     const addToCart = (item) => alert(`${item.name} added to cart!`);
+
+    // Pagination
+    const itemsPerPage = 5;
+    const [currentPage, setCurrentPage] = useState(1);
+    const totalPages = Math.ceil(favorites.length / itemsPerPage);
+    const paginatedFavorites = favorites.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
     return (
         <div className="font-sans bg-white relative">
@@ -86,7 +99,7 @@ export default function FavoriteListPage() {
                                         </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-200">
-                                        {favorites.map(item => (
+                                        {paginatedFavorites.map(item => (
                                             <tr key={item.id}>
                                                 <td className="px-4 py-3 flex items-center space-x-3">
                                                     <input type="checkbox" className="h-4 w-4 text-green-600" />
@@ -111,6 +124,27 @@ export default function FavoriteListPage() {
                                         ))}
                                         </tbody>
                                     </table>
+
+                                    {/* Pagination */}
+                                    {totalPages > 1 && (
+                                        <div className="flex justify-center gap-2 mt-4">
+                                            <button
+                                                className="px-3 py-1 border rounded"
+                                                onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                                                disabled={currentPage === 1}
+                                            >
+                                                Previous
+                                            </button>
+                                            <span className="px-3 py-1">{currentPage} / {totalPages}</span>
+                                            <button
+                                                className="px-3 py-1 border rounded"
+                                                onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                                                disabled={currentPage === totalPages}
+                                            >
+                                                Next
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -120,7 +154,6 @@ export default function FavoriteListPage() {
                 {/* Footer ไม่เบลอ */}
                 <Footer />
             </div>
-
 
             {/* Cart Sidebar */}
             <CartSidebarWrapper

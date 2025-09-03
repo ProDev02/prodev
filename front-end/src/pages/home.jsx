@@ -117,7 +117,10 @@ export default function HomePage() {
                         <Swiper spaceBetween={20} slidesPerView={6}>
                             {categories.map((cat) => (
                                 <SwiperSlide key={cat.name}>
-                                    <div className="border rounded-lg p-4 cursor-pointer flex flex-col items-center text-center hover:shadow-lg hover:border-green-600 transition">
+                                    <div
+                                        className="border rounded-lg p-4 cursor-pointer flex flex-col items-center text-center hover:shadow-lg hover:border-green-600 transition"
+                                        onClick={() => navigate("/search", { state: { category: cat.name } })}
+                                    >
                                         {cat.icon}
                                         <p className="mt-2 text-gray-700">{cat.name}</p>
                                     </div>
@@ -190,7 +193,12 @@ export default function HomePage() {
                             ))}
                         </div>
                         <div className="mt-6 text-center">
-                            <button className="bg-black text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">View More</button>
+                            <button
+                                className="bg-black text-white px-6 py-2 rounded-lg hover:bg-green-700 transition"
+                                onClick={() => navigate("/search", { state: { category: "All" } })}
+                            >
+                                View More
+                            </button>
                         </div>
                     </section>
                 </main>

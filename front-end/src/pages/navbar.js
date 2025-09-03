@@ -48,7 +48,10 @@ export default function Navbar({ cartItems = [], onCartOpen }) {
                         )}
                     </div>
 
-                    <button className="flex items-center bg-green-600 text-white px-4 py-2 rounded-lg space-x-2">
+                    <button
+                        className="flex items-center bg-green-600 text-white px-4 py-2 rounded-lg space-x-2"
+                        onClick={() => navigate("/search", { state: { category: "All" } })}
+                    >
                         <Menu size={18} />
                         <span>All categories</span>
                     </button>
