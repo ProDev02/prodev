@@ -11,6 +11,11 @@ import DetailProductPage from "./pages/detail/DetailProduct";
 
 //admin
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import OutOfStock from "./pages/admin/OutOfStock";
+import OrderProduct from "./pages/admin/OrderProduct";
+
+import AddNewProduct from "./pages/admin/addProduct/AddNewProduct";
+import UpdateProduct from "./pages/admin/updateProduct/UpdateProduct";
 function App() {
     return (
         <BrowserRouter>
@@ -27,6 +32,11 @@ function App() {
 
                 {/*admin*/}
                 <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                <Route path="/out-of-stock" element={<OutOfStock />} />
+                <Route path="/order-product" element={<OrderProduct />} />
+
+                <Route path="/add-product" element={<AddNewProduct />} />
+                <Route path="/update/mock" element={<UpdateProduct />} />
             </Routes>
         </BrowserRouter>
     );

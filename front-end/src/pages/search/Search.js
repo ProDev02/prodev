@@ -191,9 +191,14 @@ export default function SearchPage() {
                             <p className="text-gray-500">No products found.</p>
                         )}
 
-                        {paginatedProducts.length > 0 && (
+                        {filteredProducts.length > itemsPerPage && (
                             <div className="flex justify-center mt-8 gap-2">
-                                <button className="px-3 py-1 border rounded" onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}>&lt;</button>
+                                <button
+                                    className="px-3 py-1 border rounded"
+                                    onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                                >
+                                    &lt;
+                                </button>
                                 {Array.from({ length: totalPages }, (_, i) => (
                                     <button
                                         key={i}
@@ -203,7 +208,12 @@ export default function SearchPage() {
                                         {i + 1}
                                     </button>
                                 ))}
-                                <button className="px-3 py-1 border rounded" onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}>&gt;</button>
+                                <button
+                                    className="px-3 py-1 border rounded"
+                                    onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                                >
+                                    &gt;
+                                </button>
                             </div>
                         )}
                     </section>
