@@ -135,7 +135,9 @@ export default function HomePage() {
                         <Swiper spaceBetween={20} slidesPerView={5} modules={[Pagination]} pagination={{ clickable: true }} loop={false} autoplay={false}>
                             {popularProducts.map((p) => (
                                 <SwiperSlide key={p.id}>
-                                    <div className="border rounded-lg overflow-hidden flex flex-col transition hover:shadow-lg hover:border-green-600">
+                                    <div className="border rounded-lg overflow-hidden flex flex-col transition hover:shadow-lg hover:border-green-600"
+                                         onClick={() => navigate("/product/mock")}
+                                    >
                                         <img src={p.image} alt={p.name} className="w-full h-40 object-contain p-4" />
                                         <div className="p-4 flex flex-col flex-grow">
                                             <h3 className="text-sm font-medium mb-2">{p.name}</h3>
@@ -178,7 +180,9 @@ export default function HomePage() {
                         <h2 className="text-xl font-semibold mb-6">Best Selling Products</h2>
                         <div className="grid grid-cols-5 gap-6">
                             {bestSellers.map((p) => (
-                                <div key={p.id} className="border rounded-lg overflow-hidden flex flex-col transition hover:shadow-lg hover:border-green-600">
+                                <div key={p.id} className="border rounded-lg overflow-hidden flex flex-col transition hover:shadow-lg hover:border-green-600"
+                                     onClick={() => navigate("/product/mock")}
+                                >
                                     <img src={p.image} alt={p.name} className="w-full h-40 object-contain p-4" />
                                     <div className="p-4 flex flex-col flex-grow">
                                         <h3 className="text-sm font-medium">{p.name}</h3>
