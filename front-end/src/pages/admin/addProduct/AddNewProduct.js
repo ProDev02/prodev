@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import AdminNavbar from "../AdminNavbar";
 
 export default function AddNewProduct() {
     const [inStock, setInStock] = useState(false);
@@ -27,20 +28,8 @@ export default function AddNewProduct() {
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
-            {/* Header */}
-            <header className="bg-white shadow">
-                <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                        <img
-                            src="/images/WholeCart_logo.png"
-                            alt="WholeCart"
-                            className="h-12 w-auto"
-                        />
-                        <span className="ml-4 text-gray-600">Admin username</span>
-                    </div>
-                    <button className="text-gray-800 font-medium">Log out</button>
-                </div>
-            </header>
+            {/* Navbar */}
+            <AdminNavbar username="Admin username" />
 
             {/* Main */}
             <main className="max-w-7xl mx-auto p-6">

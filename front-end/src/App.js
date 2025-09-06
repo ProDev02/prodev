@@ -3,38 +3,43 @@ import HomePage from "./pages/home";
 import SignInPage from "./pages/login/login";
 import SignUpPage from "./pages/login/register";
 import SignInAdmin from "./pages/login/login_admin";
+import AppLayout from "./AppLayout";
 
-import PaymentPage from "./pages/shopcart/Payment"
+import PaymentPage from "./pages/shopcart/Payment";
 import FavoriteListPage from "./pages/favorite";
 import SearchPage from "./pages/search/Search";
 import DetailProductPage from "./pages/detail/DetailProduct";
 
-//admin
+// admin
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import OutOfStock from "./pages/admin/OutOfStock";
 import OrderProduct from "./pages/admin/OrderProduct";
-
 import AddNewProduct from "./pages/admin/addProduct/AddNewProduct";
 import UpdateProduct from "./pages/admin/updateProduct/UpdateProduct";
+
 function App() {
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="/" element={<HomePage />} />
+                {/* Public Pages */}
                 <Route path="/signin" element={<SignInPage />} />
                 <Route path="/signup" element={<SignUpPage />} />
                 <Route path="/signin-admin" element={<SignInAdmin />} />
-
                 <Route path="/payment" element={<PaymentPage />} />
-                <Route path="/favorite" element={<FavoriteListPage />} />
-                <Route path="/search" element={<SearchPage />} />
-                <Route path="/product/mock" element={<DetailProductPage />} />
 
-                {/*admin*/}
+                {/* Pages with Navbar + Footer */}
+                <Route element={<AppLayout />}>
+                    <Route path="/" element={<HomePage />} />
+
+                    <Route path="/favorite" element={<FavoriteListPage />} />
+                    <Route path="/search" element={<SearchPage />} />
+                    <Route path="/product/mock" element={<DetailProductPage />} />
+                </Route>
+
+                {/* Admin Pages */}
                 <Route path="/admin-dashboard" element={<AdminDashboard />} />
                 <Route path="/out-of-stock" element={<OutOfStock />} />
                 <Route path="/order-product" element={<OrderProduct />} />
-
                 <Route path="/add-product" element={<AddNewProduct />} />
                 <Route path="/update/mock" element={<UpdateProduct />} />
             </Routes>

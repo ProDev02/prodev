@@ -3,25 +3,16 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Utensils, Smartphone, Sofa, ShowerHead, Shirt, Tv, Cookie } from "lucide-react";
-import Navbar from "../navbar";
-import Footer from "../footer";
-import CartSidebarWrapper from "../shopcart/CartSidebarWrapper";
 
 export default function SearchPage() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const defaultCategory = location.state?.category || "All";
 
-    const [isCartOpen, setIsCartOpen] = useState(false);
-
-    const [cartItems, setCartItems] = useState([
-        { id: 1, name: "Be Nice Shower Cream, Perfect Elastic Formula, 450 ml.", price: 109, qty: 1, stock: 5, image: "/images/products/showercream.png", warning: false },
-        { id: 2, name: "Protex Lavender Ice Freeze Soap Bar 60 g.", price: 19, qty: 3, stock: 3, image: "/images/products/protex.png", warning: false },
-        { id: 3, name: "KFC BamBam BOX Menu TheBox special", price: 159, qty: 1, stock: 20, image: "/images/products/kfc.png", warning: false },
-    ]);
-
-    // เพิ่ม/ลด/ลบใน cart
-    const increaseQty = (id) => setCartItems(prev => prev.map(item => item.id === id ? { ...item, qty: Math.min(item.qty + 1, item.stock) } : item));
-    const decreaseQty = (id) => setCartItems(prev => prev.map(item => item.id === id ? { ...item, qty: Math.max(item.qty - 1, 1) } : item));
-    const removeItem = (id) => setCartItems(prev => prev.filter(item => item.id !== id));
+    const [selectedCategory, setSelectedCategory] = useState(defaultCategory);
+    const [selectedPrices, setSelectedPrices] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 8;
 
     const categories = [
         { name: "All", icon: null },
@@ -57,12 +48,10 @@ export default function SearchPage() {
         { id: 12, name: "Coffee Maker", desc: "Automatic drip", price: 199, image: "/images/products/showercream.png", category: "Food & Drinks" },
     ];
 
-    const location = useLocation();
-    const defaultCategory = location.state?.category || "All";
-    const [selectedCategory, setSelectedCategory] = useState(defaultCategory);
-    const [selectedPrices, setSelectedPrices] = useState([]);
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 8;
+    useEffect(() => {
+        setSelectedCategory(defaultCategory);
+        setCurrentPage(1);
+    }, [defaultCategory]);
 
     const handleCategoryClick = (name) => {
         setSelectedCategory(name);
@@ -93,143 +82,99 @@ export default function SearchPage() {
         currentPage * itemsPerPage
     );
 
-    useEffect(() => {
-        setSelectedCategory(defaultCategory);
-        setCurrentPage(1);
-    }, [defaultCategory]);
-
     return (
-        <div className="font-sans bg-white relative">
-            <div className={`${isCartOpen ? "blur-sm pointer-events-none" : ""} transition-all duration-300`}>
-                <Navbar cartItems={cartItems} onCartOpen={() => setIsCartOpen(true)} />
+        <main className="min-h-screen max-w-7xl mx-auto px-6 py-10 flex gap-8">
+            <aside className="w-1/4">
+                <div className="text-sm text-gray-500 mb-4">
+                    <span className="cursor-pointer hover:text-green-600" onClick={() => navigate("/")}>Home</span> / {selectedCategory}
+                </div>
 
-                <main className="max-w-7xl mx-auto px-6 py-6 flex gap-8">
-                    <aside className="w-1/4">
-                        <div className="text-sm text-gray-500 mb-4">
-                            <span className="cursor-pointer hover:text-green-600" onClick={() => navigate("/")}>Home</span> / {selectedCategory}
-                        </div>
-
-                        <h3 className="text-gray-600 text-sm mb-2 font-semibold">Categories</h3>
-                        <ul className="mb-6">
-                            {categories.map(c => (
-                                <li
-                                    key={c.name}
-                                    className={`px-3 py-2 rounded-md mb-1 cursor-pointer ${selectedCategory === c.name ? "bg-green-500 text-white" : "hover:bg-gray-100"}`}
-                                    onClick={() => handleCategoryClick(c.name)}
-                                >
-                                    <div className="flex items-center gap-2">
-                                        {c.icon}
-                                        <span>{c.name}</span>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-
-                        <h3 className="text-gray-600 text-sm mb-2">Price</h3>
-                        <div className="flex flex-col gap-2 text-sm">
-                            {priceRanges.map(p => (
-                                <label key={p.label}>
-                                    <input
-                                        type="checkbox"
-                                        className="mr-2"
-                                        checked={selectedPrices.includes(p.label)}
-                                        onChange={() => handlePriceChange(p.label)}
-                                    />
-                                    {p.label}
-                                </label>
-                            ))}
-                        </div>
-                    </aside>
-
-                    <section className="flex-1">
-                        <h2 className="text-2xl font-semibold mb-6">
-                            {selectedCategory === "All" ? "All Products" : selectedCategory}
-                        </h2>
-
-                        {paginatedProducts.length > 0 ? (
-                            <div className="grid grid-cols-3 lg:grid-cols-4 gap-6">
-                                {paginatedProducts.map(p => (
-                                    <div
-                                        key={p.id}
-                                        className="border rounded-lg overflow-hidden flex flex-col transition hover:shadow-lg hover:border-green-600 cursor-pointer"
-                                        onClick={() =>
-                                            navigate(`/product/mock`, {
-                                                state: { product: p, products }, // ส่ง product ที่เลือกไปเลย
-                                            })
-                                        }
-                                    >
-                                        <img
-                                            src={p.image}
-                                            alt={p.name}
-                                            className="w-full h-40 object-contain p-4"
-                                        />
-                                        <div className="p-4 flex flex-col flex-grow">
-                                            <h3 className="text-sm font-medium mb-2">{p.name}</h3>
-                                            <p className="text-xs text-gray-500 mt-1">{p.category}</p>
-                                            <div className="mt-auto flex items-center justify-between">
-                                                <p className="text-gray-800 font-semibold">${p.price.toFixed(2)}</p>
-                                                <button
-                                                    className="bg-green-600 text-white px-3 py-1 rounded-md text-sm"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        const exist = cartItems.find(c => c.id === p.id);
-                                                        if (exist) {
-                                                            setCartItems(prev => prev.map(c => c.id === p.id ? { ...c, qty: c.qty + 1 } : c));
-                                                        } else {
-                                                            setCartItems(prev => [...prev, { ...p, qty: 1, stock: 10 }]);
-                                                        }
-                                                    }}
-                                                >
-                                                    + Add
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                <h3 className="text-gray-600 text-sm mb-2 font-semibold">Categories</h3>
+                <ul className="mb-6">
+                    {categories.map(c => (
+                        <li
+                            key={c.name}
+                            className={`px-3 py-2 rounded-md mb-1 cursor-pointer ${selectedCategory === c.name ? "bg-green-500 text-white" : "hover:bg-gray-100"}`}
+                            onClick={() => handleCategoryClick(c.name)}
+                        >
+                            <div className="flex items-center gap-2">
+                                {c.icon}
+                                <span>{c.name}</span>
                             </div>
-                        ) : (
-                            <p className="text-gray-500">No products found.</p>
-                        )}
+                        </li>
+                    ))}
+                </ul>
 
-                        {filteredProducts.length > itemsPerPage && (
-                            <div className="flex justify-center mt-8 gap-2">
-                                <button
-                                    className="px-3 py-1 border rounded"
-                                    onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                                >
-                                    &lt;
-                                </button>
-                                {Array.from({ length: totalPages }, (_, i) => (
-                                    <button
-                                        key={i}
-                                        className={`px-3 py-1 border rounded ${currentPage === i + 1 ? "bg-green-600 text-white" : ""}`}
-                                        onClick={() => setCurrentPage(i + 1)}
-                                    >
-                                        {i + 1}
-                                    </button>
-                                ))}
-                                <button
-                                    className="px-3 py-1 border rounded"
-                                    onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                                >
-                                    &gt;
-                                </button>
+                <h3 className="text-gray-600 text-sm mb-2">Price</h3>
+                <div className="flex flex-col gap-2 text-sm">
+                    {priceRanges.map(p => (
+                        <label key={p.label}>
+                            <input
+                                type="checkbox"
+                                className="mr-2"
+                                checked={selectedPrices.includes(p.label)}
+                                onChange={() => handlePriceChange(p.label)}
+                            />
+                            {p.label}
+                        </label>
+                    ))}
+                </div>
+            </aside>
+
+            <section className="flex-1">
+                <h2 className="text-2xl font-semibold mb-6">
+                    {selectedCategory === "All" ? "All Products" : selectedCategory}
+                </h2>
+
+                {paginatedProducts.length > 0 ? (
+                    <div className="grid grid-cols-3 lg:grid-cols-4 gap-6">
+                        {paginatedProducts.map(p => (
+                            <div
+                                key={p.id}
+                                className="border rounded-lg overflow-hidden flex flex-col transition hover:shadow-lg hover:border-green-600 cursor-pointer"
+                                onClick={() => navigate(`/product/mock`, { state: { product: p, products } })}
+                            >
+                                <img src={p.image} alt={p.name} className="w-full h-40 object-contain p-4" />
+                                <div className="p-4 flex flex-col flex-grow">
+                                    <h3 className="text-sm font-medium mb-2">{p.name}</h3>
+                                    <p className="text-xs text-gray-500 mt-1">{p.category}</p>
+                                    <div className="mt-auto flex items-center justify-between">
+                                        <p className="text-gray-800 font-semibold">${p.price.toFixed(2)}</p>
+                                    </div>
+                                </div>
                             </div>
-                        )}
-                    </section>
-                </main>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-gray-500">No products found.</p>
+                )}
 
-                <Footer />
-            </div>
-
-            <CartSidebarWrapper
-                isCartOpen={isCartOpen}
-                onClose={() => setIsCartOpen(false)}
-                cartItems={cartItems}
-                increaseQty={increaseQty}
-                decreaseQty={decreaseQty}
-                removeItem={removeItem}
-            />
-        </div>
+                {filteredProducts.length > itemsPerPage && (
+                    <div className="flex justify-center mt-8 gap-2">
+                        <button
+                            className="px-3 py-1 border rounded"
+                            onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                        >
+                            &lt;
+                        </button>
+                        {Array.from({ length: totalPages }, (_, i) => (
+                            <button
+                                key={i}
+                                className={`px-3 py-1 border rounded ${currentPage === i + 1 ? "bg-green-600 text-white" : ""}`}
+                                onClick={() => setCurrentPage(i + 1)}
+                            >
+                                {i + 1}
+                            </button>
+                        ))}
+                        <button
+                            className="px-3 py-1 border rounded"
+                            onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                        >
+                            &gt;
+                        </button>
+                    </div>
+                )}
+            </section>
+        </main>
     );
 }

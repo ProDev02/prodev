@@ -6,16 +6,48 @@ import Footer from "../footer";
 
 export default function SignUpPage() {
     const [showPassword, setShowPassword] = useState(false);
+    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [message, setMessage] = useState("");
+    const [showModal, setShowModal] = useState(false);
+
+    const handleRegister = async (e) => {
+        e.preventDefault();
+
+        try {
+            const res = await fetch("http://localhost:8080/api/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, email, password }),
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                // แสดง popup
+                setShowModal(true);
+            } else {
+                const err = await res.text();
+                setMessage("❌ Register failed: " + err);
+            }
+        } catch (error) {
+            setMessage("❌ Error: " + error.message);
+        }
+    };
+
+    const handleModalOk = () => {
+        setShowModal(false);
+        setUsername("");
+        setEmail("");
+        setPassword("");
+        setMessage("");
+    };
 
     return (
-        <div className="min-h-screen flex flex-col bg-white font-sans">
+        <div className="min-h-screen flex flex-col bg-white font-sans relative">
             {/* Navbar */}
             <header className="w-full border-b py-4 px-6 flex justify-between items-center">
-                <img
-                    src="/images/WholeCart_logo.png"
-                    alt="WholeCart"
-                    className="h-10 w-auto"
-                />
+                <img src="/images/WholeCart_logo.png" alt="WholeCart" className="h-10 w-auto" />
                 <p className="text-sm text-gray-600">
                     Already have an account?{" "}
                     <a href="/signin" className="text-green-600 font-semibold hover:underline">
@@ -29,11 +61,7 @@ export default function SignUpPage() {
                 <div className="grid md:grid-cols-2 gap-10 max-w-5xl w-full items-center">
                     {/* Left illustration */}
                     <div className="flex justify-center">
-                        <img
-                            src="/images/register.png"
-                            alt="Register illustration"
-                            className="max-h-96 object-contain"
-                        />
+                        <img src="/images/register.png" alt="Register illustration" className="max-h-96 object-contain" />
                     </div>
 
                     {/* Right form */}
@@ -46,11 +74,14 @@ export default function SignUpPage() {
                         </p>
 
                         {/* Form */}
-                        <form className="space-y-4">
+                        <form className="space-y-4" onSubmit={handleRegister}>
                             <div>
                                 <input
                                     type="text"
                                     placeholder="Username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    required
                                     className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
                                 />
                             </div>
@@ -59,6 +90,9 @@ export default function SignUpPage() {
                                 <input
                                     type="email"
                                     placeholder="Email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
                                     className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
                                 />
                             </div>
@@ -67,6 +101,9 @@ export default function SignUpPage() {
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     placeholder="Password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
                                     className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
                                 />
                                 <button
@@ -86,6 +123,8 @@ export default function SignUpPage() {
                             </button>
                         </form>
 
+                        {message && <p className="mt-4 text-sm text-center text-red-600">{message}</p>}
+
                         <p className="mt-4 text-sm text-gray-600 text-center">
                             By continuing, you agree to our{" "}
                             <a href="#" className="text-green-600 font-semibold hover:underline">
@@ -102,6 +141,22 @@ export default function SignUpPage() {
 
             {/* Footer */}
             <Footer />
+
+            {/* Modal */}
+            {showModal && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white rounded-lg shadow-lg p-6 w-80 text-center">
+                        <h3 className="text-xl font-bold mb-4 text-green-600">🎉 Registration Successful!</h3>
+                        <p className="mb-6">Your account has been created successfully.</p>
+                        <button
+                            onClick={handleModalOk}
+                            className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition"
+                        >
+                            OK
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
