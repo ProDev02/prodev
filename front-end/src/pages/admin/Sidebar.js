@@ -2,6 +2,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 export default function Sidebar() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const { username } = location.state || {};
     const { pathname } = useLocation();
 
     return (
@@ -12,7 +14,9 @@ export default function Sidebar() {
                     className={`cursor-pointer px-2 py-1 rounded ${
                         pathname === "/admin-dashboard" ? "bg-gray-200" : ""
                     }`}
-                    onClick={() => navigate("/admin-dashboard")}
+                    onClick={() =>
+                        navigate("/admin-dashboard", { state: { username } })
+                    }
                 >
                     All Products
                 </li>
@@ -20,7 +24,9 @@ export default function Sidebar() {
                     className={`cursor-pointer px-2 py-1 rounded ${
                         pathname === "/out-of-stock" ? "bg-gray-200" : ""
                     }`}
-                    onClick={() => navigate("/out-of-stock")}
+                    onClick={() =>
+                        navigate("/out-of-stock", { state: { username } })
+                    }
                 >
                     Out of stocks
                 </li>
@@ -28,13 +34,17 @@ export default function Sidebar() {
                     className={`cursor-pointer px-2 py-1 rounded ${
                         pathname === "/order-product" ? "bg-gray-200" : ""
                     }`}
-                    onClick={() => navigate("/order-product")}
+                    onClick={() =>
+                        navigate("/order-product", { state: { username }})
+                    }
                 >
                     Order product
                 </li>
             </ul>
             <button className="mt-4 w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
-            onClick={() => navigate("/add-product")}
+                onClick={() =>
+                    navigate("/add-product", { state: { username }})
+                }
             >
                 + Add Products
             </button>

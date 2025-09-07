@@ -1,17 +1,20 @@
 "use client";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import AdminNavbar from "./pages/admin/AdminNavbar";
 import Sidebar from "./pages/admin/Sidebar";
 import Topstats from "./pages/admin/Topstats";
 
 export default function AdminLayout({ children, stats, showDashboardHeader = true }) {
     const navigate = useNavigate();
+    const location = useLocation();
+    const { username } = location.state || {};
+
     // stats = { total, outOfStock, pending }
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
             {/* Navbar */}
-            <AdminNavbar username="Admin username" />
+            <AdminNavbar username={username} />
 
             <main className="max-w-7xl mx-auto p-6">
                 {/* Dashboard Header + View Website */}
@@ -20,7 +23,7 @@ export default function AdminLayout({ children, stats, showDashboardHeader = tru
                         <h1 className="text-xl font-bold text-gray-800">Dashboard Admin</h1>
                         <button
                             className="text-green-600 hover:underline"
-                            onClick={() => navigate("/")}
+                            onClick={() => navigate("/", { state: { username } })}
                         >
                             View website
                         </button>

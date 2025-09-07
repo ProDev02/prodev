@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { MoreVertical, Trash2, Edit2 } from "lucide-react";
 import AdminLayout from "../../AdminLayout";
 
@@ -21,6 +21,8 @@ export default function OutOfStock() {
     const [dropdownOpen, setDropdownOpen] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const navigate = useNavigate();
+    const location = useLocation();
+    const { username } = location.state || {};
 
     const ITEMS_PER_PAGE = 5;
 
@@ -121,7 +123,9 @@ export default function OutOfStock() {
                                         </button>
                                         <button
                                             className="flex items-center gap-2 w-full text-left px-2 py-1 hover:bg-gray-200"
-                                            onClick={() => navigate("/update/mock")}
+                                                onClick={() =>
+                                                    navigate("/update/mock", { state: { username } })
+                                            }
                                         >
                                             <Edit2 size={16} /> Update
                                         </button>

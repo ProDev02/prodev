@@ -1,10 +1,12 @@
 // AdminNavbar.jsx
 "use client";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation  } from "react-router-dom";
 
-export default function AdminNavbar({ username = "Admin username" }) {
+export default function AdminNavbar() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const { username } = location.state || {};
 
     return (
         <header className="bg-white shadow">

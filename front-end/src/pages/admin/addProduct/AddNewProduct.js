@@ -1,14 +1,20 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import AdminNavbar from "../AdminNavbar";
 
 export default function AddNewProduct() {
+    const [title, setTitle] = useState("");
+    const [category, setCategory] = useState("");
     const [inStock, setInStock] = useState(false);
     const [quantity, setQuantity] = useState("");
+    const [price, setPrice] = useState("");
+    const [description, setDescription] = useState("");
     const [images, setImages] = useState([]); // ✅ เก็บไฟล์รูป
-    const fileInputRef = useRef(null); // ✅ อ้างอิง input file
+    const fileInputRef = useRef(null);
+    const location = useLocation();
+    const { username } = location.state || {};
     const navigate = useNavigate();
 
     // handle เลือกรูป
@@ -24,6 +30,42 @@ export default function AddNewProduct() {
     // handle ลบ
     const handleRemoveImage = (index) => {
         setImages((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    // ✅ handle submit
+    const handleSubmit = async () => {
+        try {
+            const formData = new FormData();
+            formData.append("name", title);
+            formData.append("statusStock", inStock ? "In stock" : "Out of stock");
+            if (inStock) {
+                formData.append("quantity", quantity);
+            }
+            formData.append("price", price);
+            formData.append("description", description);
+            formData.append("category", category);
+            images.forEach((img) => {
+                formData.append("images", img.file);
+            });
+
+            const res = await fetch("http://localhost:8080/api/products/add", {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!res.ok) {
+                throw new Error("Failed to create product");
+            }
+
+            const data = await res.json();
+            alert("✅ Product created successfully!");
+            console.log("Created product:", data);
+
+            navigate("/admin-dashboard", { state: { username } });
+        } catch (err) {
+            console.error(err);
+            alert("❌ Error creating product");
+        }
     };
 
     return (
@@ -42,7 +84,7 @@ export default function AddNewProduct() {
                     </p>
                     <button
                         className="bg-gray-500 text-white px-4 py-1 rounded"
-                        onClick={() => navigate("/admin-dashboard")}
+                        onClick={() => navigate("/admin-dashboard", { state: { username } })}
                     >
                         Back to Product
                     </button>
@@ -55,13 +97,39 @@ export default function AddNewProduct() {
                             Product Information
                         </h2>
 
-                        {/* Title */}
-                        <label className="block text-sm text-gray-600 mb-1">Title</label>
-                        <input
-                            type="text"
-                            placeholder="Product Name"
-                            className="w-full border rounded px-3 py-2 mb-4"
-                        />
+                        {/* Title + Categories in one row */}
+                        <div className="grid grid-cols-2 gap-6 mb-4">
+                            {/* Title */}
+                            <div>
+                                <label className="block text-sm text-gray-600 mb-1">Title</label>
+                                <input
+                                    type="text"
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    placeholder="Product Name"
+                                    className="w-full border rounded px-3 py-2"
+                                />
+                            </div>
+
+                            {/* Categories */}
+                            <div>
+                                <label className="block text-sm text-gray-600 mb-1">Categories</label>
+                                <select
+                                    value={category}
+                                    onChange={(e) => setCategory(e.target.value)}
+                                    className="w-full border rounded px-3 py-2"
+                                >
+                                    <option value="">Product Categories</option>
+                                    <option>Snack</option>
+                                    <option>Food & Drink</option>
+                                    <option>SmartPhone</option>
+                                    <option>Furniture</option>
+                                    <option>Shower</option>
+                                    <option>Clothing</option>
+                                    <option>Electronics</option>
+                                </select>
+                            </div>
+                        </div>
 
                         {/* Status Stock Toggle */}
                         <div className="flex items-center gap-3 mb-4">
@@ -159,6 +227,8 @@ export default function AddNewProduct() {
                             Product Description
                         </label>
                         <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
                             className="w-full border rounded px-3 py-2"
                             rows="3"
                         ></textarea>
@@ -175,10 +245,15 @@ export default function AddNewProduct() {
                             </label>
                             <input
                                 type="number"
+                                value={price}
+                                onChange={(e) => setPrice(e.target.value)}
                                 placeholder="$0.00"
                                 className="w-full border rounded px-3 py-2 mb-4"
                             />
-                            <button className="bg-green-600 text-white w-full py-2 rounded hover:bg-green-700">
+                            <button
+                                onClick={handleSubmit}
+                                className="bg-green-600 text-white w-full py-2 rounded hover:bg-green-700"
+                            >
                                 Create Product
                             </button>
                         </div>

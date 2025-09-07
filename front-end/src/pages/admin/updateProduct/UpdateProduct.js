@@ -1,20 +1,23 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import AdminNavbar from "../AdminNavbar";
 
 export default function UpdateProduct() {
     const navigate = useNavigate();
     const fileInputRef = useRef(null);
+    const location = useLocation();
+    const { username } = location.state || {};
 
-    // mock product data ตรง ๆ
+    // mock product data
     const [product, setProduct] = useState({
         title: "Be Nice Shower Cream",
         description: "Perfect Elastic Formula 450ml",
         price: 109,
         inStock: true,
         quantity: 20,
+        category: "Shower", // ✅ mock category
         images: [{ url: "/images/products/showercream.png" }],
     });
 
@@ -59,7 +62,7 @@ export default function UpdateProduct() {
                     <p className="text-sm text-gray-500">Dashboard / Update Product / Mock</p>
                     <button
                         className="bg-gray-500 text-white px-4 py-1 rounded"
-                        onClick={() => navigate("/admin-dashboard")}
+                        onClick={() => navigate("/admin-dashboard", { state: { username } })}
                     >
                         Back to Product
                     </button>
@@ -72,14 +75,38 @@ export default function UpdateProduct() {
                             Product Information
                         </h2>
 
-                        {/* Title */}
-                        <label className="block text-sm text-gray-600 mb-1">Title</label>
-                        <input
-                            type="text"
-                            value={product.title}
-                            onChange={(e) => setProduct({ ...product, title: e.target.value })}
-                            className="w-full border rounded px-3 py-2 mb-4"
-                        />
+                        {/* Title + Categories */}
+                        <div className="grid grid-cols-2 gap-6 mb-4">
+                            {/* Title */}
+                            <div>
+                                <label className="block text-sm text-gray-600 mb-1">Title</label>
+                                <input
+                                    type="text"
+                                    value={product.title}
+                                    onChange={(e) => setProduct({ ...product, title: e.target.value })}
+                                    className="w-full border rounded px-3 py-2"
+                                />
+                            </div>
+
+                            {/* Categories */}
+                            <div>
+                                <label className="block text-sm text-gray-600 mb-1">Categories</label>
+                                <select
+                                    value={product.category || ""}
+                                    onChange={(e) => setProduct({ ...product, category: e.target.value })}
+                                    className="w-full border rounded px-3 py-2"
+                                >
+                                    <option value="">Product Categories</option>
+                                    <option value="Snack">Snack</option>
+                                    <option value="Food & Drink">Food & Drink</option>
+                                    <option value="SmartPhone">SmartPhone</option>
+                                    <option value="Furniture">Furniture</option>
+                                    <option value="Shower">Shower</option>
+                                    <option value="Clothing">Clothing</option>
+                                    <option value="Electronics">Electronics</option>
+                                </select>
+                            </div>
+                        </div>
 
                         {/* Status Stock Toggle */}
                         <div className="flex items-center gap-3 mb-4">
@@ -101,8 +128,8 @@ export default function UpdateProduct() {
                                     product.inStock ? "text-green-600" : "text-red-600"
                                 }`}
                             >
-                {product.inStock ? "In stock" : "Out of stock"}
-              </span>
+                                {product.inStock ? "In stock" : "Out of stock"}
+                            </span>
                         </div>
 
                         {/* Quantity */}
@@ -112,7 +139,9 @@ export default function UpdateProduct() {
                                 <input
                                     type="number"
                                     value={product.quantity}
-                                    onChange={(e) => setProduct({ ...product, quantity: e.target.value })}
+                                    onChange={(e) =>
+                                        setProduct({ ...product, quantity: e.target.value })
+                                    }
                                     className="w-full border rounded px-3 py-2"
                                 />
                             </div>
