@@ -1,4 +1,4 @@
-package aekkasit.prodev.backend.user.service.dto;
+package aekkasit.prodev.backend.user.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

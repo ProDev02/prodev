@@ -29,7 +29,6 @@ public class Product {
     @Column(name = "image_path")
     private List<String> images;
 
-    // ✅ เพิ่ม category
     private String category;
 
     private LocalDateTime createdAt = LocalDateTime.now();

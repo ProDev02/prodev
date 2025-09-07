@@ -1,11 +1,11 @@
 package aekkasit.prodev.backend.user.service;
 
-import aekkasit.prodev.backend.user.service.dto.AuthResponse;
-import aekkasit.prodev.backend.user.service.dto.LoginRequest;
-import aekkasit.prodev.backend.user.service.dto.RegisterRequest;
-import aekkasit.prodev.backend.user.service.model.User;
-import aekkasit.prodev.backend.user.service.repository.UserRepository;
-import aekkasit.prodev.backend.user.service.security.JwtUtils;
+import aekkasit.prodev.backend.user.dto.AuthResponse;
+import aekkasit.prodev.backend.user.dto.LoginRequest;
+import aekkasit.prodev.backend.user.dto.RegisterRequest;
+import aekkasit.prodev.backend.user.model.User;
+import aekkasit.prodev.backend.user.repository.UserRepository;
+import aekkasit.prodev.backend.user.security.JwtUtils;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;

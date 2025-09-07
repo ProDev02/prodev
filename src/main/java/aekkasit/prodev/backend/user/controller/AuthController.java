@@ -1,8 +1,8 @@
-package aekkasit.prodev.backend.user.service.controller;
+package aekkasit.prodev.backend.user.controller;
 
-import aekkasit.prodev.backend.user.service.dto.AuthResponse;
-import aekkasit.prodev.backend.user.service.dto.LoginRequest;
-import aekkasit.prodev.backend.user.service.dto.RegisterRequest;
+import aekkasit.prodev.backend.user.dto.AuthResponse;
+import aekkasit.prodev.backend.user.dto.LoginRequest;
+import aekkasit.prodev.backend.user.dto.RegisterRequest;
 import aekkasit.prodev.backend.user.service.AuthService;
 
 import lombok.RequiredArgsConstructor;

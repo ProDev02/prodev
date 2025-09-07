@@ -1,4 +1,4 @@
-package aekkasit.prodev.backend.user.service.security;
+package aekkasit.prodev.backend.user.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
