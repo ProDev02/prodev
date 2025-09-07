@@ -1,6 +1,6 @@
-package aekkasit.prodev.backend.repository;
+package aekkasit.prodev.backend.user.service.repository;
 
-import aekkasit.prodev.backend.model.User;
+import aekkasit.prodev.backend.user.service.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 

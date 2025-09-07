@@ -1,4 +1,4 @@
-package aekkasit.prodev.backend.model;
+package aekkasit.prodev.backend.user.service.model;
 
 import jakarta.persistence.*;
 import lombok.*;

@@ -1,4 +1,4 @@
-package aekkasit.prodev.backend.dto;
+package aekkasit.prodev.backend.user.service.dto;
 
 import lombok.Data;
 

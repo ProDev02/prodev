@@ -1,4 +1,4 @@
-package aekkasit.prodev.backend.security;
+package aekkasit.prodev.backend.user.service.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,6 +27,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS แบบใหม่
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/products/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 // ถ้าไม่ใช้ httpBasic ให้ comment หรือเปลี่ยนเป็น JWT filter

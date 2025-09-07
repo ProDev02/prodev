@@ -1,9 +1,9 @@
-package aekkasit.prodev.backend.controller;
+package aekkasit.prodev.backend.user.service.controller;
 
-import aekkasit.prodev.backend.dto.AuthResponse;
-import aekkasit.prodev.backend.dto.LoginRequest;
-import aekkasit.prodev.backend.dto.RegisterRequest;
-import aekkasit.prodev.backend.service.AuthService;
+import aekkasit.prodev.backend.user.service.dto.AuthResponse;
+import aekkasit.prodev.backend.user.service.dto.LoginRequest;
+import aekkasit.prodev.backend.user.service.dto.RegisterRequest;
+import aekkasit.prodev.backend.user.service.AuthService;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
