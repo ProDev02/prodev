@@ -1,43 +1,67 @@
 "use client";
 
-import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { MoreVertical, Trash2, Edit2 } from "lucide-react";
 import AdminLayout from "../../AdminLayout";
 
-const productsMock = [
-    { id: 1, name: "Be Nice Shower Cream, Perfect Elastic Formula, 450 ml", category: "Shower", price: 109, status: "In stock", createdAt: "2024/08/27", image: "/images/products/showercream.png" },
-    { id: 2, name: "Protex Lavender Ice Freeze Soap Bar 60 g", category: "Shower", price: 19, status: "Out of stock", createdAt: "2024/08/27", image: "/images/products/protex.png" },
-    { id: 3, name: "Sample Product 3", category: "Bath", price: 50, status: "In stock", createdAt: "2024/08/28", image: "/images/products/showercream.png" },
-    { id: 4, name: "Sample Product 4", category: "Shower", price: 75, status: "Out of stock", createdAt: "2024/08/29", image: "/images/products/protex.png" },
-    { id: 5, name: "Sample Product 5", category: "Shower", price: 120, status: "In stock", createdAt: "2024/08/30", image: "/images/products/showercream.png" },
-    { id: 6, name: "Sample Product 6", category: "Bath", price: 90, status: "Out of stock", createdAt: "2024/09/01", image: "/images/products/protex.png" },
-];
-
 export default function AdminDashboard() {
-    const [products, setProducts] = useState(productsMock);
+    const [products, setProducts] = useState([]);
     const [search, setSearch] = useState("");
     const [sort, setSort] = useState("lowToHigh");
     const [dropdownOpen, setDropdownOpen] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const navigate = useNavigate();
-    const location = useLocation();
-    const { username } = location.state || {};
 
     const ITEMS_PER_PAGE = 5;
+    const BACKEND_URL = "http://localhost:8080";
 
+    // --- Get token / username from localStorage ---
+    const token = localStorage.getItem("admin_token");
+    const username = localStorage.getItem("admin_username");
+
+    // --- Redirect to login if no token ---
+    useEffect(() => {
+        if (!token) navigate("/signup");
+    }, [token, navigate]);
+
+    // --- Fetch products ---
+    useEffect(() => {
+        if (!token) return;
+        (async () => {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/products/all`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (!res.ok) throw new Error("Failed to fetch products");
+                const data = await res.json();
+
+                // --- map images to full URL ---
+                const dataWithFullImages = data.map((p) => ({
+                    ...p,
+                    images: p.images?.map((img) =>
+                        img.startsWith("http") ? img : `${BACKEND_URL}${img}`
+                    ),
+                }));
+
+                setProducts(dataWithFullImages);
+            } catch (err) {
+                console.error(err);
+                navigate("/signup");
+            }
+        })();
+    }, [token, navigate]);
+
+    // --- Stats ---
     const totalProducts = products.length;
-    const outOfStockCount = products.filter((p) => p.status === "Out of stock").length;
-    const pendingCount = products.filter((p) => p.status === "Pending").length;
+    const outOfStockCount = products.filter((p) => p.statusStock === "Out of stock").length;
+    const pendingCount = products.filter((p) => p.statusStock === "Pending").length;
 
+    // --- Filter + Sort + Pagination ---
     const filteredProducts = products
-        .filter((p) => p.status === "In stock")
+        .filter((p) => p.statusStock === "In stock")
         .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
-        .sort((a, b) => {
-            if (sort === "lowToHigh") return a.price - b.price;
-            if (sort === "highToLow") return b.price - a.price;
-            return 0;
-        });
+        .sort((a, b) => (sort === "lowToHigh" ? a.price - b.price : b.price - a.price));
 
     const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
     const paginatedProducts = filteredProducts.slice(
@@ -48,20 +72,26 @@ export default function AdminDashboard() {
     const startItem = (currentPage - 1) * ITEMS_PER_PAGE + 1;
     const endItem = Math.min(currentPage * ITEMS_PER_PAGE, filteredProducts.length);
 
-    const handleDelete = (id) => {
-        setProducts((prev) => prev.filter((p) => p.id !== id));
-        if (paginatedProducts.length === 1 && currentPage > 1) {
-            setCurrentPage(currentPage - 1);
+    // --- Delete product ---
+    const handleDelete = async (id) => {
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/products/delete/${id}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!res.ok) throw new Error("Delete failed");
+
+            setProducts((prev) => prev.filter((p) => p.id !== id));
+            if (paginatedProducts.length === 1 && currentPage > 1) setCurrentPage(currentPage - 1);
+        } catch (err) {
+            console.error(err);
         }
     };
 
     return (
-        <AdminLayout
-            stats={{ total: totalProducts, outOfStock: outOfStockCount, pending: pendingCount }}
-        >
-            {/* Product Table */}
+        <AdminLayout stats={{ total: totalProducts, outOfStock: outOfStockCount, pending: pendingCount }}>
             <div className="bg-white p-4 rounded shadow">
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex justify-between items-center mb-4 gap-2 flex-wrap">
                     <h3 className="font-semibold text-lg">All Products</h3>
                     <input
                         type="text"
@@ -86,7 +116,8 @@ export default function AdminDashboard() {
                         <th className="p-2">Product ID</th>
                         <th className="p-2">Image</th>
                         <th className="p-2">Product Name</th>
-                        <th className="p-2">Categories</th>
+                        <th className="p-2">Category</th>
+                        <th className="p-2">Quantity</th>
                         <th className="p-2">Status Stock</th>
                         <th className="p-2">Price</th>
                         <th className="p-2">Actions</th>
@@ -97,17 +128,20 @@ export default function AdminDashboard() {
                         <tr key={p.id} className="border-b hover:bg-gray-50">
                             <td className="p-2">P{String(p.id).padStart(5, "0")}</td>
                             <td className="p-2">
-                                <img src={p.image} alt={p.name} className="w-12 h-12 object-contain" />
+                                {p.images?.[0] && (
+                                    <img src={p.images[0]} alt={p.name} className="w-12 h-12 object-contain" />
+                                )}
                             </td>
                             <td className="p-2">{p.name}</td>
                             <td className="p-2">{p.category}</td>
+                            <td className="p-2">{p.quantity ?? "-"}</td>
                             <td className="p-2">
                                     <span
                                         className={`px-2 py-1 rounded text-white ${
-                                            p.status === "In stock" ? "bg-green-600" : "bg-red-600"
+                                            p.statusStock === "In stock" ? "bg-green-600" : "bg-red-600"
                                         }`}
                                     >
-                                        {p.status}
+                                        {p.statusStock}
                                     </span>
                             </td>
                             <td className="p-2">${p.price}</td>
@@ -128,7 +162,7 @@ export default function AdminDashboard() {
                                         </button>
                                         <button
                                             className="flex items-center gap-2 w-full text-left px-2 py-1 hover:bg-gray-200"
-                                            onClick={() => navigate("/update/mock", { state: { username } })}
+                                            onClick={() => navigate("/update/" + p.id, { state: { productId: p.id, username } })}
                                         >
                                             <Edit2 size={16} /> Update
                                         </button>
@@ -141,7 +175,7 @@ export default function AdminDashboard() {
                 </table>
 
                 <div className="mt-2 text-sm text-gray-600">
-                    Showing {endItem} from {filteredProducts.length}
+                    Showing {startItem} - {endItem} of {filteredProducts.length}
                 </div>
 
                 {filteredProducts.length > ITEMS_PER_PAGE && (

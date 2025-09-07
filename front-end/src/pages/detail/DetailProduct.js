@@ -1,33 +1,61 @@
 "use client";
 
-import { useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { Heart } from "lucide-react";
 
 export default function DetailProductPage() {
+    const { id } = useParams(); // ดึง id จาก URL
     const navigate = useNavigate();
-    const location = useLocation();
-    const productFromState = location.state?.product;
-    const products = location.state?.products || [];
 
-    const [product] = useState(
-        productFromState || {
-            id: 999,
-            name: "Mock Product",
-            desc: "This is a demo description.",
-            price: 199,
-            image: "/images/products/showercream.png",
-            category: "Demo",
-        }
-    );
-
+    const [product, setProduct] = useState(null);
+    const [relatedProducts, setRelatedProducts] = useState([]);
     const [isFavorite, setIsFavorite] = useState(false);
     const [quantity, setQuantity] = useState(1);
+
+    const BACKEND_URL = "http://localhost:8080"; // เปลี่ยนเป็น backend จริงของคุณ
+
+    useEffect(() => {
+        // Fetch product by ID
+        fetch(`${BACKEND_URL}/api/products/${id}`)
+            .then((res) => {
+                if (!res.ok) throw new Error("Product not found");
+                return res.json();
+            })
+            .then((data) => {
+                // map image full path
+                const fullImages = data.images?.map((img) =>
+                    img.startsWith("http") ? img : `${BACKEND_URL}${img}`
+                );
+                setProduct({ ...data, images: fullImages });
+            })
+            .catch((err) => {
+                console.error(err);
+                navigate("/"); // ถ้าไม่เจอสินค้ากลับหน้าแรก
+            });
+
+        // Fetch all products for related items
+        fetch(`${BACKEND_URL}/api/products/all`)
+            .then((res) => res.json())
+            .then((data) => {
+                setRelatedProducts(
+                    data.map((p) => ({
+                        ...p,
+                        images: p.images?.map((img) =>
+                            img.startsWith("http") ? img : `${BACKEND_URL}${img}`
+                        ),
+                    }))
+                );
+            })
+            .catch((err) => console.error(err));
+    }, [id, navigate]);
 
     const addToCart = (item) => {
         console.log("Add to cart:", item, quantity);
         setQuantity(1);
     };
+
+    if (!product) return <div className="text-center py-20">Loading product...</div>;
 
     return (
         <main className="min-h-screen max-w-7xl mx-auto px-6 py-8">
@@ -48,14 +76,19 @@ export default function DetailProductPage() {
                 {/* Left images */}
                 <div className="flex flex-col gap-3">
                     <img
-                        src={product.image}
+                        src={product.images?.[0] || "/images/no-image.png"}
                         alt={product.name}
                         className="w-96 h-96 object-contain border rounded"
                     />
                     <div className="flex gap-2">
-                        <img src={product.image} alt="thumb1" className="w-24 h-24 object-contain border rounded" />
-                        <img src={product.image} alt="thumb2" className="w-24 h-24 object-contain border rounded" />
-                        <img src={product.image} alt="thumb3" className="w-24 h-24 object-contain border rounded" />
+                        {product.images?.slice(0, 3).map((img, i) => (
+                            <img
+                                key={i}
+                                src={img}
+                                alt={`thumb-${i}`}
+                                className="w-24 h-24 object-contain border rounded"
+                            />
+                        ))}
                     </div>
                 </div>
 
@@ -66,7 +99,7 @@ export default function DetailProductPage() {
 
                     <hr className="my-4" />
 
-                    <p className="text-2xl text-gray-800 mb-6">${product.price.toFixed(2)}</p>
+                    <p className="text-2xl text-gray-800 mb-6">฿{product.price}</p>
 
                     {/* Quantity row */}
                     <div className="mb-4 flex items-center gap-4">
@@ -105,7 +138,7 @@ export default function DetailProductPage() {
                     {/* Product info */}
                     <div className="space-y-1 text-sm">
                         <p><span className="font-medium">Product code:</span> P{product.id.toString().padStart(5, "0")}</p>
-                        <p className="text-green-600"><span className="font-medium">In stock:</span> 2500</p>
+                        <p className="text-green-600"><span className="font-medium">In stock:</span> {product.quantity ?? 0}</p>
                         <p><span className="font-medium">Type:</span> {product.category}</p>
                         <p><span className="font-medium">Shipping:</span> 01/01/2025</p>
                     </div>
@@ -115,12 +148,7 @@ export default function DetailProductPage() {
                     {/* Product Details */}
                     <div>
                         <h3 className="font-semibold text-lg mb-2">Product Details</h3>
-                        <p className="text-sm text-gray-700 leading-relaxed">Benefits: {product.desc}</p>
-                        <p className="text-sm text-gray-700">Unit: 1 unit</p>
-                        <p className="text-sm text-gray-700">Seller: Demo / Official retailers</p>
-                        <p className="text-xs text-gray-500 mt-2">
-                            Disclaimer: Images are for reference only. Please check packaging for exact details.
-                        </p>
+                        <p className="text-sm text-gray-700 leading-relaxed">{product.description}</p>
                     </div>
                 </div>
             </div>
@@ -129,20 +157,20 @@ export default function DetailProductPage() {
             <div className="mt-12">
                 <h3 className="text-xl font-semibold mb-6">Related Items</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    {products
+                    {relatedProducts
                         .filter((p) => p.category === product.category && p.id !== product.id)
                         .map((p) => (
                             <div
                                 key={p.id}
-                                className="border rounded-lg overflow-hidden flex flex-col transition hover:shadow-lg hover:border-green-600"
-                                onClick={() => navigate(`/product/mock`, { state: { product: p, products } })}
+                                className="border rounded-lg overflow-hidden flex flex-col transition hover:shadow-lg hover:border-green-600 cursor-pointer"
+                                onClick={() => navigate(`/product/detail/${p.id}`)}
                             >
-                                <img src={p.image} alt={p.name} className="w-full h-40 object-contain p-4" />
+                                <img src={p.images?.[0] || "/images/no-image.png"} alt={p.name} className="w-full h-40 object-contain p-4" />
                                 <div className="p-4 flex flex-col flex-grow">
                                     <h3 className="text-sm font-medium mb-2 line-clamp-2">{p.name}</h3>
                                     <p className="text-xs text-gray-500 mt-1">{p.category}</p>
                                     <div className="mt-auto flex items-center justify-between">
-                                        <p className="text-gray-800 font-semibold">${p.price.toFixed(2)}</p>
+                                        <p className="text-gray-800 font-semibold">฿{p.price}</p>
                                         <button className="bg-green-600 text-white px-3 py-1 rounded-md text-sm">+ Add</button>
                                     </div>
                                 </div>

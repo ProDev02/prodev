@@ -28,6 +28,11 @@ export default function OrderProduct() {
 
     const ITEMS_PER_PAGE = 5;
 
+    // --- Stats สำหรับ Topstats (จำนวนสินค้า) ---
+    const totalProducts = productsMock.length; // หรือ fetch จาก backend
+    const outOfStockCount = productsMock.filter(p => p.status === "Out of stock").length;
+    const pendingCount = productsMock.filter(p => p.status === "Pending").length;
+
     const filteredOrders = orders
         .filter((o) => o.name.toLowerCase().includes(search.toLowerCase()))
         .sort((a, b) => (sort === "lowToHigh" ? a.price - b.price : b.price - a.price));
@@ -53,14 +58,15 @@ export default function OrderProduct() {
             title="Dashboard Admin - Order Product"
             viewWebsiteLink="/"
             stats={{
-                total: orders.length,
-                outOfStock: orders.filter(o => o.statusOrder === "Pending").length,
-                pending: orders.filter(o => o.statusOrder === "Pending").length,
+                total: totalProducts,
+                outOfStock: outOfStockCount,
+                pending: pendingCount,
             }}
         >
             {/* Order table */}
             <div className="bg-white p-4 rounded shadow">
                 <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-semibold text-lg">Order Products</h3>
                     <input
                         type="text"
                         placeholder="Search"

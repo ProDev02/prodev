@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Eye, EyeOff, Shield } from "lucide-react";
 import Footer from "../footer";
 import { useNavigate } from "react-router-dom";
@@ -13,6 +13,15 @@ export default function SignInAdmin() {
     const [modalText, setModalText] = useState("");
     const [modalType, setModalType] = useState("success"); // success / error
     const navigate = useNavigate();
+
+    useEffect(() => {
+        // ตรวจสอบว่ามี admin login แล้วหรือยัง
+        const token = localStorage.getItem("admin_token");
+        const role = localStorage.getItem("admin_role");
+        if (token && role === "ADMIN") {
+            navigate("/admin-dashboard");
+        }
+    }, [navigate]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -28,13 +37,19 @@ export default function SignInAdmin() {
                 const data = await res.json();
 
                 if (data.role === "ADMIN") {
+                    // เก็บข้อมูล admin ใน localStorage
+                    localStorage.setItem("admin_token", data.token);
+                    localStorage.setItem("admin_email", data.email);
+                    localStorage.setItem("admin_username", data.username);
+                    localStorage.setItem("admin_role", data.role);
+
                     setModalType("success");
                     setModalText("🎉 Admin login successful! Redirecting...");
                     setShowModal(true);
 
                     setTimeout(() => {
                         setShowModal(false);
-                        navigate("/admin-dashboard", { state: { token: data.token, email: data.email, username: data.username, role: data.role } });
+                        navigate("/admin-dashboard");
                     }, 1500);
                 } else {
                     setModalType("error");

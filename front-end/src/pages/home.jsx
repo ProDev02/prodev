@@ -18,38 +18,25 @@ import "swiper/css/pagination";
 
 export default function HomePage() {
     const [user, setUser] = useState(null);
+    const [popularProducts, setPopularProducts] = useState([]);
+    const [bestSellers, setBestSellers] = useState([]);
     const location = useLocation();
     const navigate = useNavigate();
 
-    // ข้อมูล category และ products
+    const BACKEND_URL = "http://localhost:8080"; // backend URL จริง
+
+    // ข้อมูล category
     const categories = [
         { name: "Snack", icon: <Cookie size={32} className="mx-auto text-gray-700" /> },
-        { name: "Food & Drinks", icon: <Utensils size={32} className="mx-auto text-gray-700" /> },
-        { name: "Smartphones", icon: <Smartphone size={32} className="mx-auto text-gray-700" /> },
+        { name: "Food & Drink", icon: <Utensils size={32} className="mx-auto text-gray-700" /> },
+        { name: "Smartphone", icon: <Smartphone size={32} className="mx-auto text-gray-700" /> },
         { name: "Furniture", icon: <Sofa size={32} className="mx-auto text-gray-700" /> },
         { name: "Shower", icon: <ShowerHead size={32} className="mx-auto text-gray-700" /> },
         { name: "Clothing", icon: <Shirt size={32} className="mx-auto text-gray-700" /> },
         { name: "Electronics", icon: <Tv size={32} className="mx-auto text-gray-700" /> },
     ];
 
-    const popularProducts = [
-        { id: 1, name: "Samsung Galaxy S22 Ultra", price: "฿30,000", image: "/images/products/s22.png", category: "Electronics" },
-        { id: 2, name: "Shower Curtain Waterproof", price: "฿500", image: "/images/products/shower-curtain.png", category: "Shower" },
-        { id: 3, name: "Smart Watch T500", price: "฿1,200", image: "/images/products/watch.png", category: "Electronics" },
-        { id: 4, name: "Laptop ASUS VivoBook", price: "฿25,000", image: "/images/products/laptop.png", category: "Electronics" },
-        { id: 5, name: "Headphones JBL Tune", price: "฿3,000", image: "/images/products/headphones.png", category: "Electronics" },
-        { id: 6, name: "Headphones JBL Tune", price: "฿3,000", image: "/images/products/headphones.png", category: "Electronics" },
-    ];
-
-    const bestSellers = [
-        { id: 1, name: "หมูสามชั้นสไลด์", price: "฿199", image: "/images/products/pork1.png", category: "Meat" },
-        { id: 2, name: "นมถั่วเหลือง Lactasoy", price: "฿20", image: "/images/products/lactasoy.png", category: "Beverages" },
-        { id: 3, name: "สบู่ Protex", price: "฿45", image: "/images/products/protex.png", category: "Shower" },
-        { id: 4, name: "หมูสันนอกสไลด์", price: "฿199", image: "/images/products/pork2.png", category: "Meat" },
-        { id: 5, name: "หมูสามชั้นหมัก", price: "฿220", image: "/images/products/pork3.png", category: "Meat" },
-        { id: 6, name: "หมูสันคอสไลด์", price: "฿199", image: "/images/products/pork4.png", category: "Meat" },
-    ];
-
+    // Fetch products from API
     useEffect(() => {
         if (location.state?.username) {
             setUser({
@@ -59,6 +46,25 @@ export default function HomePage() {
                 token: location.state.token
             });
         }
+
+        fetch("http://localhost:8080/api/products/all")
+            .then(res => res.json())
+            .then(data => {
+                // Map ข้อมูลให้เหลือเฉพาะ summary + full URL รูป
+                const mapped = data.map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    price: p.price ? `฿${p.price}` : "฿0",
+                    image: p.images?.[0] ? `${BACKEND_URL}${p.images[0]}` : "/images/no-image.png",
+                    category: p.category
+                }));
+
+                // สมมติแยก popular / best selling จาก logic: in stock, newest 6
+                const inStockProducts = mapped.filter(p => p.price && p.image);
+                setPopularProducts(inStockProducts.slice(0, 6));
+                setBestSellers(inStockProducts.slice(-10));
+            })
+            .catch(err => console.error(err));
     }, [location.state]);
 
     return (
@@ -93,7 +99,7 @@ export default function HomePage() {
                         <SwiperSlide key={cat.name}>
                             <div
                                 className="border rounded-lg p-4 cursor-pointer flex flex-col items-center text-center hover:shadow-lg hover:border-green-600 transition"
-                                onClick={() => navigate("/search", { state: { category: cat.name } })}
+                                onClick={() => navigate(`/search?category=${encodeURIComponent(cat.name)}`)}
                             >
                                 {cat.icon}
                                 <p className="mt-2 text-gray-700">{cat.name}</p>
@@ -118,7 +124,7 @@ export default function HomePage() {
                         <SwiperSlide key={p.id}>
                             <div
                                 className="border rounded-lg overflow-hidden flex flex-col transition hover:shadow-lg hover:border-green-600"
-                                onClick={() => navigate("/product/mock")}
+                                onClick={() => navigate(`/product/detail/${p.id}`)}
                             >
                                 <img src={p.image} alt={p.name} className="w-full h-40 object-contain p-4" />
                                 <div className="p-4 flex flex-col flex-grow">
@@ -165,7 +171,7 @@ export default function HomePage() {
                         <div
                             key={p.id}
                             className="border rounded-lg overflow-hidden flex flex-col transition hover:shadow-lg hover:border-green-600"
-                            onClick={() => navigate("/product/mock")}
+                            onClick={() => navigate(`/product/detail/${p.id}`)}
                         >
                             <img src={p.image} alt={p.name} className="w-full h-40 object-contain p-4" />
                             <div className="p-4 flex flex-col flex-grow">

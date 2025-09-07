@@ -1,21 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { MoreVertical, Trash2, Edit2 } from "lucide-react";
 import AdminLayout from "../../AdminLayout";
 
-const productsMock = [
-    { id: 1, name: "Be Nice Shower Cream, Perfect Elastic Formula, 450 ml", category: "Shower", price: 109, status: "In stock", image: "/images/products/showercream.png" },
-    { id: 2, name: "Protex Lavender Ice Freeze Soap Bar 60 g", category: "Shower", price: 19, status: "Out of stock", image: "/images/products/protex.png" },
-    { id: 3, name: "Sample Product 3", category: "Bath", price: 50, status: "In stock", image: "/images/products/showercream.png" },
-    { id: 4, name: "Sample Product 4", category: "Shower", price: 75, status: "Out of stock", image: "/images/products/protex.png" },
-    { id: 5, name: "Sample Product 5", category: "Shower", price: 120, status: "In stock", image: "/images/products/showercream.png" },
-    { id: 6, name: "Sample Product 6", category: "Bath", price: 90, status: "Out of stock", image: "/images/products/protex.png" },
-];
-
 export default function OutOfStock() {
-    const [products, setProducts] = useState(productsMock);
+    const [products, setProducts] = useState([]);
     const [search, setSearch] = useState("");
     const [sort, setSort] = useState("lowToHigh");
     const [dropdownOpen, setDropdownOpen] = useState(null);
@@ -25,18 +16,32 @@ export default function OutOfStock() {
     const { username } = location.state || {};
 
     const ITEMS_PER_PAGE = 5;
+    const BACKEND_URL = "http://localhost:8080";
 
+    // --- Fetch all products from backend
+    useEffect(() => {
+        fetch(`${BACKEND_URL}/api/products/all`)
+            .then((res) => {
+                if (!res.ok) throw new Error("Failed to fetch products");
+                return res.json();
+            })
+            .then((data) => setProducts(data))
+            .catch((err) => console.error(err));
+    }, []);
+
+    // --- Filter stats
     const totalProducts = products.length;
-    const outOfStockCount = products.filter((p) => p.status === "Out of stock").length;
-    const pendingCount = products.filter((p) => p.status === "Pending").length;
+    const outOfStockCount = products.filter((p) => p.statusStock === "Out of stock").length;
+    const pendingCount = products.filter((p) => p.statusStock === "Pending").length;
 
+    // --- Filter + Search + Sort + Pagination
     const filteredProducts = products
-        .filter((p) => p.status === "Out of stock" && p.name.toLowerCase().includes(search.toLowerCase()))
-        .sort((a, b) => {
-            if (sort === "lowToHigh") return a.price - b.price;
-            if (sort === "highToLow") return b.price - a.price;
-            return 0;
-        });
+        .filter(
+            (p) =>
+                p.statusStock === "Out of stock" &&
+                p.name.toLowerCase().includes(search.toLowerCase())
+        )
+        .sort((a, b) => (sort === "lowToHigh" ? a.price - b.price : b.price - a.price));
 
     const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
     const paginatedProducts = filteredProducts.slice(
@@ -44,13 +49,25 @@ export default function OutOfStock() {
         currentPage * ITEMS_PER_PAGE
     );
 
+    const startItem = (currentPage - 1) * ITEMS_PER_PAGE + 1;
     const endItem = Math.min(currentPage * ITEMS_PER_PAGE, filteredProducts.length);
 
+    // --- Delete product
     const handleDelete = (id) => {
-        setProducts((prev) => prev.filter((p) => p.id !== id));
-        if (paginatedProducts.length === 1 && currentPage > 1) {
-            setCurrentPage(currentPage - 1);
-        }
+        fetch(`${BACKEND_URL}/api/products/delete/${id}`, {
+            method: "DELETE",
+        })
+            .then((res) => {
+                if (!res.ok) throw new Error("Failed to delete product");
+                setProducts((prev) => prev.filter((p) => p.id !== id));
+                if (paginatedProducts.length === 1 && currentPage > 1) setCurrentPage(currentPage - 1);
+            })
+            .catch((err) => console.error(err));
+    };
+
+    // --- Navigate to update page
+    const handleUpdate = (p) => {
+        navigate(`/update/${p.id}`, { state: { productId: p.id, username } });
     };
 
     return (
@@ -60,7 +77,7 @@ export default function OutOfStock() {
             viewWebsiteLink="/"
         >
             <div className="bg-white p-4 rounded shadow">
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex justify-between items-center mb-4 gap-2 flex-wrap">
                     <h3 className="font-semibold text-lg">Out of Stock Products</h3>
                     <input
                         type="text"
@@ -85,7 +102,7 @@ export default function OutOfStock() {
                         <th className="p-2">Product ID</th>
                         <th className="p-2">Image</th>
                         <th className="p-2">Product Name</th>
-                        <th className="p-2">Categories</th>
+                        <th className="p-2">Category</th>
                         <th className="p-2">Status Stock</th>
                         <th className="p-2">Price</th>
                         <th className="p-2">Actions</th>
@@ -96,20 +113,30 @@ export default function OutOfStock() {
                         <tr key={p.id} className="border-b hover:bg-gray-50">
                             <td className="p-2">P{String(p.id).padStart(5, "0")}</td>
                             <td className="p-2">
-                                <img src={p.image} alt={p.name} className="w-12 h-12 object-contain" />
+                                {p.images?.[0] ? (
+                                    <img
+                                        src={p.images[0].startsWith("http") ? p.images[0] : `${BACKEND_URL}${p.images[0]}`}
+                                        alt={p.name}
+                                        className="w-12 h-12 object-contain"
+                                    />
+                                ) : (
+                                    <span className="text-gray-400">No Image</span>
+                                )}
                             </td>
                             <td className="p-2">{p.name}</td>
                             <td className="p-2">{p.category}</td>
                             <td className="p-2">
-                                    <span className="px-2 py-1 rounded text-white bg-red-600">
-                                        {p.status}
-                                    </span>
+                                <span className="px-2 py-1 rounded text-white bg-red-600">
+                                    {p.statusStock}
+                                </span>
                             </td>
                             <td className="p-2">${p.price}</td>
                             <td className="p-2 relative">
                                 <button
                                     className="p-1 rounded hover:bg-gray-100"
-                                    onClick={() => setDropdownOpen(dropdownOpen === p.id ? null : p.id)}
+                                    onClick={() =>
+                                        setDropdownOpen(dropdownOpen === p.id ? null : p.id)
+                                    }
                                 >
                                     <MoreVertical size={20} />
                                 </button>
@@ -123,9 +150,7 @@ export default function OutOfStock() {
                                         </button>
                                         <button
                                             className="flex items-center gap-2 w-full text-left px-2 py-1 hover:bg-gray-200"
-                                                onClick={() =>
-                                                    navigate("/update/mock", { state: { username } })
-                                            }
+                                            onClick={() => handleUpdate(p)}
                                         >
                                             <Edit2 size={16} /> Update
                                         </button>
@@ -138,7 +163,7 @@ export default function OutOfStock() {
                 </table>
 
                 <div className="mt-2 text-sm text-gray-600">
-                    Showing {endItem} from {filteredProducts.length}
+                    Showing {startItem} - {endItem} of {filteredProducts.length}
                 </div>
 
                 {filteredProducts.length > ITEMS_PER_PAGE && (
@@ -153,9 +178,7 @@ export default function OutOfStock() {
                         {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                             <button
                                 key={page}
-                                className={`px-2 py-1 border rounded ${
-                                    page === currentPage ? "bg-red-600 text-white" : ""
-                                }`}
+                                className={`px-2 py-1 border rounded ${page === currentPage ? "bg-red-600 text-white" : ""}`}
                                 onClick={() => setCurrentPage(page)}
                             >
                                 {page}

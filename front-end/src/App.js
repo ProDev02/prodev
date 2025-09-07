@@ -33,7 +33,7 @@ function App() {
 
                     <Route path="/favorite" element={<FavoriteListPage />} />
                     <Route path="/search" element={<SearchPage />} />
-                    <Route path="/product/mock" element={<DetailProductPage />} />
+                    <Route path="/product/detail/:id" element={<DetailProductPage />} />
                 </Route>
 
                 {/* Admin Pages */}
@@ -41,7 +41,7 @@ function App() {
                 <Route path="/out-of-stock" element={<OutOfStock />} />
                 <Route path="/order-product" element={<OrderProduct />} />
                 <Route path="/add-product" element={<AddNewProduct />} />
-                <Route path="/update/mock" element={<UpdateProduct />} />
+                <Route path="/update/:id" element={<UpdateProduct />} />
             </Routes>
         </BrowserRouter>
     );

@@ -1,18 +1,31 @@
+// Navbar.jsx
 "use client";
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ShoppingCart, Heart, User, Menu, ChevronDown } from "lucide-react";
+import { ShoppingCart, Heart, User, Menu, ChevronDown, Search } from "lucide-react";
 
 export default function Navbar({ cartItems = [], onCartOpen, user, setUser }) {
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
     const navigate = useNavigate();
     const totalCartQty = cartItems.length;
 
     const handleLogout = () => {
-        setUser(null); // ล้าง user state
+        setUser(null);
         setDropdownOpen(false);
-        navigate("/"); // กลับหน้าแรก
+        navigate("/");
+    };
+
+    const handleSearch = () => {
+        if (searchTerm.trim() !== "") {
+            navigate("/search", { state: { search: searchTerm.trim() } });
+            setSearchTerm("");
+        }
+    };
+
+    const handleKeyPress = (e) => {
+        if (e.key === "Enter") handleSearch();
     };
 
     return (
@@ -34,21 +47,24 @@ export default function Navbar({ cartItems = [], onCartOpen, user, setUser }) {
                         type="text"
                         placeholder="Search for products"
                         className="w-full border border-gray-300 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onKeyDown={handleKeyPress}
                     />
-                    <button className="bg-green-600 text-white px-4 rounded-r-lg">
-                        <Menu size={20} />
+                    <button
+                        className="bg-green-600 text-white px-4 rounded-r-lg flex items-center justify-center"
+                        onClick={handleSearch}
+                    >
+                        <Search size={20} />
                     </button>
                 </div>
 
                 {/* Icons & User */}
                 <div className="flex items-center space-x-4 relative">
-                    {/* Favorites */}
                     <Heart
                         className="text-gray-600 cursor-pointer"
                         onClick={() => navigate("/favorite")}
                     />
-
-                    {/* Cart */}
                     <div className="relative">
                         <ShoppingCart
                             className="text-gray-600 cursor-pointer"
@@ -74,7 +90,7 @@ export default function Navbar({ cartItems = [], onCartOpen, user, setUser }) {
                                 </button>
 
                                 {dropdownOpen && (
-                                    <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg py-2 z-50 transition-transform duration-200 origin-top scale-100">
+                                    <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg py-2 z-50">
                                         <p
                                             className="px-4 py-2 cursor-pointer hover:bg-gray-100"
                                             onClick={handleLogout}
@@ -94,7 +110,7 @@ export default function Navbar({ cartItems = [], onCartOpen, user, setUser }) {
                                 </button>
 
                                 {dropdownOpen && (
-                                    <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg border border-gray-200 shadow-md py-2 z-50 transition-transform duration-200 origin-top scale-100">
+                                    <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg border border-gray-200 shadow-md py-2 z-50">
                                         <p
                                             className="px-4 py-2 cursor-pointer hover:bg-gray-100"
                                             onClick={() => navigate("/signin")}

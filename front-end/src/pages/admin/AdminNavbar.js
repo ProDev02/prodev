@@ -1,12 +1,19 @@
-// AdminNavbar.jsx
 "use client";
 
-import { useNavigate, useLocation  } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export default function AdminNavbar() {
     const navigate = useNavigate();
-    const location = useLocation();
-    const { username } = location.state || {};
+    // ดึง username จาก localStorage
+    const username = localStorage.getItem("admin_username") || "Admin";
+
+    const handleLogout = () => {
+        localStorage.removeItem("admin_token");
+        localStorage.removeItem("admin_email");
+        localStorage.removeItem("admin_username");
+        localStorage.removeItem("admin_role");
+        navigate("/signin-admin");
+    };
 
     return (
         <header className="bg-white shadow">
@@ -21,7 +28,7 @@ export default function AdminNavbar() {
                 </div>
                 <button
                     className="text-gray-800 font-medium"
-                    onClick={() => navigate("/")}
+                    onClick={handleLogout}
                 >
                     Log out
                 </button>

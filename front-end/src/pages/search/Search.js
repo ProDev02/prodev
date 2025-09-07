@@ -1,24 +1,34 @@
+// SearchPage.jsx
 "use client";
 
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Utensils, Smartphone, Sofa, ShowerHead, Shirt, Tv, Cookie } from "lucide-react";
 
 export default function SearchPage() {
     const navigate = useNavigate();
     const location = useLocation();
-    const defaultCategory = location.state?.category || "All";
+
+    // รองรับทั้ง state และ query params
+    const queryParams = new URLSearchParams(location.search);
+    const defaultCategory = queryParams.get("category") || location.state?.category || "All";
+    const defaultKeyword = queryParams.get("keyword") || location.state?.search || "";
 
     const [selectedCategory, setSelectedCategory] = useState(defaultCategory);
     const [selectedPrices, setSelectedPrices] = useState([]);
+    const [keyword, setKeyword] = useState(defaultKeyword);
     const [currentPage, setCurrentPage] = useState(1);
+    const [products, setProducts] = useState([]);
+    const [totalProducts, setTotalProducts] = useState(0);
+
     const itemsPerPage = 8;
+    const BACKEND_URL = "http://localhost:8080";
 
     const categories = [
         { name: "All", icon: null },
         { name: "Snack", icon: <Cookie size={18} /> },
-        { name: "Food & Drinks", icon: <Utensils size={18} /> },
-        { name: "Smartphones", icon: <Smartphone size={18} /> },
+        { name: "Food & Drink", icon: <Utensils size={18} /> },
+        { name: "Smartphone", icon: <Smartphone size={18} /> },
         { name: "Furniture", icon: <Sofa size={18} /> },
         { name: "Shower", icon: <ShowerHead size={18} /> },
         { name: "Clothing", icon: <Shirt size={18} /> },
@@ -31,27 +41,48 @@ export default function SearchPage() {
         { label: "$1,050–$2,999", min: 1050, max: 2999 },
         { label: "$3,000–$5,000", min: 3000, max: 5000 },
         { label: "$5,000–$10,000", min: 5000, max: 10000 },
-    ];
-
-    const products = [
-        { id: 1, name: "Be Nice Shower Cream", desc: "Perfect Elastic Formula, 450 ml", price: 109, image: "/images/products/showercream.png", category: "Shower" },
-        { id: 2, name: "Protex Soap Bar", desc: "Lavender Ice Freeze 60 g", price: 19, image: "/images/products/protex.png", category: "Shower" },
-        { id: 3, name: "KFC BamBam BOX", desc: "Menu TheBox special", price: 159, image: "/images/products/kfc.png", category: "Food & Drinks" },
-        { id: 4, name: "Chocolate Chip Cookie", desc: "Delicious snack", price: 49, image: "/images/products/protex.png", category: "Snack" },
-        { id: 5, name: "iPhone 15", desc: "Latest smartphone", price: 999, image: "/images/products/kfc.png", category: "Smartphones" },
-        { id: 6, name: "Modern Sofa", desc: "Comfortable 3-seater", price: 1200, image: "/images/products/showercream.png", category: "Furniture" },
-        { id: 7, name: "Shampoo Set", desc: "For smooth hair", price: 89, image: "/images/products/protex.png", category: "Shower" },
-        { id: 8, name: "T-shirt", desc: "Cotton casual", price: 29, image: "/images/products/kfc.png", category: "Clothing" },
-        { id: 9, name: "Samsung TV", desc: "55-inch 4K", price: 799, image: "/images/products/showercream.png", category: "Electronics" },
-        { id: 10, name: "Protein Bar", desc: "Healthy snack", price: 39, image: "/images/products/protex.png", category: "Snack" },
-        { id: 11, name: "Laptop", desc: "High performance", price: 1500, image: "/images/products/kfc.png", category: "Electronics" },
-        { id: 12, name: "Coffee Maker", desc: "Automatic drip", price: 199, image: "/images/products/showercream.png", category: "Food & Drinks" },
+        { label: "$10001 ขึ้นไป", min: 10001, max: Infinity },
     ];
 
     useEffect(() => {
         setSelectedCategory(defaultCategory);
+        setKeyword(defaultKeyword);
         setCurrentPage(1);
-    }, [defaultCategory]);
+    }, [defaultCategory, defaultKeyword]);
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                const minPrice = selectedPrices.length
+                    ? Math.min(...selectedPrices.map(label => priceRanges.find(r => r.label === label).min))
+                    : undefined;
+                const maxPrice = selectedPrices.length
+                    ? Math.max(...selectedPrices.map(label => priceRanges.find(r => r.label === label).max))
+                    : undefined;
+
+                const params = new URLSearchParams();
+                if (selectedCategory && selectedCategory !== "All") params.append("category", selectedCategory);
+                if (minPrice !== undefined) params.append("minPrice", minPrice);
+                if (maxPrice !== undefined) params.append("maxPrice", maxPrice);
+                if (keyword) params.append("keyword", keyword);
+                params.append("page", currentPage);
+                params.append("limit", itemsPerPage);
+
+                const res = await fetch(`${BACKEND_URL}/api/products/search?${params.toString()}`);
+                const data = await res.json();
+
+                setProducts(data.items.map(p => ({
+                    ...p,
+                    images: p.images.map(img => img.startsWith("http") ? img : `${BACKEND_URL}${img}`)
+                })));
+                setTotalProducts(data.total);
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        fetchProducts();
+    }, [selectedCategory, selectedPrices, currentPage, keyword]);
 
     const handleCategoryClick = (name) => {
         setSelectedCategory(name);
@@ -65,22 +96,7 @@ export default function SearchPage() {
         );
     };
 
-    const filteredProducts = products.filter(p => {
-        const matchCategory = selectedCategory === "All" ? true : p.category === selectedCategory;
-        const matchPrice = selectedPrices.length
-            ? selectedPrices.some(label => {
-                const range = priceRanges.find(r => r.label === label);
-                return p.price >= range.min && p.price <= range.max;
-            })
-            : true;
-        return matchCategory && matchPrice;
-    });
-
-    const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
-    const paginatedProducts = filteredProducts.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
+    const totalPages = Math.ceil(totalProducts / itemsPerPage);
 
     return (
         <main className="min-h-screen max-w-7xl mx-auto px-6 py-10 flex gap-8">
@@ -88,6 +104,15 @@ export default function SearchPage() {
                 <div className="text-sm text-gray-500 mb-4">
                     <span className="cursor-pointer hover:text-green-600" onClick={() => navigate("/")}>Home</span> / {selectedCategory}
                 </div>
+
+                <h3 className="text-gray-600 text-sm mb-2 font-semibold">Search</h3>
+                <input
+                    type="text"
+                    placeholder="Search products..."
+                    value={keyword}
+                    onChange={(e) => { setKeyword(e.target.value); setCurrentPage(1); }}
+                    className="w-full mb-4 px-3 py-2 border rounded"
+                />
 
                 <h3 className="text-gray-600 text-sm mb-2 font-semibold">Categories</h3>
                 <ul className="mb-6">
@@ -126,20 +151,20 @@ export default function SearchPage() {
                     {selectedCategory === "All" ? "All Products" : selectedCategory}
                 </h2>
 
-                {paginatedProducts.length > 0 ? (
+                {products.length > 0 ? (
                     <div className="grid grid-cols-3 lg:grid-cols-4 gap-6">
-                        {paginatedProducts.map(p => (
+                        {products.map(p => (
                             <div
                                 key={p.id}
                                 className="border rounded-lg overflow-hidden flex flex-col transition hover:shadow-lg hover:border-green-600 cursor-pointer"
-                                onClick={() => navigate(`/product/mock`, { state: { product: p, products } })}
+                                onClick={() => navigate(`/product/detail/${p.id}`)}
                             >
-                                <img src={p.image} alt={p.name} className="w-full h-40 object-contain p-4" />
+                                <img src={p.images?.[0] || "/images/no-image.png"} alt={p.name} className="w-full h-40 object-contain p-4" />
                                 <div className="p-4 flex flex-col flex-grow">
                                     <h3 className="text-sm font-medium mb-2">{p.name}</h3>
                                     <p className="text-xs text-gray-500 mt-1">{p.category}</p>
                                     <div className="mt-auto flex items-center justify-between">
-                                        <p className="text-gray-800 font-semibold">${p.price.toFixed(2)}</p>
+                                        <p className="text-gray-800 font-semibold">฿{p.price}</p>
                                     </div>
                                 </div>
                             </div>
@@ -149,7 +174,7 @@ export default function SearchPage() {
                     <p className="text-gray-500">No products found.</p>
                 )}
 
-                {filteredProducts.length > itemsPerPage && (
+                {totalPages > 1 && (
                     <div className="flex justify-center mt-8 gap-2">
                         <button
                             className="px-3 py-1 border rounded"
