@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, createContext } from "react";
-import { useLocation, Outlet } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import Navbar from "./pages/navbar";
 import Footer from "./pages/footer";
 import CartSidebarWrapper from "./pages/shopcart/CartSidebarWrapper";
@@ -15,7 +15,18 @@ export default function AppLayout() {
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [cart, setCart] = useState({ items: [], total: 0 });
 
-    const location = useLocation();
+    // ดึง user จาก localStorage ตอนเริ่มต้น
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        const username = localStorage.getItem("username");
+        const email = localStorage.getItem("email");
+        const role = localStorage.getItem("role");
+        const userId = localStorage.getItem("userId")
+
+        if (token && username && email && role && userId) {
+            setUser({ token, username, email, role, userId });
+        }
+    }, []);
 
     // fetch cart
     const fetchCart = () => {
@@ -30,34 +41,11 @@ export default function AppLayout() {
     };
 
     useEffect(() => {
-        if (location.state?.username) {
-            setUser({
-                username: location.state.username,
-                email: location.state.email,
-                role: location.state.role,
-                token: location.state.token,
-            });
-        }
-    }, [location.state]);
-
-    useEffect(() => {
-        if (!user) {
-            const token = localStorage.getItem("token");
-            const username = localStorage.getItem("username");
-            const email = localStorage.getItem("email");
-            const role = localStorage.getItem("role");
-
-            if (token && username && email && role) {
-                setUser({ token, username, email, role });
-            }
-        }
-    }, [user]);
-
-    useEffect(() => {
-        fetchCart();
+        if (user) fetchCart();
     }, [user]);
 
     const updateCartItem = (itemId, newQty) => {
+        if (!user?.token) return;
         fetch(`${BACKEND_URL}/api/cart/update/${itemId}?qty=${newQty}`, {
             method: "PUT",
             headers: { Authorization: `Bearer ${user.token}` },
@@ -89,7 +77,12 @@ export default function AppLayout() {
         <CartContext.Provider value={{ cart, fetchCart }}>
             <div className="font-sans bg-white relative">
                 <div className={`${isCartOpen ? "blur-sm pointer-events-none" : ""} transition-all duration-300`}>
-                    <Navbar cartItems={cart.items} onCartOpen={() => setIsCartOpen(true)} user={user} setUser={setUser} />
+                    <Navbar
+                        cartItems={cart.items}
+                        onCartOpen={() => setIsCartOpen(true)}
+                        user={user}
+                        setUser={setUser}
+                    />
                     <Outlet />
                     <Footer />
                 </div>

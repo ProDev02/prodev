@@ -17,49 +17,66 @@ export default function DetailProductPage() {
     const [quantity, setQuantity] = useState(1);
 
     const BACKEND_URL = "http://localhost:8080";
+    const token = localStorage.getItem("token");
 
+    // Fetch product by ID
     useEffect(() => {
-        // Fetch product by ID
         fetch(`${BACKEND_URL}/api/products/${id}`)
-            .then((res) => {
+            .then(res => {
                 if (!res.ok) throw new Error("Product not found");
                 return res.json();
             })
-            .then((data) => {
-                const fullImages = data.images?.map((img) =>
+            .then(data => {
+                const fullImages = data.images?.map(img =>
                     img.startsWith("http") ? img : `${BACKEND_URL}${img}`
                 );
                 setProduct({ ...data, images: fullImages });
             })
-            .catch((err) => {
+            .catch(err => {
                 console.error(err);
                 navigate("/");
             });
 
         // Fetch all products for related items
         fetch(`${BACKEND_URL}/api/products/all`)
-            .then((res) => res.json())
-            .then((data) => {
+            .then(res => res.json())
+            .then(data => {
                 setRelatedProducts(
-                    data.map((p) => ({
+                    data.map(p => ({
                         ...p,
-                        images: p.images?.map((img) =>
+                        images: p.images?.map(img =>
                             img.startsWith("http") ? img : `${BACKEND_URL}${img}`
                         ),
                     }))
                 );
             })
-            .catch((err) => console.error(err));
+            .catch(err => console.error(err));
     }, [id, navigate]);
 
-    // เพิ่มสินค้าเข้าตะกร้า
+    // Fetch favorite status
+    useEffect(() => {
+        const fetchFavoriteStatus = async () => {
+            if (!token || !product) return;
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/favorites`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (!res.ok) throw new Error("Failed to fetch favorites");
+                const data = await res.json();
+                setIsFavorite(data.some(fav => fav.id === product.id));
+            } catch (err) {
+                console.error(err);
+            }
+        };
+        fetchFavoriteStatus();
+    }, [product, token]);
+
+    // Add to cart
     const addToCart = async (productId, qty) => {
-        const token = localStorage.getItem("token");
         if (!token) {
             alert("❌ Please login first!");
             return;
         }
-
         try {
             const res = await fetch(`${BACKEND_URL}/api/cart/add`, {
                 method: "POST",
@@ -69,17 +86,38 @@ export default function DetailProductPage() {
                 },
                 body: JSON.stringify({ productId, qty }),
             });
-
             if (!res.ok) throw new Error("Failed to add to cart");
-
             const data = await res.json();
             console.log("Added to cart:", data);
             alert(`✅ Added ${qty} item(s) to cart!`);
-            setQuantity(1); // รีเซ็ต quantity
-            fetchCart(); // <-- อัปเดตตะกร้าแบบ realtime
+            setQuantity(1);
+            fetchCart(); // update cart realtime
         } catch (err) {
             console.error(err);
             alert("❌ Cannot add to cart: " + err.message);
+        }
+    };
+
+    // Toggle favorite
+    const toggleFavorite = async () => {
+        if (!token) {
+            alert("❌ Please login first!");
+            return;
+        }
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/favorites/toggle`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ productId: product.id }),
+            });
+            if (!res.ok) throw new Error("Failed to toggle favorite");
+            setIsFavorite(prev => !prev);
+        } catch (err) {
+            console.error(err);
+            alert("❌ Cannot toggle favorite: " + err.message);
         }
     };
 
@@ -106,12 +144,7 @@ export default function DetailProductPage() {
                     />
                     <div className="flex gap-2">
                         {product.images?.slice(0, 3).map((img, i) => (
-                            <img
-                                key={i}
-                                src={img}
-                                alt={`thumb-${i}`}
-                                className="w-24 h-24 object-contain border rounded"
-                            />
+                            <img key={i} src={img} alt={`thumb-${i}`} className="w-24 h-24 object-contain border rounded" />
                         ))}
                     </div>
                 </div>
@@ -126,54 +159,25 @@ export default function DetailProductPage() {
 
                     {/* Quantity */}
                     <div className="mb-4 flex items-center gap-4">
-                        <button
-                            onClick={() => setQuantity((q) => (q > 1 ? q - 1 : 1))}
-                            className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-400 text-lg hover:bg-gray-100"
-                        >
-                            -
-                        </button>
+                        <button onClick={() => setQuantity(q => (q > 1 ? q - 1 : 1))} className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-400 text-lg hover:bg-gray-100">-</button>
                         <span className="text-lg font-medium">{quantity}</span>
-                        <button
-                            onClick={() => setQuantity((q) => q + 1)}
-                            className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-400 text-lg hover:bg-gray-100"
-                        >
-                            +
-                        </button>
+                        <button onClick={() => setQuantity(q => q + 1)} className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-400 text-lg hover:bg-gray-100">+</button>
                     </div>
 
                     {/* Add to Cart & Favorite */}
                     <div className="flex items-center gap-3 mb-6">
-                        <button
-                            onClick={() => addToCart(product.id, quantity)}
-                            className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
-                        >
-                            Add to cart
-                        </button>
+                        <button onClick={() => addToCart(product.id, quantity)} className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">Add to cart</button>
 
-                        <button
-                            onClick={() => setIsFavorite((prev) => !prev)}
-                            className={`px-3 py-2 rounded transition-colors ${
-                                isFavorite ? "bg-green-600" : "border hover:bg-gray-100"
-                            }`}
-                        >
+                        <button onClick={toggleFavorite} className={`px-3 py-2 rounded transition-colors ${isFavorite ? "bg-green-600" : "border hover:bg-gray-100"}`}>
                             <Heart className={`w-5 h-5 ${isFavorite ? "text-white" : "text-gray-600"}`} />
                         </button>
                     </div>
 
                     <div className="space-y-1 text-sm">
-                        <p>
-                            <span className="font-medium">Product code:</span> P
-                            {product.id.toString().padStart(5, "0")}
-                        </p>
-                        <p className="text-green-600">
-                            <span className="font-medium">In stock:</span> {product.quantity ?? 0}
-                        </p>
-                        <p>
-                            <span className="font-medium">Type:</span> {product.category}
-                        </p>
-                        <p>
-                            <span className="font-medium">Shipping:</span> 01/01/2025
-                        </p>
+                        <p><span className="font-medium">Product code:</span> P{product.id.toString().padStart(5, "0")}</p>
+                        <p className="text-green-600"><span className="font-medium">In stock:</span> {product.quantity ?? 0}</p>
+                        <p><span className="font-medium">Type:</span> {product.category}</p>
+                        <p><span className="font-medium">Shipping:</span> 01/01/2025</p>
                     </div>
 
                     <hr className="my-6" />
@@ -189,37 +193,19 @@ export default function DetailProductPage() {
             <div className="mt-12">
                 <h3 className="text-xl font-semibold mb-6">Related Items</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    {relatedProducts
-                        .filter((p) => p.category === product.category && p.id !== product.id)
-                        .map((p) => (
-                            <div
-                                key={p.id}
-                                className="border rounded-lg overflow-hidden flex flex-col transition hover:shadow-lg hover:border-green-600 cursor-pointer"
-                                onClick={() => navigate(`/product/detail/${p.id}`)}
-                            >
-                                <img
-                                    src={p.images?.[0] || "/images/no-image.png"}
-                                    alt={p.name}
-                                    className="w-full h-40 object-contain p-4"
-                                />
-                                <div className="p-4 flex flex-col flex-grow">
-                                    <h3 className="text-sm font-medium mb-2 line-clamp-2">{p.name}</h3>
-                                    <p className="text-xs text-gray-500 mt-1">{p.category}</p>
-                                    <div className="mt-auto flex items-center justify-between">
-                                        <p className="text-gray-800 font-semibold">฿{p.price}</p>
-                                        <button
-                                            className="bg-green-600 text-white px-3 py-1 rounded-md text-sm"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                addToCart(p.id, 1); // <-- อัปเดต cart realtime
-                                            }}
-                                        >
-                                            + Add
-                                        </button>
-                                    </div>
+                    {relatedProducts.filter(p => p.category === product.category && p.id !== product.id).map(p => (
+                        <div key={p.id} className="border rounded-lg overflow-hidden flex flex-col transition hover:shadow-lg hover:border-green-600 cursor-pointer" onClick={() => navigate(`/product/detail/${p.id}`)}>
+                            <img src={p.images?.[0] || "/images/no-image.png"} alt={p.name} className="w-full h-40 object-contain p-4" />
+                            <div className="p-4 flex flex-col flex-grow">
+                                <h3 className="text-sm font-medium mb-2 line-clamp-2">{p.name}</h3>
+                                <p className="text-xs text-gray-500 mt-1">{p.category}</p>
+                                <div className="mt-auto flex items-center justify-between">
+                                    <p className="text-gray-800 font-semibold">฿{p.price}</p>
+                                    <button className="bg-green-600 text-white px-3 py-1 rounded-md text-sm" onClick={(e) => { e.stopPropagation(); addToCart(p.id, 1); }}>+ Add</button>
                                 </div>
                             </div>
-                        ))}
+                        </div>
+                    ))}
                 </div>
             </div>
         </main>

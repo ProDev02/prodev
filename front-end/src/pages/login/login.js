@@ -28,8 +28,12 @@ export default function SignInPage() {
                 const data = await res.json();
 
                 if (data.role === "USER") {
-                    // เก็บ token ใน localStorage
+                    // เก็บทุกตัวลง localStorage
                     localStorage.setItem("token", data.token);
+                    localStorage.setItem("username", data.username);
+                    localStorage.setItem("email", data.email);
+                    localStorage.setItem("role", data.role);
+                    localStorage.setItem("userId", data.id);
 
                     setModalType("success");
                     setModalText("🎉 Login successful! Redirecting...");
@@ -37,12 +41,7 @@ export default function SignInPage() {
 
                     setTimeout(() => {
                         setShowModal(false);
-                        navigate("/", { state: {
-                                token: data.token,
-                                email: data.email,
-                                username: data.username,
-                                role: data.role
-                            }});
+                        navigate("/"); // navigate ไปหน้า home
                     }, 1500);
                 } else {
                     setModalType("error");

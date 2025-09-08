@@ -1,19 +1,26 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+"use client";
+
+import React, { useState, useContext } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { CheckCircle, ShoppingCart } from "lucide-react";
+import { CartContext } from "../../AppLayout";
 
 export default function CheckoutPage() {
-    const [selectedDelivery, setSelectedDelivery] = useState("Standard");
-    const [showModal, setShowModal] = useState(false); // <-- modal state
+    const { state } = useLocation();
     const navigate = useNavigate();
+    const cartContext = useContext(CartContext) || {};
+    const fetchCart = cartContext.fetchCart || (() => {});
 
-    const orderSummary = [
-        { name: "Be Nice Shower Cream, Perfect Elastic Formula, 450 ml", category: "Shower", qty: 1, price: 109, img: "/images/shower1.png" },
-        { name: "Protex Shower Cream, Perfect Elastic Formula, 450 ml", category: "Shower", qty: 3, price: 19.0, img: "/images/shower2.png" },
-        { name: "KFC BamBam BOX Menu TheBox special", category: "Food & Drink", qty: 1, price: 159.0, img: "/images/kfc.png" },
-    ];
+    // รับข้อมูลจาก CartSidebar
+    const cartItems = state?.cartItems || [];
+    const totalFromSidebar = state?.total || 0;
 
-    const subtotal = orderSummary.reduce((acc, item) => acc + item.price * item.qty, 0);
+    const [selectedDelivery, setSelectedDelivery] = useState("Standard");
+    const [showModal, setShowModal] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    // คำนวณ subtotal
+    const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
     const deliveryOptions = [
         { id: "Standard", label: "Standard", desc: "Receive : Thu, 31 Aug - Mon 1 Sep.", price: 0 },
@@ -23,6 +30,47 @@ export default function CheckoutPage() {
     ];
 
     const selectedOption = deliveryOptions.find((opt) => opt.id === selectedDelivery);
+
+    const handlePayNow = async () => {
+        if (loading) return; // ป้องกันกดซ้ำ
+        setLoading(true);
+
+        try {
+            const token = localStorage.getItem("token");
+            console.log(token);
+
+            if (!token) {
+                alert("You must login first!");
+                setLoading(false);
+                return;
+            }
+
+            const response = await fetch(`http://localhost:8080/api/orders/checkout`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) throw new Error("Checkout failed");
+
+            const data = await response.json();
+            console.log("Checkout success:", data);
+
+            // รีโหลด cart ใหม่
+            fetchCart();
+
+            // แสดง modal
+            setShowModal(true);
+        } catch (error) {
+            console.error(error);
+            alert(error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
 
     return (
         <div className="min-h-screen bg-white">
@@ -97,13 +145,13 @@ export default function CheckoutPage() {
                                                 </div>
                                             </div>
                                             <span className="font-medium">
-                                                {opt.price === 0 ? "FREE" : `$${opt.price.toFixed(2)}`}
+                                                {opt.price === 0 ? "FREE" : `฿${opt.price.toFixed(2)}`}
                                             </span>
                                         </label>
                                     ))}
                                 </div>
                                 <p className="text-xs text-gray-500 mt-2">
-                                    *Estimated delivery times exclude bank holidays and weekends. Orders placed after 6pm Friday will be dispatched the following working day.
+                                    *Estimated delivery times exclude bank holidays and weekends.
                                 </p>
                             </div>
 
@@ -121,8 +169,8 @@ export default function CheckoutPage() {
                                 </div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
                                 <select className="w-full p-2 border rounded">
-                                    <option>United Kingdom</option>
                                     <option>Thailand</option>
+                                    <option>United Kingdom</option>
                                     <option>USA</option>
                                 </select>
                             </div>
@@ -137,10 +185,11 @@ export default function CheckoutPage() {
 
                             {/* Pay Now Button */}
                             <button
-                                onClick={() => setShowModal(true)}
-                                className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 mt-4"
+                                onClick={handlePayNow}
+                                disabled={loading}
+                                className={`w-full py-3 rounded-lg font-semibold mt-4 ${loading ? "bg-gray-400" : "bg-green-600 text-white hover:bg-green-700"}`}
                             >
-                                Pay Now!!
+                                {loading ? "Processing..." : "Pay Now!!"}
                             </button>
                         </div>
                     </div>
@@ -150,37 +199,44 @@ export default function CheckoutPage() {
                 <div className="bg-white border rounded p-6 h-fit">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-semibold">Summary Order</h2>
-                        <button className="text-sm text-gray-500 underline" onClick={() => {
-                            navigate("/")
-                        }}>Back to Order</button>
+                        <button
+                            className="text-sm text-gray-500 underline"
+                            onClick={() => navigate("/")}
+                        >
+                            Back to Order
+                        </button>
                     </div>
 
                     <div className="space-y-4">
-                        {orderSummary.map((item, index) => (
+                        {cartItems.map((item, index) => (
                             <div key={index} className="flex gap-3 border-b pb-3">
-                                <img src={item.img} alt={item.name} className="w-16 h-16 object-cover rounded" />
+                                <img
+                                    src={item.image.startsWith("http") ? item.image : `http://localhost:8080${item.image}`}
+                                    alt={item.name}
+                                    className="w-16 h-16 object-cover rounded"
+                                />
                                 <div className="flex-1">
-                                    <h3 className="font-semibold text-sm">{item.name}</h3>
-                                    <p className="text-gray-500 text-xs">{item.category}</p>
-                                    <p className="text-gray-700 text-sm">Qty: {item.qty}</p>
+                                    <h3 className="font-semibold text-sm">{item.productName}</h3>
+                                    <p className="text-gray-500 text-xs">categories: {item.category}</p>
+                                    <p className="text-gray-500 text-xs">Quantity: {item.quantity}</p>
                                 </div>
-                                <p className="font-semibold">${(item.price * item.qty).toFixed(2)}</p>
+                                <p className="font-semibold">฿{(item.price * item.quantity).toFixed(2)}</p>
                             </div>
                         ))}
                     </div>
 
                     <div className="mt-4 border-t pt-4 space-y-2 text-sm">
                         <div className="flex justify-between">
-                            <span>SubTotal({orderSummary.length} Products)</span>
-                            <span>${subtotal.toFixed(2)}</span>
+                            <span>SubTotal({cartItems.length} Products)</span>
+                            <span>฿{subtotal.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
                             <span>Delivery ({selectedOption?.label} delivery)</span>
-                            <span>{selectedOption?.price === 0 ? "Free" : `$${selectedOption?.price.toFixed(2)}`}</span>
+                            <span>{selectedOption?.price === 0 ? "Free" : `฿${selectedOption?.price.toFixed(2)}`}</span>
                         </div>
                         <div className="flex justify-between font-bold text-lg">
                             <span>Total (SubTotal + Delivery)</span>
-                            <span>${(subtotal + (selectedOption?.price || 0)).toFixed(2)}</span>
+                            <span>฿{(subtotal + (selectedOption?.price || 0)).toFixed(2)}</span>
                         </div>
                     </div>
                 </div>
@@ -191,7 +247,7 @@ export default function CheckoutPage() {
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-80 flex flex-col items-center space-y-4">
                         <CheckCircle className="w-12 h-12 text-green-500" />
-                        <h2 className="text-lg font-bold text-center">Payment Successed!!</h2>
+                        <h2 className="text-lg font-bold text-center">Payment Successful!</h2>
                         <button
                             onClick={() => {
                                 setShowModal(false);

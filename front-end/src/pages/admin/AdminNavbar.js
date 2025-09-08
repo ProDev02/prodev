@@ -12,7 +12,7 @@ export default function AdminNavbar() {
         localStorage.removeItem("admin_email");
         localStorage.removeItem("admin_username");
         localStorage.removeItem("admin_role");
-        navigate("/signin-admin");
+        navigate("/");
     };
 
     return (

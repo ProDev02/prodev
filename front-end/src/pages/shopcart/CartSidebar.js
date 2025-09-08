@@ -95,7 +95,7 @@ export default function CartSidebar({ isCartOpen, onClose, cartItems, increaseQt
                     <div className="p-4 border-t bg-white">
                         <button
                             className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg text-base font-medium"
-                            onClick={() => navigate("/payment")}
+                            onClick={() => navigate("/payment", { state: { cartItems, total } })}
                         >
                             <CreditCard size={18} /> Payment ฿{total}
                         </button>

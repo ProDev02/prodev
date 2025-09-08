@@ -1,53 +1,95 @@
+// FavoriteListPage.jsx
 "use client";
-import { useState } from "react";
+
+import { useState, useEffect, useContext } from "react";
 import { Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { CartContext } from "../AppLayout";
 
 export default function FavoriteListPage() {
     const navigate = useNavigate();
+    const { fetchCart } = useContext(CartContext);
+    const BACKEND_URL = "http://localhost:8080";
+    const token = localStorage.getItem("token");
 
-    const [favorites, setFavorites] = useState([
-        { id: 1, name: "Be Nice Shower Cream, Perfect Elastic Formula, 450 ml.", price: 109, image: "/images/products/showercream.png", inStock: true },
-        { id: 2, name: "Protex Lavender Ice Freeze Soap Bar 60 g.", price: 57, image: "/images/products/protex.png", inStock: false },
-        { id: 3, name: "KFC BamBam BOX Menu TheBox special", price: 159, image: "/images/products/kfc.png", inStock: true },
-        { id: 4, name: "Chocolate Chip Cookie", price: 49, image: "/images/products/protex.png", inStock: true },
-        { id: 5, name: "iPhone 15", price: 999, image: "/images/products/kfc.png", inStock: true },
-        { id: 6, name: "Modern Sofa", price: 1200, image: "/images/products/showercream.png", inStock: true },
-        { id: 7, name: "Shampoo Set", price: 89, image: "/images/products/protex.png", inStock: true },
-    ]);
+    const [favorites, setFavorites] = useState([]);
 
-    const removeFavorite = (id) => setFavorites(prev => prev.filter(item => item.id !== id));
-    const addToCart = (item) => alert(`${item.name} added to cart!`);
+    // Fetch favorites from API
+    // Fetch favorites from API
+    useEffect(() => {
+        if (!token) return;
+
+        fetch(`${BACKEND_URL}/api/favorites`, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+            .then(res => res.json())
+            .then(data => {
+                const updated = data.map(item => ({
+                    ...item,
+                    image: item.image
+                        ? (item.image.startsWith('http') ? item.image : `${BACKEND_URL}${item.image}`)
+                        : "/images/no-image.png" // placeholder
+                }));
+                setFavorites(updated);
+            })
+            .catch(err => console.error(err));
+    }, [token]);
+
+
+    // Add to cart
+    const addToCart = async (item) => {
+        if (!token) {
+            alert("❌ Please login first!");
+            return;
+        }
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/cart/add`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ productId: item.id, qty: 1 }),
+            });
+            if (!res.ok) throw new Error("Failed to add to cart");
+            fetchCart();
+            alert(`✅ ${item.name} added to cart!`);
+        } catch (err) {
+            console.error(err);
+            alert(err.message);
+        }
+    };
+
+    // Remove favorite
+    const removeFavorite = async (id) => {
+        if (!token) return;
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/favorites/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+            if (!res.ok) throw new Error("Failed to remove favorite");
+            setFavorites(prev => prev.filter(item => item.id !== id));
+        } catch (err) {
+            console.error(err);
+            alert(err.message);
+        }
+    };
 
     // Pagination
     const itemsPerPage = 5;
     const [currentPage, setCurrentPage] = useState(1);
     const totalPages = Math.ceil(favorites.length / itemsPerPage);
-    const paginatedFavorites = favorites.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
+    const paginatedFavorites = favorites.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     return (
         <main className="min-h-screen max-w-7xl mx-auto px-6 py-10">
-            {/* Breadcrumb */}
             <div className="text-sm text-gray-500 mb-4">
-                <span
-                    className="cursor-pointer hover:text-green-600"
-                    onClick={() => navigate("/")}
-                >
-                    Home
-                </span>{" "}
-                / My Favorite List
+                <span className="cursor-pointer hover:text-green-600" onClick={() => navigate("/")}>Home</span> / My Favorite List
             </div>
 
-            {/* Title */}
             <h1 className="text-2xl font-semibold mb-1">My Favorite List</h1>
             <p className="text-gray-500 mb-6">
                 There are {favorites.length} product{favorites.length > 1 ? "s" : ""} in my favorite list.
             </p>
 
-            {/* Favorite Table */}
             <div className="overflow-x-auto bg-white shadow rounded-lg">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-200">
@@ -66,7 +108,7 @@ export default function FavoriteListPage() {
                                 <img src={item.image} alt={item.name} className="w-12 h-12 object-contain" />
                                 <span className="text-sm font-medium">{item.name}</span>
                             </td>
-                            <td className="px-4 py-3 text-sm">${item.price.toFixed(2)}</td>
+                            <td className="px-4 py-3 text-sm">฿{item.price}</td>
                             <td className="px-4 py-3">
                                 {item.inStock
                                     ? <span className="px-2 py-1 text-xs font-medium text-white bg-green-600 rounded-full">In stock</span>
@@ -85,24 +127,11 @@ export default function FavoriteListPage() {
                     </tbody>
                 </table>
 
-                {/* Pagination */}
                 {totalPages > 1 && (
                     <div className="flex justify-center gap-2 mt-4">
-                        <button
-                            className="px-3 py-1 border rounded"
-                            onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                            disabled={currentPage === 1}
-                        >
-                            Previous
-                        </button>
+                        <button className="px-3 py-1 border rounded" onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}>Previous</button>
                         <span className="px-3 py-1">{currentPage} / {totalPages}</span>
-                        <button
-                            className="px-3 py-1 border rounded"
-                            onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                            disabled={currentPage === totalPages}
-                        >
-                            Next
-                        </button>
+                        <button className="px-3 py-1 border rounded" onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}>Next</button>
                     </div>
                 )}
             </div>
