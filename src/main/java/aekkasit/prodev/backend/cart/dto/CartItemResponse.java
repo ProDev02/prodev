@@ -13,4 +13,5 @@ public class CartItemResponse {
     private double price;
     private String image;
     private int stock;
+    private String category;
 }

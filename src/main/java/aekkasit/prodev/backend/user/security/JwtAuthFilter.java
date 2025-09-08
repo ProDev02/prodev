@@ -11,7 +11,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import java.util.List;
 import java.io.IOException;
 
 @Component
@@ -34,8 +36,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 username = jwtUtils.getUsernameFromToken(token);
                 User user = userRepository.findByUsername(username)
                         .orElseThrow(() -> new RuntimeException("User not found"));
+
+                System.out.println("JWT username: " + username);
+                System.out.println("User role: " + user.getRole());
+
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                        user, null, null);
+                        user,
+                        null,
+                        List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().toUpperCase()))
+                );
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
         }

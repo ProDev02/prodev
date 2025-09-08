@@ -47,7 +47,8 @@ public class CartService {
                         i.getQuantity(),
                         i.getProduct().getPrice(),
                         i.getProduct().getImages().isEmpty() ? "" : i.getProduct().getImages().get(0),
-                        i.getProduct().getQuantity() // ส่ง stock จาก Product
+                        i.getProduct().getQuantity(),
+                        i.getProduct().getCategory()
                 ))
                 .toList();
 
