@@ -10,9 +10,8 @@ import java.util.Date;
 @Component
 public class JwtUtils {
 
-    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS512); // key ยาวพอ
-
-    private long jwtExpirationMs = 86400000; // 1 วัน (ปรับตามต้องการ)
+    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+    private long jwtExpirationMs = 86400000; // 1 วัน
 
     public String generateToken(String username) {
         return Jwts.builder()
