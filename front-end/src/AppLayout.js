@@ -1,19 +1,33 @@
-import { useState, useEffect } from "react";
+"use client";
+
+import { useState, useEffect, createContext } from "react";
 import { useLocation, Outlet } from "react-router-dom";
 import Navbar from "./pages/navbar";
 import Footer from "./pages/footer";
 import CartSidebarWrapper from "./pages/shopcart/CartSidebarWrapper";
 
+export const CartContext = createContext(); // <-- export ออกมาที่นี่
+
+const BACKEND_URL = "http://localhost:8080";
+
 export default function AppLayout() {
     const [user, setUser] = useState(null);
     const [isCartOpen, setIsCartOpen] = useState(false);
-    const [cartItems, setCartItems] = useState([
-        { id: 1, name: "Be Nice Shower Cream", price: 109, qty: 1, stock: 5, image: "/images/products/showercream.png", warning: false },
-        { id: 2, name: "Protex Soap Bar", price: 19, qty: 3, stock: 3, image: "/images/products/protex.png", warning: false },
-        { id: 3, name: "KFC BamBam BOX", price: 159, qty: 1, stock: 20, image: "/images/products/kfc.png", warning: false },
-    ]);
+    const [cart, setCart] = useState({ items: [], total: 0 });
 
     const location = useLocation();
+
+    // fetch cart
+    const fetchCart = () => {
+        if (user?.token) {
+            fetch(`${BACKEND_URL}/api/cart/list`, {
+                headers: { Authorization: `Bearer ${user.token}` },
+            })
+                .then(res => res.json())
+                .then(data => setCart({ items: data.items || [], total: data.total || 0 }))
+                .catch(err => console.error(err));
+        }
+    };
 
     useEffect(() => {
         if (location.state?.username) {
@@ -26,45 +40,72 @@ export default function AppLayout() {
         }
     }, [location.state]);
 
-    // Cart functions
+    useEffect(() => {
+        if (!user) {
+            const token = localStorage.getItem("token");
+            const username = localStorage.getItem("username");
+            const email = localStorage.getItem("email");
+            const role = localStorage.getItem("role");
+
+            if (token && username && email && role) {
+                setUser({ token, username, email, role });
+            }
+        }
+    }, [user]);
+
+    useEffect(() => {
+        fetchCart();
+    }, [user]);
+
+    const updateCartItem = (itemId, newQty) => {
+        fetch(`${BACKEND_URL}/api/cart/update/${itemId}?qty=${newQty}`, {
+            method: "PUT",
+            headers: { Authorization: `Bearer ${user.token}` },
+        })
+            .then(res => res.json())
+            .then(updatedCart => setCart({ items: updatedCart.items, total: updatedCart.total }))
+            .catch(err => console.error(err));
+    };
+
     const increaseQty = (id) => {
-        setCartItems(prev =>
-            prev.map(item => {
-                if (item.id === id) {
-                    if (item.qty + 1 > item.stock) return { ...item, warning: true };
-                    return { ...item, qty: item.qty + 1, warning: false };
-                }
-                return item;
-            })
-        );
+        const item = cart.items.find(i => i.id === id);
+        if (!item) return;
+        if (item.quantity + 1 > item.stock) return;
+        updateCartItem(id, item.quantity + 1);
     };
 
     const decreaseQty = (id) => {
-        setCartItems(prev =>
-            prev.map(item => item.id === id ? { ...item, qty: Math.max(item.qty - 1, 1), warning: false } : item)
-        );
+        const item = cart.items.find(i => i.id === id);
+        if (!item) return;
+        const newQty = Math.max(item.quantity - 1, 1);
+        updateCartItem(id, newQty);
     };
 
-    const removeItem = (id) => setCartItems(prev => prev.filter(item => item.id !== id));
+    const removeItem = (id) => {
+        updateCartItem(id, 0);
+    };
 
     return (
-        <div className="font-sans bg-white relative">
+        <CartContext.Provider value={{ cart, fetchCart }}>
+            <div className="font-sans bg-white relative">
+                <div className={`${isCartOpen ? "blur-sm pointer-events-none" : ""} transition-all duration-300`}>
+                    <Navbar cartItems={cart.items} onCartOpen={() => setIsCartOpen(true)} user={user} setUser={setUser} />
+                    <Outlet />
+                    <Footer />
+                </div>
 
-
-            <div className={`${isCartOpen ? "blur-sm pointer-events-none" : ""} transition-all duration-300`}>
-                <Navbar cartItems={cartItems} onCartOpen={() => setIsCartOpen(true)} user={user} setUser={setUser} />
-                <Outlet /> {/* หน้าเพจต่าง ๆ จะ render ตรงนี้ */}
-                <Footer />
+                <CartSidebarWrapper
+                    isCartOpen={isCartOpen}
+                    onClose={() => setIsCartOpen(false)}
+                    cartItems={cart.items}
+                    increaseQty={increaseQty}
+                    decreaseQty={decreaseQty}
+                    removeItem={removeItem}
+                    total={cart.total}
+                    user={user}
+                    refreshCart={fetchCart}
+                />
             </div>
-
-            <CartSidebarWrapper
-                isCartOpen={isCartOpen}
-                onClose={() => setIsCartOpen(false)}
-                cartItems={cartItems}
-                increaseQty={increaseQty}
-                decreaseQty={decreaseQty}
-                removeItem={removeItem}
-            />
-        </div>
+        </CartContext.Provider>
     );
 }

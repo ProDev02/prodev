@@ -1,19 +1,22 @@
+// DetailProductPage.jsx
 "use client";
 
 import { useParams, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Heart } from "lucide-react";
+import { CartContext } from "../../AppLayout"; // <-- import CartContext
 
 export default function DetailProductPage() {
-    const { id } = useParams(); // ดึง id จาก URL
+    const { id } = useParams();
     const navigate = useNavigate();
+    const { fetchCart } = useContext(CartContext); // <-- ดึง fetchCart จาก context
 
     const [product, setProduct] = useState(null);
     const [relatedProducts, setRelatedProducts] = useState([]);
     const [isFavorite, setIsFavorite] = useState(false);
     const [quantity, setQuantity] = useState(1);
 
-    const BACKEND_URL = "http://localhost:8080"; // เปลี่ยนเป็น backend จริงของคุณ
+    const BACKEND_URL = "http://localhost:8080";
 
     useEffect(() => {
         // Fetch product by ID
@@ -23,7 +26,6 @@ export default function DetailProductPage() {
                 return res.json();
             })
             .then((data) => {
-                // map image full path
                 const fullImages = data.images?.map((img) =>
                     img.startsWith("http") ? img : `${BACKEND_URL}${img}`
                 );
@@ -31,7 +33,7 @@ export default function DetailProductPage() {
             })
             .catch((err) => {
                 console.error(err);
-                navigate("/"); // ถ้าไม่เจอสินค้ากลับหน้าแรก
+                navigate("/");
             });
 
         // Fetch all products for related items
@@ -50,9 +52,35 @@ export default function DetailProductPage() {
             .catch((err) => console.error(err));
     }, [id, navigate]);
 
-    const addToCart = (item) => {
-        console.log("Add to cart:", item, quantity);
-        setQuantity(1);
+    // เพิ่มสินค้าเข้าตะกร้า
+    const addToCart = async (productId, qty) => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("❌ Please login first!");
+            return;
+        }
+
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/cart/add`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ productId, qty }),
+            });
+
+            if (!res.ok) throw new Error("Failed to add to cart");
+
+            const data = await res.json();
+            console.log("Added to cart:", data);
+            alert(`✅ Added ${qty} item(s) to cart!`);
+            setQuantity(1); // รีเซ็ต quantity
+            fetchCart(); // <-- อัปเดตตะกร้าแบบ realtime
+        } catch (err) {
+            console.error(err);
+            alert("❌ Cannot add to cart: " + err.message);
+        }
     };
 
     if (!product) return <div className="text-center py-20">Loading product...</div>;
@@ -61,10 +89,7 @@ export default function DetailProductPage() {
         <main className="min-h-screen max-w-7xl mx-auto px-6 py-8">
             {/* Breadcrumb */}
             <div className="text-sm text-gray-500 mb-6">
-                <span
-                    className="cursor-pointer hover:text-green-600"
-                    onClick={() => navigate("/")}
-                >
+                <span className="cursor-pointer hover:text-green-600" onClick={() => navigate("/")}>
                     Home
                 </span>{" "}
                 / {product.category} /{" "}
@@ -73,7 +98,6 @@ export default function DetailProductPage() {
 
             {/* Product Section */}
             <div className="flex flex-col lg:flex-row gap-10">
-                {/* Left images */}
                 <div className="flex flex-col gap-3">
                     <img
                         src={product.images?.[0] || "/images/no-image.png"}
@@ -92,7 +116,6 @@ export default function DetailProductPage() {
                     </div>
                 </div>
 
-                {/* Right details */}
                 <div className="flex-1">
                     <p className="text-green-600 text-sm font-medium mb-1">{product.category}</p>
                     <h1 className="text-2xl font-semibold mb-2">{product.name}</h1>
@@ -101,7 +124,7 @@ export default function DetailProductPage() {
 
                     <p className="text-2xl text-gray-800 mb-6">฿{product.price}</p>
 
-                    {/* Quantity row */}
+                    {/* Quantity */}
                     <div className="mb-4 flex items-center gap-4">
                         <button
                             onClick={() => setQuantity((q) => (q > 1 ? q - 1 : 1))}
@@ -121,7 +144,7 @@ export default function DetailProductPage() {
                     {/* Add to Cart & Favorite */}
                     <div className="flex items-center gap-3 mb-6">
                         <button
-                            onClick={() => addToCart(product)}
+                            onClick={() => addToCart(product.id, quantity)}
                             className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
                         >
                             Add to cart
@@ -129,23 +152,32 @@ export default function DetailProductPage() {
 
                         <button
                             onClick={() => setIsFavorite((prev) => !prev)}
-                            className={`px-3 py-2 rounded transition-colors ${isFavorite ? "bg-green-600" : "border hover:bg-gray-100"}`}
+                            className={`px-3 py-2 rounded transition-colors ${
+                                isFavorite ? "bg-green-600" : "border hover:bg-gray-100"
+                            }`}
                         >
                             <Heart className={`w-5 h-5 ${isFavorite ? "text-white" : "text-gray-600"}`} />
                         </button>
                     </div>
 
-                    {/* Product info */}
                     <div className="space-y-1 text-sm">
-                        <p><span className="font-medium">Product code:</span> P{product.id.toString().padStart(5, "0")}</p>
-                        <p className="text-green-600"><span className="font-medium">In stock:</span> {product.quantity ?? 0}</p>
-                        <p><span className="font-medium">Type:</span> {product.category}</p>
-                        <p><span className="font-medium">Shipping:</span> 01/01/2025</p>
+                        <p>
+                            <span className="font-medium">Product code:</span> P
+                            {product.id.toString().padStart(5, "0")}
+                        </p>
+                        <p className="text-green-600">
+                            <span className="font-medium">In stock:</span> {product.quantity ?? 0}
+                        </p>
+                        <p>
+                            <span className="font-medium">Type:</span> {product.category}
+                        </p>
+                        <p>
+                            <span className="font-medium">Shipping:</span> 01/01/2025
+                        </p>
                     </div>
 
                     <hr className="my-6" />
 
-                    {/* Product Details */}
                     <div>
                         <h3 className="font-semibold text-lg mb-2">Product Details</h3>
                         <p className="text-sm text-gray-700 leading-relaxed">{product.description}</p>
@@ -165,13 +197,25 @@ export default function DetailProductPage() {
                                 className="border rounded-lg overflow-hidden flex flex-col transition hover:shadow-lg hover:border-green-600 cursor-pointer"
                                 onClick={() => navigate(`/product/detail/${p.id}`)}
                             >
-                                <img src={p.images?.[0] || "/images/no-image.png"} alt={p.name} className="w-full h-40 object-contain p-4" />
+                                <img
+                                    src={p.images?.[0] || "/images/no-image.png"}
+                                    alt={p.name}
+                                    className="w-full h-40 object-contain p-4"
+                                />
                                 <div className="p-4 flex flex-col flex-grow">
                                     <h3 className="text-sm font-medium mb-2 line-clamp-2">{p.name}</h3>
                                     <p className="text-xs text-gray-500 mt-1">{p.category}</p>
                                     <div className="mt-auto flex items-center justify-between">
                                         <p className="text-gray-800 font-semibold">฿{p.price}</p>
-                                        <button className="bg-green-600 text-white px-3 py-1 rounded-md text-sm">+ Add</button>
+                                        <button
+                                            className="bg-green-600 text-white px-3 py-1 rounded-md text-sm"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                addToCart(p.id, 1); // <-- อัปเดต cart realtime
+                                            }}
+                                        >
+                                            + Add
+                                        </button>
                                     </div>
                                 </div>
                             </div>

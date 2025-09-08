@@ -1,4 +1,6 @@
+// CartSidebarWrapper.js
 "use client";
+
 import { useState } from "react";
 import CartSidebar from "./CartSidebar";
 

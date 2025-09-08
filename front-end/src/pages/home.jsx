@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
     Utensils,
@@ -16,6 +16,9 @@ import { Autoplay, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
+// Import context จาก AppLayout
+import { CartContext } from "../AppLayout";
+
 export default function HomePage() {
     const [user, setUser] = useState(null);
     const [popularProducts, setPopularProducts] = useState([]);
@@ -25,7 +28,9 @@ export default function HomePage() {
 
     const BACKEND_URL = "http://localhost:8080"; // backend URL จริง
 
-    // ข้อมูล category
+    // ดึง context ของ cart
+    const { fetchCart } = useContext(CartContext);
+
     const categories = [
         { name: "Snack", icon: <Cookie size={32} className="mx-auto text-gray-700" /> },
         { name: "Food & Drink", icon: <Utensils size={32} className="mx-auto text-gray-700" /> },
@@ -36,21 +41,23 @@ export default function HomePage() {
         { name: "Electronics", icon: <Tv size={32} className="mx-auto text-gray-700" /> },
     ];
 
-    // Fetch products from API
     useEffect(() => {
+        // ดึงข้อมูล user จาก location.state
         if (location.state?.username) {
-            setUser({
+            const newUser = {
                 username: location.state.username,
                 email: location.state.email,
                 role: location.state.role,
                 token: location.state.token
-            });
+            };
+            setUser(newUser);
+            localStorage.setItem("token", newUser.token); // เก็บ token ไว้ localStorage ด้วย
         }
 
-        fetch("http://localhost:8080/api/products/all")
+        // ดึงสินค้า
+        fetch(`${BACKEND_URL}/api/products/all`)
             .then(res => res.json())
             .then(data => {
-                // Map ข้อมูลให้เหลือเฉพาะ summary + full URL รูป
                 const mapped = data.map(p => ({
                     id: p.id,
                     name: p.name,
@@ -59,13 +66,45 @@ export default function HomePage() {
                     category: p.category
                 }));
 
-                // สมมติแยก popular / best selling จาก logic: in stock, newest 6
                 const inStockProducts = mapped.filter(p => p.price && p.image);
                 setPopularProducts(inStockProducts.slice(0, 6));
                 setBestSellers(inStockProducts.slice(-10));
             })
             .catch(err => console.error(err));
     }, [location.state]);
+
+    // เพิ่มสินค้าเข้าตะกร้า
+    const addToCart = (productId) => {
+        const tokenToUse = user?.token || localStorage.getItem("token");
+        if (!tokenToUse) {
+            alert("❌ Please login first!");
+            return;
+        }
+
+        fetch(`${BACKEND_URL}/api/cart/add`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${tokenToUse}`
+            },
+            body: JSON.stringify({ productId, qty: 1 })
+        })
+            .then(res => {
+                if (!res.ok) throw new Error(`Failed to add cart: ${res.status}`);
+                return res.json();
+            })
+            .then(data => {
+                alert("✅ Product added to cart!");
+                console.log("Product added to cart:", data);
+
+                // รีเฟรช cart sidebar ทันที
+                if (fetchCart) fetchCart();
+            })
+            .catch(err => {
+                console.error(err);
+                alert("❌ Error adding to cart: " + err.message);
+            });
+    };
 
     return (
         <main className="font-sans bg-white relative">
@@ -132,7 +171,12 @@ export default function HomePage() {
                                     <p className="text-xs text-gray-500 mt-1">{p.category}</p>
                                     <div className="mt-auto flex items-center justify-between">
                                         <p className="text-gray-800 font-semibold">{p.price}</p>
-                                        <button className="bg-green-600 text-white px-3 py-1 rounded-md text-sm">+ Add</button>
+                                        <button
+                                            className="bg-green-600 text-white px-3 py-1 rounded-md text-sm"
+                                            onClick={(e) => { e.stopPropagation(); addToCart(p.id); }}
+                                        >
+                                            + Add
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -181,7 +225,12 @@ export default function HomePage() {
                                     <p className="text-green-600 font-semibold">{p.price}</p>
                                     <span className="text-xs text-green-600 font-medium">In stock</span>
                                 </div>
-                                <button className="mt-3 w-full bg-green-600 text-white py-1 rounded-lg text-sm">Add to Cart</button>
+                                <button
+                                    className="mt-3 w-full bg-green-600 text-white py-1 rounded-lg text-sm"
+                                    onClick={(e) => { e.stopPropagation(); addToCart(p.id); }}
+                                >
+                                    Add to Cart
+                                </button>
                             </div>
                         </div>
                     ))}

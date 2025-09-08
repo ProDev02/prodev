@@ -28,20 +28,26 @@ export default function SignInPage() {
                 const data = await res.json();
 
                 if (data.role === "USER") {
+                    // เก็บ token ใน localStorage
+                    localStorage.setItem("token", data.token);
+
                     setModalType("success");
                     setModalText("🎉 Login successful! Redirecting...");
                     setShowModal(true);
 
                     setTimeout(() => {
                         setShowModal(false);
-                        navigate("/", { state: { token: data.token, email: data.email, username: data.username, role: data.role } });
+                        navigate("/", { state: {
+                                token: data.token,
+                                email: data.email,
+                                username: data.username,
+                                role: data.role
+                            }});
                     }, 1500);
                 } else {
-                    // ถ้าไม่ใช่ USER
                     setModalType("error");
                     setModalText("❌ Only USER role can login here");
                     setShowModal(true);
-
                     setTimeout(() => setShowModal(false), 2000);
                 }
             } else {
@@ -61,7 +67,6 @@ export default function SignInPage() {
 
     return (
         <div className="min-h-screen flex flex-col bg-white font-sans relative">
-            {/* Navbar */}
             <header className="w-full border-b py-4 px-6 flex justify-between items-center">
                 <img src="/images/WholeCart_logo.png" alt="WholeCart" className="h-10 w-auto" />
                 <p className="text-sm text-gray-600">
@@ -72,7 +77,6 @@ export default function SignInPage() {
                 </p>
             </header>
 
-            {/* Content */}
             <main className="flex flex-1 justify-center items-center px-6 py-10">
                 <div className="grid md:grid-cols-2 gap-10 max-w-5xl w-full items-center">
                     <div className="flex justify-center">
@@ -130,7 +134,6 @@ export default function SignInPage() {
 
             <Footer />
 
-            {/* Popup Modal */}
             {showModal && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                     <div className={`bg-white rounded-lg shadow-lg p-6 w-80 text-center animate-fade-in
