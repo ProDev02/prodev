@@ -22,7 +22,7 @@ export default function SearchPage() {
     const [totalProducts, setTotalProducts] = useState(0);
 
     const itemsPerPage = 8;
-    const BACKEND_URL = "http://localhost:8080";
+    const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
     const categories = [
         { name: "All", icon: null },
@@ -71,10 +71,15 @@ export default function SearchPage() {
                 const res = await fetch(`${BACKEND_URL}/api/products/search?${params.toString()}`);
                 const data = await res.json();
 
-                setProducts(data.items.map(p => ({
-                    ...p,
-                    images: p.images.map(img => img.startsWith("http") ? img : `${BACKEND_URL}${img}`)
-                })));
+                setProducts(
+                    data.items
+                        .filter(p => p.quantity > 0) // กรองเฉพาะสินค้าที่มี stock
+                        .map(p => ({
+                            ...p,
+                            images: p.images.map(img => img.startsWith("http") ? img : `${BACKEND_URL}${img}`)
+                        }))
+                );
+
                 setTotalProducts(data.total);
             } catch (err) {
                 console.error(err);

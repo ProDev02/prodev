@@ -14,11 +14,13 @@ export default function SignInPage() {
     const [modalType, setModalType] = useState("success"); // success / error
     const navigate = useNavigate();
 
+    const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
     const handleLogin = async (e) => {
         e.preventDefault();
 
         try {
-            const res = await fetch("http://localhost:8080/api/auth/login", {
+            const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),
@@ -113,6 +115,7 @@ export default function SignInPage() {
                                 />
                                 <button
                                     type="button"
+                                    aria-label={showPassword ? "Hide password" : "Show password"}
                                     className="absolute right-3 top-2.5 text-gray-500"
                                     onClick={() => setShowPassword(!showPassword)}
                                 >

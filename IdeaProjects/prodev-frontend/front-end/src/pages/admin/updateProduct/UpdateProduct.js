@@ -108,7 +108,7 @@ export default function UpdateProduct() {
         type: "info",
     });
 
-    const BACKEND_URL = "http://localhost:8080";
+    const BACKEND_URL = process.env.REACT_APP_BACKEND_URL.replace(/\/$/, '');
 
     useEffect(() => {
         if (!productId) return;
@@ -124,7 +124,7 @@ export default function UpdateProduct() {
                     description: data.description || "",
                     price: data.price || 0,
                     inStock: data.statusStock === "In stock",
-                    quantity: data.quantity || 0,
+                    quantity: data.statusStock === "In stock" ? data.quantity : 0, // ✅ แก้ตรงนี้
                     category: data.category || "",
                     images: (data.images || []).map((url) => ({
                         url: url.startsWith("http") ? url : `${BACKEND_URL}${url}`,
@@ -137,11 +137,10 @@ export default function UpdateProduct() {
 
     const handleImageUpload = (e) => {
         const files = Array.from(e.target.files);
-        const newImages = files.map((file) => ({
-            file,
-            url: URL.createObjectURL(file),
-            isNew: true,
-        }));
+        const newImages = files.map((file) => {
+            const imageUrl = URL.createObjectURL(file);
+            return { file, url: imageUrl, isNew: true };
+        });
         setProduct((prev) => ({ ...prev, images: [...prev.images, ...newImages] }));
     };
 
@@ -160,12 +159,18 @@ export default function UpdateProduct() {
             formData.append("description", product.description);
             formData.append("price", product.price);
             formData.append("statusStock", product.inStock ? "In stock" : "Out of stock");
-            if (product.inStock) formData.append("quantity", product.quantity);
+
+            // ✅ ส่ง quantity = 0 ถ้า out of stock
+            formData.append(
+                "quantity",
+                product.inStock ? product.quantity : 0
+            );
+
             formData.append("category", product.category);
 
             const existingImages = product.images
                 .filter((img) => !img.isNew)
-                .map((img) => img.url.replace(BACKEND_URL, ""));
+                .map((img) => img.url.replace(BACKEND_URL, "").replace(/^\/\//, "/"));
             formData.append("existingImages", JSON.stringify(existingImages));
 
             product.images.forEach((img) => {
@@ -233,6 +238,7 @@ export default function UpdateProduct() {
                     <div className="flex-1 bg-white border rounded p-6">
                         <h2 className="text-md font-semibold text-gray-700 mb-4">Product Information</h2>
 
+                        {/* Title + Categories */}
                         <div className="grid grid-cols-2 gap-6 mb-4">
                             <div>
                                 <label className="block text-sm text-gray-600 mb-1">Title</label>
@@ -263,10 +269,17 @@ export default function UpdateProduct() {
                             </div>
                         </div>
 
+                        {/* Stock status and quantity */}
                         <div className="flex items-center gap-3 mb-4">
                             <span className="text-sm text-gray-600">Status Stock</span>
                             <button
-                                onClick={() => setProduct({ ...product, inStock: !product.inStock })}
+                                onClick={() =>
+                                    setProduct((prev) => ({
+                                        ...prev,
+                                        inStock: !prev.inStock,
+                                        quantity: prev.inStock ? 0 : prev.quantity, // quantity = 0 ถ้า out of stock
+                                    }))
+                                }
                                 className={`w-12 h-6 flex items-center rounded-full p-1 transition ${
                                     product.inStock ? "bg-green-500" : "bg-red-500"
                                 }`}
@@ -282,22 +295,26 @@ export default function UpdateProduct() {
                                     product.inStock ? "text-green-600" : "text-red-600"
                                 }`}
                             >
-                {product.inStock ? "In stock" : "Out of stock"}
-              </span>
+                                {product.inStock ? "In stock" : "Out of stock"}
+                            </span>
                         </div>
 
+                        {/* Quantity input */}
                         {product.inStock && (
                             <div className="mb-4">
                                 <label className="block text-sm text-gray-600 mb-1">Quantity</label>
                                 <input
                                     type="number"
                                     value={product.quantity}
-                                    onChange={(e) => setProduct({ ...product, quantity: e.target.value })}
+                                    onChange={(e) =>
+                                        setProduct({ ...product, quantity: Number(e.target.value) })
+                                    }
                                     className="w-full border rounded px-3 py-2"
                                 />
                             </div>
                         )}
 
+                        {/* Product Images */}
                         <div className="mb-4">
                             <label className="block text-sm text-gray-600 mb-1">Product Images</label>
                             <input
@@ -342,6 +359,7 @@ export default function UpdateProduct() {
                             </div>
                         </div>
 
+                        {/* Description */}
                         <label className="block text-sm text-gray-600 mb-1">Product Description</label>
                         <textarea
                             value={product.description}

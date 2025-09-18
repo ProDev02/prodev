@@ -14,6 +14,8 @@ export default function SignInAdmin() {
     const [modalType, setModalType] = useState("success"); // success / error
     const navigate = useNavigate();
 
+    const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
     useEffect(() => {
         // ตรวจสอบว่ามี admin login แล้วหรือยัง
         const token = localStorage.getItem("admin_token");
@@ -27,7 +29,7 @@ export default function SignInAdmin() {
         e.preventDefault();
 
         try {
-            const res = await fetch("http://localhost:8080/api/auth/login", {
+            const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),

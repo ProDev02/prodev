@@ -17,6 +17,8 @@ export default function AddNewProduct() {
     const { username } = location.state || {};
     const navigate = useNavigate();
 
+    const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
     // handle เลือกรูป
     const handleImageUpload = (e) => {
         const files = Array.from(e.target.files);
@@ -48,7 +50,7 @@ export default function AddNewProduct() {
                 formData.append("images", img.file);
             });
 
-            const res = await fetch("http://localhost:8080/api/products/add", {
+            const res = await fetch(`${BACKEND_URL}/api/products/add`, {
                 method: "POST",
                 body: formData,
             });
@@ -113,8 +115,9 @@ export default function AddNewProduct() {
 
                             {/* Categories */}
                             <div>
-                                <label className="block text-sm text-gray-600 mb-1">Categories</label>
+                                <label htmlFor="category" className="block text-sm text-gray-600 mb-1">Categories</label>
                                 <select
+                                    id="category"
                                     value={category}
                                     onChange={(e) => setCategory(e.target.value)}
                                     className="w-full border rounded px-3 py-2"
@@ -135,6 +138,7 @@ export default function AddNewProduct() {
                         <div className="flex items-center gap-3 mb-4">
                             <span className="text-sm text-gray-600">Status Stock</span>
                             <button
+                                aria-label="Status Stock"
                                 onClick={() => setInStock(!inStock)}
                                 className={`w-12 h-6 flex items-center rounded-full p-1 transition ${
                                     inStock ? "bg-green-500" : "bg-red-500"
@@ -173,12 +177,13 @@ export default function AddNewProduct() {
 
                         {/* Product Images */}
                         <div className="mb-4">
-                            <label className="block text-sm text-gray-600 mb-1">
+                            <label htmlFor="images" className="block text-sm text-gray-600 mb-1">
                                 Product Images
                             </label>
 
                             {/* input ซ่อน */}
                             <input
+                                id="images"
                                 type="file"
                                 multiple
                                 accept="image/*"
@@ -223,10 +228,11 @@ export default function AddNewProduct() {
                         </div>
 
                         {/* Description */}
-                        <label className="block text-sm text-gray-600 mb-1">
+                        <label htmlFor="description" className="block text-sm text-gray-600 mb-1">
                             Product Description
                         </label>
                         <textarea
+                            id="description"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             className="w-full border rounded px-3 py-2"

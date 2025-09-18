@@ -26,7 +26,7 @@ export default function HomePage() {
     const location = useLocation();
     const navigate = useNavigate();
 
-    const BACKEND_URL = "http://localhost:8080"; // backend URL จริง
+    const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
     // ดึง context ของ cart
     const { fetchCart } = useContext(CartContext);
@@ -51,22 +51,23 @@ export default function HomePage() {
                 token: location.state.token
             };
             setUser(newUser);
-            localStorage.setItem("token", newUser.token); // เก็บ token ไว้ localStorage ด้วย
+            localStorage.setItem("token", newUser.token); // เก็บ token ไว้ localStorage
         }
 
         // ดึงสินค้า
         fetch(`${BACKEND_URL}/api/products/all`)
             .then(res => res.json())
             .then(data => {
-                const mapped = data.map(p => ({
-                    id: p.id,
-                    name: p.name,
-                    price: p.price ? `฿${p.price}` : "฿0",
-                    image: p.images?.[0] ? `${BACKEND_URL}${p.images[0]}` : "/images/no-image.png",
-                    category: p.category
-                }));
+                const inStockProducts = data
+                    .filter(p => p.quantity > 0) // <-- ไม่เอาสินค้า stock <= 0
+                    .map(p => ({
+                        id: p.id,
+                        name: p.name,
+                        price: p.price ? `฿${p.price}` : "฿0",
+                        image: p.images?.[0] ? `${BACKEND_URL}${p.images[0]}` : "/images/no-image.png",
+                        category: p.category
+                    }));
 
-                const inStockProducts = mapped.filter(p => p.price && p.image);
                 setPopularProducts(inStockProducts.slice(0, 6));
                 setBestSellers(inStockProducts.slice(-10));
             })

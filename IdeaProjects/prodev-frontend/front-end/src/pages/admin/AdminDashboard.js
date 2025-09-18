@@ -14,7 +14,7 @@ export default function AdminDashboard() {
     const navigate = useNavigate();
 
     const ITEMS_PER_PAGE = 5;
-    const BACKEND_URL = "http://localhost:8080";
+    const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
     // --- Get token / username from localStorage ---
     const token = localStorage.getItem("admin_token");

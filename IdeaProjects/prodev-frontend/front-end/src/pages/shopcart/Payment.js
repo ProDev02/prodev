@@ -19,6 +19,8 @@ export default function CheckoutPage() {
     const [showModal, setShowModal] = useState(false);
     const [loading, setLoading] = useState(false);
 
+    const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
     // คำนวณ subtotal
     const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
@@ -32,28 +34,24 @@ export default function CheckoutPage() {
     const selectedOption = deliveryOptions.find((opt) => opt.id === selectedDelivery);
 
     const handlePayNow = async () => {
-        if (loading) return; // ป้องกันกดซ้ำ
+        if (loading) return;
         setLoading(true);
 
         try {
             const token = localStorage.getItem("token");
-            console.log(token);
+            if (!token) throw new Error("You must login first!");
 
-            if (!token) {
-                alert("You must login first!");
-                setLoading(false);
-                return;
-            }
-
-            const response = await fetch(`http://localhost:8080/api/orders/checkout`, {
+            const response = await fetch(`${BACKEND_URL}/api/orders/checkout`, {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
-                },
+                    "Authorization": `Bearer ${token}`
+                }
             });
 
-            if (!response.ok) throw new Error("Checkout failed");
+            if (!response.ok) {
+                const txt = await response.text();
+                throw new Error(txt || "Checkout failed");
+            }
 
             const data = await response.json();
             console.log("Checkout success:", data);
@@ -61,8 +59,9 @@ export default function CheckoutPage() {
             // รีโหลด cart ใหม่
             fetchCart();
 
-            // แสดง modal
+            // แสดง modal success
             setShowModal(true);
+
         } catch (error) {
             console.error(error);
             alert(error.message);
@@ -70,7 +69,6 @@ export default function CheckoutPage() {
             setLoading(false);
         }
     };
-
 
     return (
         <div className="min-h-screen bg-white">
@@ -211,7 +209,7 @@ export default function CheckoutPage() {
                         {cartItems.map((item, index) => (
                             <div key={index} className="flex gap-3 border-b pb-3">
                                 <img
-                                    src={item.image.startsWith("http") ? item.image : `http://localhost:8080${item.image}`}
+                                    src={item.image.startsWith("http") ? item.image : `${BACKEND_URL}${item.image}`}
                                     alt={item.name}
                                     className="w-16 h-16 object-cover rounded"
                                 />

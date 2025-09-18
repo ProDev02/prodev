@@ -16,7 +16,7 @@ export default function DetailProductPage() {
     const [isFavorite, setIsFavorite] = useState(false);
     const [quantity, setQuantity] = useState(1);
 
-    const BACKEND_URL = "http://localhost:8080";
+    const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
     const token = localStorage.getItem("token");
 
     // Fetch product by ID
@@ -168,7 +168,11 @@ export default function DetailProductPage() {
                     <div className="flex items-center gap-3 mb-6">
                         <button onClick={() => addToCart(product.id, quantity)} className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">Add to cart</button>
 
-                        <button onClick={toggleFavorite} className={`px-3 py-2 rounded transition-colors ${isFavorite ? "bg-green-600" : "border hover:bg-gray-100"}`}>
+                        <button
+                            onClick={toggleFavorite}
+                            aria-label="Favorite"
+                            data-testid="favorite-btn"
+                            className={`px-3 py-2 rounded transition-colors ${isFavorite ? "bg-green-600" : "border hover:bg-gray-100"}`}>
                             <Heart className={`w-5 h-5 ${isFavorite ? "text-white" : "text-gray-600"}`} />
                         </button>
                     </div>

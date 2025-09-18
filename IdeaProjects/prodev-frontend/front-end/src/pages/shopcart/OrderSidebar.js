@@ -6,13 +6,15 @@ export default function OrderTab() {
     const [orders, setOrders] = useState([]);
     const [search, setSearch] = useState("");
 
+    const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
     // Fetch orders ของ user
     const fetchOrders = async () => {
         try {
             const token = localStorage.getItem("token");
             if (!token) return;
 
-            const res = await fetch("http://localhost:8080/api/orders/my", {
+            const res = await fetch(`${BACKEND_URL}/api/orders/my`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -35,7 +37,7 @@ export default function OrderTab() {
             if (!token) throw new Error("User not logged in");
 
             // ลบ order จาก backend
-            const res = await fetch(`http://localhost:8080/api/orders/${id}/receive`, {
+            const res = await fetch(`${BACKEND_URL}/api/orders/${id}/receive`, {
                 method: "PATCH",
                 headers: { Authorization: `Bearer ${token}` },
             });

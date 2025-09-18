@@ -10,9 +10,9 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ict555!!!
       JWT_EXPIRATION: 86400000
-      UPLOAD_DIR: /app/uploads
+      UPLOAD_DIR: uploads/products
     volumes:
-      - ./prodev/uploads:/app/uploads
+      - ./prodev/uploads:/uploads
 
   frontend:
     build:

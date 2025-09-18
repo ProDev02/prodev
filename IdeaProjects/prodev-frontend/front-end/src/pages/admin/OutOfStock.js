@@ -16,7 +16,7 @@ export default function OutOfStock() {
     const { username } = location.state || {};
 
     const ITEMS_PER_PAGE = 5;
-    const BACKEND_URL = "http://localhost:8080";
+    const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
     // --- Fetch all products from backend
     useEffect(() => {

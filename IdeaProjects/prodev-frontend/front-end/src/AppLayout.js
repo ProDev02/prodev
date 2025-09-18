@@ -8,7 +8,7 @@ import CartSidebarWrapper from "./pages/shopcart/CartSidebarWrapper";
 
 export const CartContext = createContext(); // <-- export ออกมาที่นี่
 
-const BACKEND_URL = "http://localhost:8080";
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function AppLayout() {
     const [user, setUser] = useState(null);

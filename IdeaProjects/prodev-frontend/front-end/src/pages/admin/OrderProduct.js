@@ -13,12 +13,14 @@ export default function OrderProduct() {
 
     const ITEMS_PER_PAGE = 5;
 
+    const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
     const fetchOrders = async () => {
         try {
             const token = localStorage.getItem("admin_token");
             if (!token) throw new Error("Admin not logged in");
 
-            const res = await fetch("http://localhost:8080/api/orders", {
+            const res = await fetch(`${BACKEND_URL}/api/orders`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -40,7 +42,7 @@ export default function OrderProduct() {
 
             if (newStatus === "CANCEL") {
                 // DELETE order
-                const res = await fetch(`http://localhost:8080/api/orders/${id}`, {
+                const res = await fetch(`${BACKEND_URL}/api/orders/${id}`, {
                     method: "DELETE",
                     headers: { Authorization: `Bearer ${token}` },
                 });
@@ -49,7 +51,7 @@ export default function OrderProduct() {
                 setOrders(prev => prev.filter(o => o.id !== id));
             } else {
                 // PATCH status
-                const res = await fetch(`http://localhost:8080/api/orders/${id}?status=${newStatus}`, {
+                const res = await fetch(`${BACKEND_URL}/api/orders/${id}?status=${newStatus}`, {
                     method: "PATCH",
                     headers: { Authorization: `Bearer ${token}` },
                 });
