@@ -9,10 +9,11 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // รองรับทั้ง Windows/Linux/Mac
-        String uploadPath = System.getProperty("user.dir") + "/uploads/";
-
-        registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:" + uploadPath);
+        // ชี้ตรงไปยัง folder ที่ไฟล์เก่าและไฟล์ใหม่อยู่
+        registry.addResourceHandler("/uploads/products/**")
+                .addResourceLocations(
+                        "file:/uploads/products/",
+                        "file:/app/uploads/products/"
+                );
     }
 }
