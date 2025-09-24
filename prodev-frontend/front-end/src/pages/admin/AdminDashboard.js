@@ -147,6 +147,7 @@ export default function AdminDashboard() {
                             <td className="p-2">${p.price}</td>
                             <td className="p-2 relative">
                                 <button
+                                    data-cy={`product-actions-${p.id}`}
                                     className="p-1 rounded hover:bg-gray-100"
                                     onClick={() => setDropdownOpen(dropdownOpen === p.id ? null : p.id)}
                                 >
@@ -155,12 +156,14 @@ export default function AdminDashboard() {
                                 {dropdownOpen === p.id && (
                                     <div className="absolute right-0 mt-2 w-36 bg-white border rounded shadow z-10">
                                         <button
+                                            data-cy={`delete-product-${p.id}`}
                                             className="flex items-center gap-2 w-full text-left px-2 py-1 hover:bg-red-600 hover:text-white"
                                             onClick={() => handleDelete(p.id)}
                                         >
                                             <Trash2 size={16} /> Delete
                                         </button>
                                         <button
+                                            data-cy={`update-product-${p.id}`}
                                             className="flex items-center gap-2 w-full text-left px-2 py-1 hover:bg-gray-200"
                                             onClick={() => navigate("/update/" + p.id, { state: { productId: p.id, username } })}
                                         >

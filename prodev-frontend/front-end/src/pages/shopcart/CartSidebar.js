@@ -29,7 +29,9 @@ export default function CartSidebar({ isCartOpen, onClose, cartItems, increaseQt
                 className={`fixed inset-0 bg-black/30 backdrop-blur-sm z-40 transition-opacity duration-300 ${isCartOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
                 onClick={onClose}
             />
-            <div className={`fixed top-0 right-0 w-96 h-full bg-white shadow-lg z-50 transform transition-transform duration-300 flex flex-col ${isCartOpen ? "translate-x-0" : "translate-x-full"}`}>
+            <div
+                data-testid="cart-sidebar"
+                className={`fixed top-0 right-0 w-96 h-full bg-white shadow-lg z-50 transform transition-transform duration-300 flex flex-col ${isCartOpen ? "translate-x-0" : "translate-x-full"}`}>
                 <div className="flex items-center justify-between px-6 py-4 border-b">
                     <h2 className="text-lg font-semibold">Shop cart</h2>
                     <button onClick={onClose}><X size={24} /></button>
@@ -95,6 +97,7 @@ export default function CartSidebar({ isCartOpen, onClose, cartItems, increaseQt
                     <div className="p-4 border-t bg-white">
                         <button
                             className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg text-base font-medium"
+                            data-testid="cart-payment-btn"
                             onClick={() => navigate("/payment", { state: { cartItems, total } })}
                         >
                             <CreditCard size={18} /> Payment ฿{total}

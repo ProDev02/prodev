@@ -91,7 +91,9 @@ export default function FavoriteListPage() {
             </p>
 
             <div className="overflow-x-auto bg-white shadow rounded-lg">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table
+                    data-testid="favorites-table"
+                    className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-200">
                     <tr>
                         <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Product</th>
