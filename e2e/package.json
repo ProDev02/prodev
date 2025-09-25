@@ -3,12 +3,14 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "test": "cypress run"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "End-to-End tests for ProDev",
   "devDependencies": {
     "cypress": "^15.2.0",
     "cypress-file-upload": "^5.0.8"
