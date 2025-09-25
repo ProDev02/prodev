@@ -25,7 +25,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 4) Build & Push Backend (multi-stage, includes Gradle build)
+      # 4) Build & Push Backend
       - name: Build & Push Backend
         uses: docker/build-push-action@v4
         with:
@@ -35,8 +35,6 @@ jobs:
           tags: |
             armmer/prodev-backend:latest
             armmer/prodev-backend:${{ github.sha }}
-          labels: |
-            org.opencontainers.image.source=https://github.com/ProDev02/prodev
 
       # 5) Build & Push Frontend
       - name: Build & Push Frontend
@@ -48,19 +46,23 @@ jobs:
           tags: |
             armmer/prodev-frontend:latest
             armmer/prodev-frontend:${{ github.sha }}
-          labels: |
-            org.opencontainers.image.source=https://github.com/ProDev02/prodev
 
-      # 6) Start containers with Docker Compose V2
+      # 6) Start containers
       - name: Start containers
         run: docker compose -f docker-compose.yml up -d --build
+
+      # 6.1) Wait for backend to be ready
+      - name: Wait for backend
+        run: |
+          echo "Waiting for backend on port 8080..."
+          npx wait-on http://localhost:8080
 
       # 7) Run E2E Tests (Cypress)
       - name: Install & Run Cypress Tests
         run: |
           cd e2e
           npm ci
-          npm test
+          npx cypress run
 
       # 8) Stop containers after test
       - name: Stop containers
