@@ -54,12 +54,7 @@ jobs:
 
       # 7. Run Cypress E2E Tests using Cypress Docker image
       - name: Run Cypress E2E Tests
-        run: |
-          docker run --rm \
-            --network host \   # ใช้ host network
-            -v ${{ github.workspace }}/e2e:/e2e \
-            -w /e2e \
-            cypress/included:15.2.0
+        run: docker run --rm --network host -v ${{ github.workspace }}/e2e:/e2e -w /e2e cypress/included:15.2.0
 
       # 8. Stop containers (always)
       - name: Stop containers
