@@ -1,3 +1,4 @@
+# CI/CD - Build, Push & E2E Test
 name: CI/CD - Build, Push & E2E Test
 
 on:
@@ -8,24 +9,19 @@ on:
 jobs:
   docker:
     runs-on: ubuntu-latest
-
     steps:
-      # 1. Checkout source code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. Set up Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      # 3. Login to Docker Hub
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 4. Build & Push Backend
       - name: Build & Push Backend
         uses: docker/build-push-action@v4
         with:
@@ -36,7 +32,6 @@ jobs:
             armmer/prodev-backend:latest
             armmer/prodev-backend:${{ github.sha }}
 
-      # 5. Build & Push Frontend
       - name: Build & Push Frontend
         uses: docker/build-push-action@v4
         with:
@@ -47,13 +42,15 @@ jobs:
             armmer/prodev-frontend:latest
             armmer/prodev-frontend:${{ github.sha }}
 
-      # 6. Start backend + frontend containers
       - name: Start all containers
+        run: docker compose -f docker-compose.yml up -d
+
+      - name: Wait for backend & frontend
         run: |
-          docker compose -f docker-compose.yml up -d
-          echo "Waiting for backend and frontend to be ready..."
           for i in {1..30}; do
-            if curl -s http://localhost:3000 && curl -s http://localhost:8000; then
+            # ตรวจสอบจาก network ภายใน container
+            if docker compose exec frontend sh -c "curl -s http://localhost:3000 >/dev/null" \
+               && docker compose exec backend sh -c "curl -s http://localhost:8080 >/dev/null"; then
               echo "All containers ready!"
               break
             fi
@@ -61,17 +58,15 @@ jobs:
             sleep 2
           done
 
-      # 7. Run Cypress E2E Tests
       - name: Run Cypress E2E Tests
         run: |
           docker run --rm \
-            --network host \
+            --network prodev_default \
             -v ${{ github.workspace }}/e2e:/e2e \
             -w /e2e \
-            -e CYPRESS_BASE_URL=http://localhost:3000 \
+            -e CYPRESS_BASE_URL=http://frontend:3000 \
             cypress/included:15.2.0
 
-      # 8. Stop containers (always)
       - name: Stop containers
         if: always()
         run: docker compose -f docker-compose.yml down
