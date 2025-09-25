@@ -62,14 +62,15 @@ jobs:
       # 7. Run Cypress E2E Tests
       - name: Run Cypress E2E Tests
         run: |
+          # ใช้ network host เพื่อให้ Cypress เข้าถึง frontend container
           docker run --rm \
-            --network host \  
+            --network host \
             -v ${{ github.workspace }}/e2e:/e2e \
             -w /e2e \
             -e CYPRESS_BASE_URL=http://localhost:3000 \
             cypress/included:15.2.0
 
-      # 8. Stop containers (always)
+# 8. Stop containers (always)
       - name: Stop containers
         if: always()
         run: docker compose -f docker-compose.yml down
