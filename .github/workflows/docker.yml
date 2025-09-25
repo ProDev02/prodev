@@ -63,9 +63,10 @@ jobs:
       - name: Run Cypress E2E Tests
         run: |
           docker run --rm \
+            --network host \  # <-- ใช้ network host (ง่ายสุดบน Linux)
             -v ${{ github.workspace }}/e2e:/e2e \
             -w /e2e \
-            -e CYPRESS_BASE_URL=http://host.docker.internal:3000 \
+            -e CYPRESS_BASE_URL=http://localhost:3000 \
             cypress/included:15.2.0
 
       # 8. Stop containers (always)
