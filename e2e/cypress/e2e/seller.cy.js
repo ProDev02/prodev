@@ -1,9 +1,11 @@
 /// <reference types="cypress" />
 
 describe("Admin Dashboard (Mocked) - Products", () => {
+    const BACKEND_URL = Cypress.env("BACKEND_URL") || "";
+
     beforeEach(() => {
         // Mock GET all products
-        cy.intercept("GET", "/api/products/all", {
+        cy.intercept("GET", `${BACKEND_URL}/api/products/all`, {
             statusCode: 200,
             body: [
                 {
@@ -20,13 +22,13 @@ describe("Admin Dashboard (Mocked) - Products", () => {
         }).as("getProducts");
 
         // Mock DELETE product
-        cy.intercept("DELETE", "/api/products/delete/*", {
+        cy.intercept("DELETE", `${BACKEND_URL}/api/products/delete/*`, {
             statusCode: 200,
             body: { success: true },
         }).as("deleteProduct");
 
         // Mock GET product by ID
-        cy.intercept("GET", "/api/products/1", {
+        cy.intercept("GET", `${BACKEND_URL}/api/products/1`, {
             statusCode: 200,
             body: {
                 id: "1",
@@ -41,18 +43,17 @@ describe("Admin Dashboard (Mocked) - Products", () => {
         }).as("getProduct");
 
         // Mock PUT update product
-        cy.intercept("PUT", "/api/products/update/1", {
+        cy.intercept("PUT", `${BACKEND_URL}/api/products/update/1`, {
             statusCode: 200,
             body: { id: "1", name: "Updated Product" },
         }).as("updateProduct");
 
         // Mock POST add product
-        cy.intercept("POST", "/api/products/add", {
+        cy.intercept("POST", `${BACKEND_URL}/api/products/add`, {
             statusCode: 200,
             body: { id: "2", name: "New Product" },
         }).as("addProduct");
 
-        // Visit admin dashboard
         cy.visit("/admin-dashboard", {
             onBeforeLoad(win) {
                 win.localStorage.setItem("admin_token", "mock-token");
@@ -60,15 +61,14 @@ describe("Admin Dashboard (Mocked) - Products", () => {
             },
         });
 
-        // Wait for GET all products
-        cy.wait("@getProducts", { timeout: 10000 });
+        cy.wait("@getProducts");
     });
 
     it("should delete a product", () => {
         cy.get('[data-cy="product-actions-1"]').click();
         cy.get('[data-cy="delete-product-1"]').click();
 
-        cy.wait("@deleteProduct", { timeout: 10000 }).its("response.statusCode").should("eq", 200);
+        cy.wait("@deleteProduct").its("response.statusCode").should("eq", 200);
         cy.get("table tbody tr").should("have.length", 0);
     });
 
@@ -80,7 +80,7 @@ describe("Admin Dashboard (Mocked) - Products", () => {
             win.history.replaceState({ productId: "1", username: "Admin" }, "");
         });
 
-        cy.wait("@getProduct", { timeout: 10000 });
+        cy.wait("@getProduct");
 
         cy.get('input[type="text"]').clear().type("Updated Product");
         cy.get('textarea').clear().type("Updated description");
@@ -97,7 +97,7 @@ describe("Admin Dashboard (Mocked) - Products", () => {
         });
 
         cy.contains("Save Changes").click();
-        cy.wait("@updateProduct", { timeout: 10000 }).its("response.statusCode").should("eq", 200);
+        cy.wait("@updateProduct").its("response.statusCode").should("eq", 200);
         cy.get(".animate-fadeIn").should("contain", "Product updated successfully!");
     });
 
@@ -126,7 +126,7 @@ describe("Admin Dashboard (Mocked) - Products", () => {
         });
 
         cy.contains("Create Product").click();
-        cy.wait("@addProduct", { timeout: 10000 }).its("response.statusCode").should("eq", 200);
+        cy.wait("@addProduct").its("response.statusCode").should("eq", 200);
 
         cy.on("window:alert", (txt) => {
             expect(txt).to.contains("✅ Product created successfully!");
@@ -135,13 +135,31 @@ describe("Admin Dashboard (Mocked) - Products", () => {
 });
 
 describe("Admin Dashboard (Mocked) - Orders", () => {
+    const BACKEND_URL = Cypress.env("BACKEND_URL") || "";
+
     beforeEach(() => {
         // Mock GET all orders
-        cy.intercept("GET", "/api/orders", {
+        cy.intercept("GET", `${BACKEND_URL}/api/orders`, {
             statusCode: 200,
             body: [
-                { id: "101", name: "Order Product 1", category: "Snack", quantity: 2, price: 50, status: "PENDING", image: "/images/order1.png" },
-                { id: "102", name: "Order Product 2", category: "Drink", quantity: 1, price: 30, status: "FULFILLED", image: "/images/order2.png" },
+                {
+                    id: "101",
+                    name: "Order Product 1",
+                    category: "Snack",
+                    quantity: 2,
+                    price: 50,
+                    status: "PENDING",
+                    image: "/images/order1.png",
+                },
+                {
+                    id: "102",
+                    name: "Order Product 2",
+                    category: "Drink",
+                    quantity: 1,
+                    price: 30,
+                    status: "FULFILLED",
+                    image: "/images/order2.png",
+                },
             ],
         }).as("getOrders");
 
@@ -151,7 +169,7 @@ describe("Admin Dashboard (Mocked) - Orders", () => {
             },
         });
 
-        cy.wait("@getOrders", { timeout: 10000 });
+        cy.wait("@getOrders");
     });
 
     it("should display all orders", () => {
@@ -161,14 +179,17 @@ describe("Admin Dashboard (Mocked) - Orders", () => {
     });
 
     it("should mark a PENDING order as FULFILLED", () => {
-        cy.intercept("PATCH", "/api/orders/101*", { statusCode: 200, body: { id: "101", status: "FULFILLED" } }).as("updateOrder");
+        cy.intercept("PATCH", `${BACKEND_URL}/api/orders/101*`, {
+            statusCode: 200,
+            body: { id: "101", status: "FULFILLED" },
+        }).as("updateOrder");
 
         cy.get("table tbody tr").contains("ORD101").parent().within(() => {
             cy.get("button").click();
         });
 
         cy.contains("✅ Fulfilled").click();
-        cy.wait("@updateOrder", { timeout: 10000 });
+        cy.wait("@updateOrder");
 
         cy.get("table tbody tr").contains("ORD101").parent().within(() => {
             cy.get("td").eq(5).should("contain", "FULFILLED");
@@ -176,65 +197,109 @@ describe("Admin Dashboard (Mocked) - Orders", () => {
     });
 
     it("should cancel a PENDING order", () => {
-        cy.intercept("DELETE", "/api/orders/101", { statusCode: 200 }).as("deleteOrder");
+        cy.intercept("DELETE", `${BACKEND_URL}/api/orders/101`, {
+            statusCode: 200,
+        }).as("deleteOrder");
 
         cy.get("table tbody tr").contains("ORD101").parent().within(() => {
             cy.get("button").click();
         });
 
         cy.contains("❌ Cancel").click();
-        cy.wait("@deleteOrder", { timeout: 10000 });
+        cy.wait("@deleteOrder");
 
         cy.get("table tbody tr").should("have.length", 1);
         cy.contains("ORD101").should("not.exist");
     });
-});
 
-describe("User (Mocked) - Orders > CartSidebar OrderTab", () => {
-    beforeEach(() => {
-        window.localStorage.setItem("token", "mocked-token");
+    // cypress/e2e/seller.cy.js
+    describe("User (Mocked) - Orders > CartSidebar OrderTab", () => {
 
-        cy.intercept("GET", "/api/orders/my", {
-            statusCode: 200,
-            body: [
-                { id: 1, name: "Product A", quantity: 2, price: 100, status: "FULFILLED", category: "Category 1", image: "/images/product-a.png" },
-                { id: 2, name: "Product B", quantity: 1, price: 50, status: "PENDING", category: "Category 2", image: "/images/product-b.png" },
-            ],
-        }).as("getOrders");
+        beforeEach(() => {
+            // mock token ใน localStorage
+            window.localStorage.setItem("token", "mocked-token");
 
-        cy.visit("/");
-    });
+            // mock GET orders
+            cy.intercept("GET", "http://localhost:8080/api/orders/my", {
+                statusCode: 200,
+                body: [
+                    {
+                        id: 1,
+                        name: "Product A",
+                        quantity: 2,
+                        price: 100,
+                        status: "FULFILLED",
+                        category: "Category 1",
+                        image: "/images/product-a.png"
+                    },
+                    {
+                        id: 2,
+                        name: "Product B",
+                        quantity: 1,
+                        price: 50,
+                        status: "PENDING",
+                        category: "Category 2",
+                        image: "/images/product-b.png"
+                    }
+                ],
+            }).as("getOrders");
 
-    it("should display orders in Order tab", () => {
-        cy.get("[data-testid=cart-button]").click();
-        cy.contains("Order").click();
-        cy.wait("@getOrders", { timeout: 10000 });
-
-        cy.contains("Product A").should("exist");
-        cy.contains("Product B").should("exist");
-
-        cy.contains("Product A").parent().within(() => {
-            cy.contains("FULFILLED").should("exist");
-            cy.contains("Receive").should("exist");
+            // visit หน้าแอป
+            cy.visit("/");
         });
 
-        cy.contains("Product B").parent().within(() => {
-            cy.contains("PENDING").should("exist");
-            cy.contains("Receive").should("not.exist");
+        it("should display orders in Order tab", () => {
+            // เปิด cart sidebar
+            cy.get("[data-testid=cart-button]").click();
+
+            // เลือก tab "Order"
+            cy.contains("Order").click();
+
+            // รอให้ mock API ถูกเรียก
+            cy.wait("@getOrders");
+
+            // ตรวจสอบ order ถูกแสดง
+            cy.contains("Product A").should("exist");
+            cy.contains("Product B").should("exist");
+
+            // ตรวจสอบ status และปุ่ม Receive สำหรับ FULFILLED
+            cy.contains("Product A")
+                .parent()
+                .within(() => {
+                    cy.contains("FULFILLED").should("exist");
+                    cy.contains("Receive").should("exist");
+                });
+
+            cy.contains("Product B")
+                .parent()
+                .within(() => {
+                    cy.contains("PENDING").should("exist");
+                    cy.contains("Receive").should("not.exist");
+                });
         });
-    });
 
-    it("should allow receiving FULFILLED orders", () => {
-        cy.intercept("PATCH", "/api/orders/1/receive", { statusCode: 200 }).as("receiveOrder");
+        it("should allow receiving FULFILLED orders", () => {
+            // mock PATCH receive
+            cy.intercept("PATCH", "http://localhost:8080/api/orders/1/receive", {
+                statusCode: 200,
+            }).as("receiveOrder");
 
-        cy.get("[data-testid=cart-button]").click();
-        cy.contains("Order").click();
+            // เปิด cart sidebar และ tab "Order"
+            cy.get("[data-testid=cart-button]").click();
+            cy.contains("Order").click();
 
-        cy.contains("Product A").parent().within(() => {
-            cy.contains("Receive").click();
+            // กดปุ่ม Receive
+            cy.contains("Product A")
+                .parent()
+                .within(() => {
+                    cy.contains("Receive").click();
+                });
+
+            // รอเรียก API
+            cy.wait("@receiveOrder");
+
+            // ตรวจสอบว่า order หายไป
+            cy.contains("Product A").should("not.exist");
         });
-
-        cy.wait("@receiveOrder", { timeout: 10000 });
-        cy.contains("Product A").should("not.exist");
     });
 });
