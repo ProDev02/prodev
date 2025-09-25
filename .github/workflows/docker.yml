@@ -25,7 +25,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 4) Build & Push Backend
+      # 4) Build & Push Backend (multi-stage, includes Gradle build)
       - name: Build & Push Backend
         uses: docker/build-push-action@v4
         with:
@@ -51,12 +51,18 @@ jobs:
           labels: |
             org.opencontainers.image.source=https://github.com/ProDev02/prodev
 
-      # 6) Run mocked E2E tests (no Docker)
-      - name: Install & Run Cypress (mocked)
-        working-directory: ./e2e
-        run: |
-          npm ci
-          npx cypress run --headless --browser chrome
-        env:
-          BACKEND_URL: ""  # ใช้ mocked API ใน spec
+      # 6) Start containers with Docker Compose V2
+      - name: Start containers
+        run: docker compose -f docker-compose.yml up -d --build
 
+      # 7) Run E2E Tests (Cypress)
+      - name: Install & Run Cypress Tests
+        run: |
+          cd e2e
+          npm ci
+          npm test
+
+      # 8) Stop containers after test
+      - name: Stop containers
+        if: always()
+        run: docker compose -f docker-compose.yml down
