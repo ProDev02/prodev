@@ -52,16 +52,29 @@ jobs:
           docker compose -f docker-compose.yml up -d frontend
           sleep 5 # รอ frontend server พร้อม
 
-      # 7. Install dependencies & run Cypress E2E tests
+      # 7. Install Cypress dependencies
+      - name: Install Cypress Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk2.0-0 \
+            libgtk-3-0 \
+            libnotify-dev \
+            libgconf-2-4 \
+            libnss3 \
+            libxss1 \
+            libasound2 \
+            libxtst6 \
+            xvfb
+
+      # 8. Install dependencies & run Cypress E2E tests
       - name: Install & Run Cypress Tests
         run: |
           cd e2e
           npm ci
           npx cypress run --headless --browser electron
-        env:
-          DISPLAY: ":99.0"
 
-      # 8. Stop frontend container (always)
+      # 9. Stop containers (always)
       - name: Stop containers
         if: always()
         run: docker compose -f docker-compose.yml down
