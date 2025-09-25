@@ -61,6 +61,8 @@ jobs:
           cd e2e
           npm ci
           npm test
+        env:
+          BACKEND_URL: http://localhost:8080
 
       # 8) Stop containers after test
       - name: Stop containers
