@@ -58,12 +58,12 @@ jobs:
           echo "Waiting for backend to be ready..."
           sleep 20
 
-      # 7) Run E2E Tests (Cypress)
-      - name: Install & Run Cypress Tests
+      # 7) Run E2E tests (mocked API, headless)
+      - name: Install & Run Cypress
+        working-directory: ./e2e
         run: |
-          cd e2e
           npm ci
-          npm test
+          npx cypress run --headless --browser chrome
         env:
           BACKEND_URL: "http://localhost:8080"
 
