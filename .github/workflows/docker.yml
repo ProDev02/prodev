@@ -8,6 +8,7 @@ on:
 jobs:
   docker:
     runs-on: ubuntu-latest
+
     steps:
       # 1. Checkout source code
       - name: Checkout code
@@ -24,7 +25,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 4. Build & Push Backend (optional, แต่ push ไว้ก่อน)
+      # 4. Build & Push Backend
       - name: Build & Push Backend
         uses: docker/build-push-action@v4
         with:
@@ -46,23 +47,23 @@ jobs:
             armmer/prodev-frontend:latest
             armmer/prodev-frontend:${{ github.sha }}
 
-      # 6. Start frontend container
-      - name: Start frontend container
+      # 6. Start backend + frontend containers
+      - name: Start all containers
         run: |
-          docker compose -f docker-compose.yml up -d frontend
-          echo "Waiting for frontend to be ready..."
-          for i in {1..20}; do
-            if curl -s http://localhost:3000; then
-              echo "Frontend ready!"
+          docker compose -f docker-compose.yml up -d
+          echo "Waiting for backend and frontend to be ready..."
+          for i in {1..30}; do
+            if curl -s http://localhost:3000 && curl -s http://localhost:8000; then
+              echo "All containers ready!"
               break
             fi
+            echo "Waiting..."
             sleep 2
           done
 
       # 7. Run Cypress E2E Tests
       - name: Run Cypress E2E Tests
         run: |
-          # ใช้ network host เพื่อให้ Cypress เข้าถึง frontend container
           docker run --rm \
             --network host \
             -v ${{ github.workspace }}/e2e:/e2e \
@@ -70,7 +71,7 @@ jobs:
             -e CYPRESS_BASE_URL=http://localhost:3000 \
             cypress/included:15.2.0
 
-# 8. Stop containers (always)
+      # 8. Stop containers (always)
       - name: Stop containers
         if: always()
         run: docker compose -f docker-compose.yml down
