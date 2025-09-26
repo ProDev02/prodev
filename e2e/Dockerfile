@@ -1,14 +1,15 @@
-# ใช้ Cypress image ที่มีมาให้
-FROM cypress/included:15.2.0
+FROM node:20-alpine
 
-# กำหนด working directory สำหรับ Cypress
+# ติดตั้ง npm
+RUN npm install -g npm
+
+# คัดลอกและติดตั้ง dependencies ของ project
 WORKDIR /e2e
-
-# คัดลอกไฟล์จากเครื่องของเราไปยัง container
-COPY . /e2e
-
-# ติดตั้ง Cypress (หากยังไม่ได้ติดตั้งใน base image)
+COPY package*.json ./
 RUN npm install
 
-# รัน Cypress เมื่อ container เริ่มต้น
-CMD ["npx", "cypress", "open"]
+# คัดลอกโค้ดทั้งหมด
+COPY . .
+
+# รันคำสั่ง npx cypress
+CMD ["npx", "cypress", "run"]
