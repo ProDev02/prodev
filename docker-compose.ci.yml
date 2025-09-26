@@ -8,7 +8,7 @@ services:
       MYSQL_ROOT_PASSWORD: ict555!!!
       MYSQL_DATABASE: prodev_db
     ports:
-      - "3308:3306"  # port ใหม่
+      - "3308:3306"
     volumes:
       - prodev_db_ci_data:/var/lib/mysql
 
@@ -17,7 +17,7 @@ services:
       context: ./prodev
       dockerfile: Dockerfile
     ports:
-      - "18080:8080" # port ใหม่
+      - "18080:8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://prodev_db_ci:3306/prodev_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: root
@@ -30,7 +30,7 @@ services:
       context: ./prodev-frontend/front-end
       dockerfile: Dockerfile
     ports:
-      - "3001:3000"  # port ใหม่
+      - "3001:3000"
     depends_on:
       - backend_ci
 
@@ -38,7 +38,7 @@ services:
     image: cypress/included:15.3.0
     working_dir: /e2e
     volumes:
-      - ./e2e:/e2e
+      - ${WORKSPACE}/e2e:/e2e   # ใช้ absolute path ของ Jenkins workspace
     depends_on:
       - frontend_ci
       - backend_ci
