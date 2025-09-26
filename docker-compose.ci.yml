@@ -15,7 +15,7 @@ services:
       context: ./prodev
       dockerfile: Dockerfile
     ports:
-      - "8081:8080" # ใช้ port แยกสำหรับ CI
+      - "8082:8080" # ใช้ port แยกสำหรับ CI
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://prodev_db_ci:3306/prodev_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: root
