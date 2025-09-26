@@ -1,7 +1,8 @@
 FROM node:20-alpine
 
-# ติดตั้ง npm
+# ติดตั้ง npm และ npx
 RUN npm install -g npm
+RUN npm install -g npx
 
 # คัดลอกและติดตั้ง dependencies ของ project
 WORKDIR /e2e
