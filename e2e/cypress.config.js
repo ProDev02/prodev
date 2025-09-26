@@ -1,3 +1,4 @@
+//IdeaProjects/e2e/cypress.config.js
 const { defineConfig } = require("cypress");
 
 module.exports = defineConfig({
@@ -7,6 +8,8 @@ module.exports = defineConfig({
         setupNodeEvents(on, config) {
             // implement node event listeners here
         },
+        experimentalMemoryManagement: true,
+        video: false,
     },
     env: {
         API_BASE: "http://localhost:8080"

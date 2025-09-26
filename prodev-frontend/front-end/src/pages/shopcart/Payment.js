@@ -13,7 +13,6 @@ export default function CheckoutPage() {
 
     // รับข้อมูลจาก CartSidebar
     const cartItems = state?.cartItems || [];
-    const totalFromSidebar = state?.total || 0;
 
     const [selectedDelivery, setSelectedDelivery] = useState("Standard");
     const [showModal, setShowModal] = useState(false);
