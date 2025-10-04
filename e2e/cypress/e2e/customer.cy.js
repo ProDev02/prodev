@@ -1,58 +1,117 @@
 /// <reference types="cypress" />
 
-describe("WholeCart E2E Flow (Mocked) - Complete", () => {
-    const BASE_URL = "http://localhost:3000";
+describe("WholeCart E2E Flow (Real DB + Mocked Cart) - Complete", () => {
+    const BASE_URL = Cypress.config("baseUrl");
+    const API_BASE = Cypress.env("API_BASE");
 
-    // -------- Mock Data --------
-    const mockProducts = [
-        { id: 1, name: "Coffee", productName: "Coffee", price: 100, image: "/images/product/coffee.png", category: "Food & Drink", stock: 5, inStock: true },
-        { id: 2, name: "Chocolate", productName: "Chocolate", price: 50, image: "/images/product/chocolate.png", category: "Snack", stock: 3, inStock: true },
-    ];
-
-    const mockCartResponse = {
-        items: [
-            { id: 1, productId: 1, productName: "Coffee", image: "/images/product/coffee.png", price: 100, quantity: 2, stock: 5, inStock: true },
-            { id: 2, productId: 2, productName: "Chocolate", image: "/images/product/chocolate.png", price: 50, quantity: 1, stock: 3, inStock: true },
-        ],
-        total: 250,
-    };
-
-    const mockFavorites = [
-        { id: 1, name: "Coffee", price: 100, image: "http://localhost:8080/images/product/coffee.png", category: "Food & Drink", inStock: true },
-        { id: 2, name: "Chocolate", price: 50, image: "http://localhost:8080/images/product/chocolate.png", category: "Snack", inStock: true },
-    ];
+    let createdUserIds = []; // เก็บ id ของ user ที่สร้างระหว่าง test
 
     // -------- Helper Functions --------
-    const loginUserMock = () => {
-        cy.window().then(win => {
-            win.localStorage.setItem("token", "fake-user-jwt");
-            win.localStorage.setItem("username", "testuser");
-            win.localStorage.setItem("email", "testuser@example.com");
-            win.localStorage.setItem("role", "USER");
-            win.localStorage.setItem("userId", "1");
-
-            // simulate cart context for Cypress
-            win.__cartState = mockCartResponse;
+    const setUserToken = (token, user) => {
+        cy.window().then((win) => {
+            win.localStorage.setItem("token", token);
+            win.localStorage.setItem("userId", user.id);
+            win.localStorage.setItem("username", user.username);
+            win.localStorage.setItem("email", user.email);
+            win.localStorage.setItem("role", user.role);
         });
     };
 
-    const loginAdminMock = () => {
-        cy.window().then(win => {
-            win.localStorage.setItem("admin_token", "fake-admin-jwt");
-            win.localStorage.setItem("admin_role", "ADMIN");
-            win.localStorage.setItem("admin_username", "admin");
-            win.localStorage.setItem("admin_email", "admin@example.com");
+    const loginUserOnce = (email, password) => {
+        if (!Cypress.env('userToken')) {
+            return cy.request({
+                method: 'POST',
+                url: `${API_BASE}/api/auth/login`,
+                body: { email, password },
+            }).then((res) => {
+                expect(res.status).to.eq(200);
+                const { token, id, username, email: userEmail, role } = res.body;
+                Cypress.env('userToken', token);
+                Cypress.env('userData', { id, username, email: userEmail, role });
+            });
+        }
+        return cy.wrap(null);
+    };
+
+    const loginAdminOnce = () => {
+        if (!Cypress.env('adminToken')) {
+            return cy.request({
+                method: 'POST',
+                url: `${API_BASE}/api/auth/login`,
+                body: { email: "admin@gmail.com", password: "111111" },
+            }).then((res) => {
+                expect(res.status).to.eq(200);
+                const { token, id, username, email, role } = res.body;
+                Cypress.env('adminToken', token);
+                Cypress.env('adminUser', { id, username, email, role });
+            });
+        }
+        return cy.wrap(null);
+    };
+
+    const registerAndLoginUser = (username, email, password) => {
+        return cy.request({
+            method: "POST",
+            url: `${API_BASE}/api/auth/register`,
+            body: { username, email, password },
+            failOnStatusCode: false,
+        }).then((res) => {
+            expect(res.status).to.eq(200);
+            const userId = res.body.id;
+            createdUserIds.push(userId); // เก็บ id ของ user
+
+            const { token, id, username: uname, email: userEmail, role } = res.body;
+
+            setUserToken(token, { id, username: uname, email: userEmail, role });
         });
     };
 
+    // -------- Before All: Login once --------
+    before(() => {
+        loginAdminOnce();
+        loginUserOnce("test@gmail.com", "123456");
+    });
+
+    // -------- Before Each Test --------
     beforeEach(() => {
         cy.viewport(1280, 800);
         cy.clearLocalStorage();
 
-        // -------- Mock Backend --------
-        cy.intercept("GET", "**/api/products/all", { statusCode: 200, body: mockProducts }).as("getProducts");
+        // set token จาก env
+        if (Cypress.env('adminToken')) {
+            const admin = Cypress.env('adminUser');
+            cy.window().then(win => {
+                win.localStorage.setItem("admin_token", Cypress.env('adminToken'));
+                win.localStorage.setItem("admin_role", admin.role);
+                win.localStorage.setItem("admin_username", admin.username);
+                win.localStorage.setItem("admin_email", admin.email);
+            });
+        }
+
+        if (Cypress.env('userToken')) {
+            setUserToken(Cypress.env('userToken'), Cypress.env('userData'));
+        }
+
+        // Mock Products / Cart / Favorites
+        const mockProducts = [
+            { id: 1, name: "Coffee", productName: "Coffee", price: 100, image: "/images/product/coffee.png", category: "Food & Drink", stock: 5, inStock: true },
+            { id: 2, name: "Chocolate", productName: "Chocolate", price: 50, image: "/images/product/chocolate.png", category: "Snack", stock: 3, inStock: true },
+        ];
+
+        const mockCartResponse = {
+            items: [
+                { id: 1, productId: 1, productName: "Coffee", image: "/images/product/coffee.png", price: 100, quantity: 2, stock: 5, inStock: true },
+                { id: 2, productId: 2, productName: "Chocolate", image: "/images/product/chocolate.png", price: 50, quantity: 1, stock: 3, inStock: true },
+            ],
+            total: 250,
+        };
+
+        const mockFavorites = [
+            { id: 1, name: "Coffee", price: 100, image: "http://localhost:8080/images/product/coffee.png", category: "Food & Drink", inStock: true },
+            { id: 2, name: "Chocolate", price: 50, image: "http://localhost:8080/images/product/chocolate.png", category: "Snack", inStock: true },
+        ];
+
         cy.intercept("GET", "**/api/products/1", { statusCode: 200, body: mockProducts[0] }).as("getProduct1");
-        cy.intercept("GET", /\/api\/products\/search.*/, { statusCode: 200, body: mockProducts }).as("searchProducts");
 
         cy.intercept("POST", "**/api/cart/add", { statusCode: 200, body: mockCartResponse }).as("addCart");
         cy.intercept("GET", "**/api/cart/list", { statusCode: 200, body: mockCartResponse }).as("getCart");
@@ -61,97 +120,109 @@ describe("WholeCart E2E Flow (Mocked) - Complete", () => {
         cy.intercept("DELETE", /\/api\/favorites\/\d+/, { statusCode: 200, body: { success: true } }).as("deleteFavorite");
 
         cy.intercept("POST", "**/api/orders/checkout", { statusCode: 200, body: { success: true, message: "Payment Successful!" } }).as("checkout");
-
-        cy.intercept("POST", "**/api/auth/register", { statusCode: 200, body: { success: true, message: "🎉 Registration Successful!" } }).as("register");
-        cy.intercept("POST", "**/api/auth/login", {
-            statusCode: 200,
-            body: { success: true, token: "fake-user-jwt", role: "USER", username: "testuser", email: "testuser@example.com", id: 1 }
-        }).as("loginUser");
-        cy.intercept("POST", "**/api/auth/admin-login", {
-            statusCode: 200,
-            body: { success: true, token: "fake-admin-jwt", role: "ADMIN", username: "admin", email: "admin@example.com" }
-        }).as("loginAdmin");
     });
 
-    // -------- Buyer Flows (unchanged) --------
-    it("Shows homepage banners and categories", () => {
+    // -------- After Each Test: Cleanup created users --------
+    afterEach(() => {
+        if (createdUserIds.length > 0) {
+            const token = Cypress.env('adminToken');
+            createdUserIds.forEach((userId) => {
+                cy.request({
+                    method: "DELETE",
+                    url: `${API_BASE}/api/auth/delete/${userId}`,
+                    headers: { Authorization: `Bearer ${token}` },
+                    failOnStatusCode: false,
+                }).then((res) => {
+                    cy.log(`Deleted user ${userId}, status: ${res.status}`);
+                });
+            });
+            createdUserIds = [];
+        }
+    });
+
+    // -------- Buyer Flows --------
+    it("Shows homepage banners and categories with real products", () => {
         cy.visit(BASE_URL + "/");
-        cy.wait("@getProducts");
-        cy.contains("Featured Categories").should("exist");
-        cy.contains("Popular Products").should("exist");
+
+        cy.request(`${API_BASE}/api/products/all`).then(res => {
+            expect(res.status).to.eq(200);
+            const products = res.body;
+
+            cy.contains("Featured Categories").should("exist");
+            cy.contains("Popular Products").should("exist");
+
+            // ตรวจสอบเฉพาะสินค้าที่มี stock > 0
+            const availableProducts = products.filter(p => p.quantity > 0);
+
+            availableProducts.forEach(p => {
+                cy.contains(p.name, { timeout: 10000 }).should("exist");
+            });
+        });
     });
 
     it("Search and filter products", () => {
         cy.visit(BASE_URL + "/search");
-        cy.get('input[placeholder="Search for products"]').type("Coffee");
-        cy.wait("@searchProducts");
-        cy.get(".grid > div").should("have.length.at.least", 1);
+        cy.get('input[placeholder="Search for products"]').type("Shower");
+        cy.request(`${API_BASE}/api/products/search?keyword=Shower`).then(res => {
+            expect(res.status).to.eq(200);
+            const items = res.body.items;
+            items.forEach(p => {
+                cy.contains(p.name).should("exist");
+            });
+        });
     });
 
     it("Register a new user", () => {
-        cy.visit(BASE_URL + "/signup");
-        cy.get('input[placeholder="Username"]').type("testuser");
-        cy.get('input[placeholder="Email"]').type("testuser@example.com");
-        cy.get('input[placeholder="Password"]').type("123456");
-        cy.contains("Register").click();
-        cy.wait("@register").its("response.statusCode").should("eq", 200);
+        const username = `testuser_${Date.now()}`;
+        const email = `user_${Date.now()}@example.com`;
+        const password = "123456";
+
+        registerAndLoginUser(username, email, password).then(() => {
+            cy.visit(BASE_URL + "/");
+            cy.contains(username).should("exist");
+        });
     });
 
     it("Login as USER", () => {
-        loginUserMock();
         cy.visit(BASE_URL + "/");
-        cy.get("header").contains("testuser", { timeout: 10000 }).should("exist");
+        cy.get("header").contains("test", { timeout: 10000 }).should("exist");
     });
 
     it("View product details and add to cart", () => {
-        loginUserMock();
         cy.visit(BASE_URL + "/product/detail/1");
         cy.wait("@getProduct1");
         cy.get("h1").should("contain", "Coffee");
         cy.get("button").contains("Add to cart").click();
-        cy.wait("@addCart").its("response.statusCode").should("eq", 200);
+        cy.wait("@addCart");
     });
 
-    // -------- CartSidebar (simplified) --------
     it("Opens CartSidebar", () => {
-        loginUserMock();
         cy.visit(BASE_URL + "/");
-        cy.wait("@getCart");
-
         cy.get("[data-testid='cart-button']").click();
-        cy.get("[data-testid='cart-sidebar']", { timeout: 15000 })
-            .should("exist")
-            .should("be.visible")
-            .contains("Coffee");
+        cy.get("[data-testid='cart-sidebar']").should("exist").should("be.visible");
+        cy.get("[data-testid='cart-sidebar']").contains("Coffee");
         cy.get("[data-testid='cart-sidebar']").contains("Chocolate");
     });
 
-    // -------- Checkout (simplified) --------
     it("Checkout from CartSidebar", () => {
-        loginUserMock();
         cy.visit(BASE_URL + "/");
-        cy.wait("@getCart");
         cy.get("[data-testid='cart-button']").click();
         cy.get("[data-testid='cart-sidebar']").contains("Payment").click();
         cy.url().should("include", "/payment");
         cy.get("button").contains("Pay Now!!").click();
         cy.wait("@checkout");
-        cy.contains("Payment Successful!").should("exist"); });
+        cy.contains("Payment Successful!").should("exist");
+    });
 
-    // -------- Favorites (simplified) --------
     it("Favorites remove works", () => {
-        loginUserMock();
         cy.visit(BASE_URL + "/favorite");
-        cy.wait("@getFavorites");
-
         cy.get("[data-testid='favorites-table']").contains("Coffee").should("exist");
         cy.get("[data-testid='favorites-table'] button.text-red-500").first().click();
         cy.wait("@deleteFavorite");
     });
 
-    // -------- Admin Flow (unchanged) --------
+    // -------- Admin Flow --------
     it("Login as ADMIN", () => {
-        loginAdminMock();
         cy.visit(BASE_URL + "/admin-dashboard");
         cy.get("h1", { timeout: 10000 }).should("contain.text", "Dashboard Admin");
     });

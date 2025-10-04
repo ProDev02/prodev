@@ -51,4 +51,9 @@ public class AuthService {
 
         return new AuthResponse(user.getUsername(), user.getEmail(), user.getRole(), token, user.getId());
     }
+
+    // -------- ลบ user ตาม id --------
+    public void deleteUserById(Long id) {
+        userRepository.deleteById(id);
+    }
 }

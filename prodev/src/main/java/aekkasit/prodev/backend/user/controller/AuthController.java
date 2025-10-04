@@ -26,4 +26,11 @@ public class AuthController {
         AuthResponse response = authService.login(request);
         return ResponseEntity.ok(response);
     }
+
+    // -------- ลบ user หลัง test / ลบ user ตาม id --------
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        authService.deleteUserById(id);
+        return ResponseEntity.ok().body("User deleted successfully");
+    }
 }
