@@ -158,29 +158,40 @@ describe("WholeCart E2E Flow (Real DB + Mocked Cart) - Complete", () => {
     });
 
     // -------- ✅ ใช้ฐานข้อมูลจริง --------
-    it("View product details and add to cart (real DB)", () => {
+    it("View 2 product details and add to cart (real DB)", () => {
         cy.request(`${API_BASE}/api/products/all`).then(res => {
             expect(res.status).to.eq(200);
-            const product = res.body.find(p => p.quantity > 0);
-            expect(product).to.exist;
 
-            cy.log(`Testing product: ${product.name} (id: ${product.id})`);
-            cy.visit(`${BASE_URL}/product/detail/${product.id}`);
+            // เลือกสินค้าที่มี quantity > 0 จำนวน 2 ตัว
+            const products = res.body.filter(p => p.quantity > 0).slice(0, 2);
+            expect(products.length).to.eq(2);
 
-            cy.get("h1", { timeout: 10000 }).should("contain", product.name);
+            // วน loop เพื่อเข้า detail แต่ละสินค้า
+            products.forEach((product) => {
+                cy.log(`Testing product: ${product.name} (id: ${product.id})`);
+                cy.visit(`${BASE_URL}/product/detail/${product.id}`);
 
-            cy.get("button")
-                .contains(/Add to cart/i, { timeout: 10000 })
-                .should("be.visible")
-                .click();
+                cy.get("h1", { timeout: 10000 }).should("contain", product.name);
 
+                cy.get("button")
+                    .contains(/Add to cart/i, { timeout: 10000 })
+                    .should("be.visible")
+                    .click();
+            });
+
+            // เปิด cart sidebar
             cy.get("[data-testid='cart-button']", { timeout: 10000 })
                 .should("exist")
                 .click();
 
+            // ตรวจสอบว่า sidebar มีสินค้าทั้งสองตัว
             cy.get("[data-testid='cart-sidebar']", { timeout: 10000 })
                 .should("be.visible")
-                .and("contain", product.name);
+                .and(($sidebar) => {
+                    products.forEach((product) => {
+                        expect($sidebar).to.contain(product.name);
+                    });
+                });
         });
     });
 

@@ -123,7 +123,7 @@ export default function AddNewProduct() {
                                     className="w-full border rounded px-3 py-2"
                                 >
                                     <option value="">Product Categories</option>
-                                    <option>Snack</option>
+                                    <option value="Snack">Snack</option>
                                     <option>Food & Drink</option>
                                     <option>SmartPhone</option>
                                     <option>Furniture</option>

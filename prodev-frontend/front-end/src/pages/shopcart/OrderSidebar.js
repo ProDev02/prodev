@@ -75,6 +75,7 @@ export default function OrderTab() {
                     <div
                         key={order.id}
                         className="relative flex items-start space-x-4 pb-4 border-b"
+                        data-testid={`order-row-${order.id}`}
                     >
                         <span className="absolute top-0 right-0 text-xs font-medium text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded">
                             x{order.quantity}
