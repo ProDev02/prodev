@@ -91,35 +91,6 @@ describe("WholeCart E2E Flow (Real DB + Mocked Cart) - Complete", () => {
         if (Cypress.env('userToken')) {
             setUserToken(Cypress.env('userToken'), Cypress.env('userData'));
         }
-
-        // Mock Products / Cart / Favorites
-        const mockProducts = [
-            { id: 1, name: "Coffee", productName: "Coffee", price: 100, image: "/images/product/coffee.png", category: "Food & Drink", stock: 5, inStock: true },
-            { id: 2, name: "Chocolate", productName: "Chocolate", price: 50, image: "/images/product/chocolate.png", category: "Snack", stock: 3, inStock: true },
-        ];
-
-        const mockCartResponse = {
-            items: [
-                { id: 1, productId: 1, productName: "Coffee", image: "/images/product/coffee.png", price: 100, quantity: 2, stock: 5, inStock: true },
-                { id: 2, productId: 2, productName: "Chocolate", image: "/images/product/chocolate.png", price: 50, quantity: 1, stock: 3, inStock: true },
-            ],
-            total: 250,
-        };
-
-        const mockFavorites = [
-            { id: 1, name: "Coffee", price: 100, image: "http://localhost:8080/images/product/coffee.png", category: "Food & Drink", inStock: true },
-            { id: 2, name: "Chocolate", price: 50, image: "http://localhost:8080/images/product/chocolate.png", category: "Snack", inStock: true },
-        ];
-
-        cy.intercept("GET", "**/api/products/1", { statusCode: 200, body: mockProducts[0] }).as("getProduct1");
-
-        cy.intercept("POST", "**/api/cart/add", { statusCode: 200, body: mockCartResponse }).as("addCart");
-        cy.intercept("GET", "**/api/cart/list", { statusCode: 200, body: mockCartResponse }).as("getCart");
-
-        cy.intercept("GET", "**/api/favorites", { statusCode: 200, body: mockFavorites }).as("getFavorites");
-        cy.intercept("DELETE", /\/api\/favorites\/\d+/, { statusCode: 200, body: { success: true } }).as("deleteFavorite");
-
-        cy.intercept("POST", "**/api/orders/checkout", { statusCode: 200, body: { success: true, message: "Payment Successful!" } }).as("checkout");
     });
 
     // -------- After Each Test: Cleanup created users --------
@@ -151,9 +122,7 @@ describe("WholeCart E2E Flow (Real DB + Mocked Cart) - Complete", () => {
             cy.contains("Featured Categories").should("exist");
             cy.contains("Popular Products").should("exist");
 
-            // ตรวจสอบเฉพาะสินค้าที่มี stock > 0
             const availableProducts = products.filter(p => p.quantity > 0);
-
             availableProducts.forEach(p => {
                 cy.contains(p.name, { timeout: 10000 }).should("exist");
             });
@@ -188,38 +157,134 @@ describe("WholeCart E2E Flow (Real DB + Mocked Cart) - Complete", () => {
         cy.get("header").contains("test", { timeout: 10000 }).should("exist");
     });
 
-    it("View product details and add to cart", () => {
-        cy.visit(BASE_URL + "/product/detail/1");
-        cy.wait("@getProduct1");
-        cy.get("h1").should("contain", "Coffee");
-        cy.get("button").contains("Add to cart").click();
-        cy.wait("@addCart");
+    // -------- ✅ ใช้ฐานข้อมูลจริง --------
+    it("View product details and add to cart (real DB)", () => {
+        cy.request(`${API_BASE}/api/products/all`).then(res => {
+            expect(res.status).to.eq(200);
+            const product = res.body.find(p => p.quantity > 0);
+            expect(product).to.exist;
+
+            cy.log(`Testing product: ${product.name} (id: ${product.id})`);
+            cy.visit(`${BASE_URL}/product/detail/${product.id}`);
+
+            cy.get("h1", { timeout: 10000 }).should("contain", product.name);
+
+            cy.get("button")
+                .contains(/Add to cart/i, { timeout: 10000 })
+                .should("be.visible")
+                .click();
+
+            cy.get("[data-testid='cart-button']", { timeout: 10000 })
+                .should("exist")
+                .click();
+
+            cy.get("[data-testid='cart-sidebar']", { timeout: 10000 })
+                .should("be.visible")
+                .and("contain", product.name);
+        });
     });
 
-    it("Opens CartSidebar", () => {
+    it("Opens CartSidebar and verifies real DB cart items", () => {
         cy.visit(BASE_URL + "/");
-        cy.get("[data-testid='cart-button']").click();
-        cy.get("[data-testid='cart-sidebar']").should("exist").should("be.visible");
-        cy.get("[data-testid='cart-sidebar']").contains("Coffee");
-        cy.get("[data-testid='cart-sidebar']").contains("Chocolate");
+
+        cy.get("[data-testid='cart-button']", { timeout: 10000 }).click();
+
+        cy.request({
+            method: "GET",
+            url: `${API_BASE}/api/cart/list`,
+            headers: { Authorization: `Bearer ${Cypress.env('userToken')}` },
+        }).then(res => {
+            expect(res.status).to.eq(200);
+            const items = res.body.items || [];
+
+            if (items.length === 0) {
+                cy.log("Cart is empty, please ensure add-to-cart works.");
+            } else {
+                items.forEach(item => {
+                    cy.get("[data-testid='cart-sidebar']").contains(item.productName);
+                });
+            }
+
+            cy.get("[data-testid='cart-sidebar']").should("be.visible");
+        });
     });
 
-    it("Checkout from CartSidebar", () => {
+    it("Checkout from CartSidebar (real DB order creation)", () => {
+        cy.intercept("POST", "**/api/orders/checkout").as("checkoutReal");
+
         cy.visit(BASE_URL + "/");
         cy.get("[data-testid='cart-button']").click();
         cy.get("[data-testid='cart-sidebar']").contains("Payment").click();
+
         cy.url().should("include", "/payment");
-        cy.get("button").contains("Pay Now!!").click();
-        cy.wait("@checkout");
+
+        cy.get("button").contains("Pay Now!!").should("be.visible").click();
+
+        // ✅ รอให้ checkout request สำเร็จจริง
+        cy.wait("@checkoutReal").its("response.statusCode").should("eq", 200);
+
+        // ✅ รอ backend เขียนลง DB จริง (เผื่อดีเลย์)
+        cy.wait(1000);
+
+        cy.request({
+            method: "GET",
+            url: `${API_BASE}/api/orders/my`,
+            headers: { Authorization: `Bearer ${Cypress.env("userToken")}` },
+        }).then((res) => {
+            expect(res.status).to.eq(200);
+            expect(res.body.length, "order count").to.be.greaterThan(0);
+
+            const lastOrder = res.body[res.body.length - 1];
+            cy.log(`✅ Order created successfully: ${lastOrder.name}`);
+        });
+
         cy.contains("Payment Successful!").should("exist");
     });
 
-    it("Favorites remove works", () => {
-        cy.visit(BASE_URL + "/favorite");
-        cy.get("[data-testid='favorites-table']").contains("Coffee").should("exist");
-        cy.get("[data-testid='favorites-table'] button.text-red-500").first().click();
-        cy.wait("@deleteFavorite");
+    it("Add favorite from product detail (item 4) and remove in FavoriteListPage (real backend)", () => {
+        // ดึงสินค้าจริงจาก backend
+        cy.request({
+            method: "GET",
+            url: `${API_BASE}/api/products/all`,
+        }).then((res) => {
+            expect(res.status).to.eq(200);
+            const products = res.body.filter(p => p.quantity > 0);
+            expect(products.length).to.be.gte(4);
+
+            const product = products[3]; // เลือกสินค้าลำดับที่ 4
+
+            cy.visit(`${BASE_URL}/product/detail/${product.id}`);
+
+            // เช็คว่าหน้าโหลดสินค้าถูกต้อง
+            cy.get("h1", { timeout: 10000 }).should("contain", product.name);
+
+            // กดหัวใจเพิ่ม favorite
+            cy.get("[aria-label='Favorite']").click();
+
+            // รอให้ backend update (เล็กน้อย)
+            cy.wait(500);
+
+            // เข้า favorite list page
+            cy.visit(BASE_URL + "/favorite");
+
+            // หารายการ favorite ที่เพิ่งกด
+            cy.get("[data-testid='favorites-table']")
+                .contains(product.name)
+                .should("exist")
+                .parents("tr")
+                .find("button.text-red-500")
+                .click();
+
+            // รอ backend ลบ favorite จริง
+            cy.wait(500);
+
+            // ตรวจสอบว่าหายไปแล้ว
+            cy.get("[data-testid='favorites-table']")
+                .contains(product.name)
+                .should("not.exist");
+        });
     });
+
 
     // -------- Admin Flow --------
     it("Login as ADMIN", () => {

@@ -163,7 +163,7 @@ export default function UpdateProduct() {
             // ✅ ส่ง quantity = 0 ถ้า out of stock
             formData.append(
                 "quantity",
-                product.inStock ? product.quantity : 0
+                product.inStock ? Number(product.quantity) : 0
             );
 
             formData.append("category", product.category);
@@ -305,6 +305,7 @@ export default function UpdateProduct() {
                                 <label className="block text-sm text-gray-600 mb-1">Quantity</label>
                                 <input
                                     type="number"
+                                    name="quantity"
                                     value={product.quantity}
                                     onChange={(e) =>
                                         setProduct({ ...product, quantity: Number(e.target.value) })
@@ -376,8 +377,9 @@ export default function UpdateProduct() {
                             <label className="block text-sm text-gray-600 mb-1">Sale Price</label>
                             <input
                                 type="number"
+                                name="price"
                                 value={product.price}
-                                onChange={(e) => setProduct({ ...product, price: e.target.value })}
+                                onChange={(e) => setProduct({ ...product, price: Number(e.target.value) })}
                                 className="w-full border rounded px-3 py-2 mb-4"
                             />
                             <button

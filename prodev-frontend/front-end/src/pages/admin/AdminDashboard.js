@@ -200,6 +200,7 @@ export default function AdminDashboard() {
                             </button>
                         ))}
                         <button
+                            data-cy="pagination-next"
                             className="px-2 py-1 border rounded"
                             onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                             disabled={currentPage === totalPages}
