@@ -21,7 +21,23 @@ pipeline {
                 bat """
                 docker-compose -f .\\docker-compose.yml up -d
                 echo Waiting for backend and frontend to start...
-                powershell -Command "Start-Sleep -Seconds 30"
+                powershell -Command "
+                \$maxTries=12
+                \$counter=0
+                do {
+                    try {
+                        Invoke-WebRequest http://localhost:3000/ -UseBasicParsing
+                        Write-Host 'Frontend is ready!'
+                        break
+                    } catch {
+                        Write-Host 'Waiting for frontend...'
+                        Start-Sleep -Seconds 5
+                        \$counter++
+                    }
+                } while (\$counter -lt \$maxTries)
+
+                if (\$counter -ge \$maxTries) { throw 'Frontend not ready after 1 minute' }
+                "
                 docker ps
                 """
             }
@@ -34,8 +50,8 @@ pipeline {
                     bat 'npm ci'
 
                     echo "🧪 Running Cypress end-to-end tests..."
-                    // รัน Cypress จริง ๆ
-                    bat 'npx cypress run --headless --browser electron --config baseUrl=http://host.docker.internal:3000'
+                    // ใช้ host.docker.internal ถ้า Jenkins อยู่ใน container, localhost ถ้า Jenkins อยู่บน host
+                    bat 'npx cypress run --headless --browser electron --config baseUrl=http://localhost:3000'
                 }
             }
         }
