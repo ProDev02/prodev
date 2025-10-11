@@ -35,7 +35,7 @@ pipeline {
                     echo "🧪 Running Cypress end-to-end tests..."
                     bat """
                     npm ci
-                    npx cypress run --headless --config baseUrl=http://host.docker.internal:3000
+                    npx cypress run --headless --browser electron
                     """
                 }
             }
