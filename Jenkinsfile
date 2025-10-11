@@ -60,6 +60,8 @@ pipeline {
         always {
             echo "🧹 Cleaning up containers..."
             bat "docker-compose -f .\\docker-compose.yml down || exit 0"
+            echo "🧹 Cleaning up workspace..."
+            deleteDir()  // ลบ workspace ทั้งหมด
         }
         success {
             echo '✅ Build, Test, and Push completed successfully!'
