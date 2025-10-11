@@ -10,9 +10,7 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 echo "🔨 Building backend and frontend Docker images..."
-                // backend จริงอยู่ที่ .\prodev
                 bat "docker build -t %BACKEND_IMAGE% .\\prodev"
-                // frontend จริงอยู่ที่ .\prodev-frontend\front-end
                 bat "docker build -t %FRONTEND_IMAGE% .\\prodev-frontend\\front-end"
             }
         }
@@ -32,11 +30,12 @@ pipeline {
         stage('Run E2E Tests') {
             steps {
                 dir('e2e') {
+                    echo "🧪 Installing dependencies..."
+                    bat 'npm ci'
+
                     echo "🧪 Running Cypress end-to-end tests..."
-                    bat """
-                    npm ci
-                    npx cypress run --headless --browser electron --config baseUrl=http://host.docker.internal:3000
-                    """
+                    // รัน Cypress จริง ๆ
+                    bat 'npx cypress run --headless --browser electron --config baseUrl=http://host.docker.internal:3000'
                 }
             }
         }
@@ -61,7 +60,7 @@ pipeline {
             echo "🧹 Cleaning up containers..."
             bat "docker-compose -f .\\docker-compose.yml down || exit 0"
             echo "🧹 Cleaning up workspace..."
-            deleteDir()  // ลบ workspace ทั้งหมด
+            deleteDir()
         }
         success {
             echo '✅ Build, Test, and Push completed successfully!'
