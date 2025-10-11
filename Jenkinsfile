@@ -10,10 +10,10 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 echo "🔨 Building backend and frontend Docker images..."
-                // backend จริงอยู่ที่ .\prodev\prodev
-                bat "docker build -t %BACKEND_IMAGE% .\\prodev\\prodev"
-                // frontend จริงอยู่ที่ .\prodev\prodev-frontend\front-end
-                bat "docker build -t %FRONTEND_IMAGE% .\\prodev\\prodev-frontend\\front-end"
+                // backend จริงอยู่ที่ .\prodev
+                bat "docker build -t %BACKEND_IMAGE% .\\prodev"
+                // frontend จริงอยู่ที่ .\prodev-frontend\front-end
+                bat "docker build -t %FRONTEND_IMAGE% .\\prodev-frontend\\front-end"
             }
         }
 
@@ -21,7 +21,7 @@ pipeline {
             steps {
                 echo "🚀 Starting containers with docker-compose..."
                 bat """
-                docker-compose -f .\\prodev\\docker-compose.yml up -d
+                docker-compose -f .\\docker-compose.yml up -d
                 echo ⏳ Waiting for backend & frontend to start...
                 timeout /t 30
                 docker ps
@@ -31,7 +31,7 @@ pipeline {
 
         stage('Run E2E Tests') {
             steps {
-                dir('prodev\\e2e') {
+                dir('e2e') {
                     echo "🧪 Running Cypress end-to-end tests..."
                     bat """
                     npm ci
@@ -59,7 +59,7 @@ pipeline {
     post {
         always {
             echo "🧹 Cleaning up containers..."
-            bat "docker-compose -f .\\prodev\\docker-compose.yml down || exit 0"
+            bat "docker-compose -f .\\docker-compose.yml down || exit 0"
         }
         success {
             echo '✅ Build, Test, and Push completed successfully!'
