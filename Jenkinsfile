@@ -55,9 +55,14 @@ pipeline {
 
     post {
         always {
-            node {
-                sh 'docker-compose down || true'
-            }
+            echo "🧹 Cleaning up containers..."
+            sh 'docker-compose down || true'
+        }
+        success {
+            echo '✅ Build, Test, and Push completed successfully!'
+        }
+        failure {
+            echo '❌ Build or Test failed. Please check logs.'
         }
     }
 }
