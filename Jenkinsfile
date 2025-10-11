@@ -35,7 +35,7 @@ pipeline {
 
                     echo "🧪 Running Cypress end-to-end tests..."
                     // รัน Cypress จริง ๆ
-                    bat 'npx cypress run --headless --browser electron --config baseUrl=http://host.docker.internal:3000'
+                    bat 'npx cypress run --headless --browser electron --config baseUrl=http://localhost:3000'
                 }
             }
         }
