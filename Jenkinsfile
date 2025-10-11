@@ -7,13 +7,6 @@ pipeline {
     }
 
     stages {
-
-        stage('Checkout Code') {
-            steps {
-                git branch: 'main', url: 'https://github.com/ProDev02/prodev.git'
-            }
-        }
-
         stage('Build Docker Images') {
             steps {
                 script {
@@ -55,7 +48,6 @@ pipeline {
             steps {
                 script {
                     echo "📦 Pushing Docker images to Docker Hub..."
-                    // ใช้ Jenkins Credentials แทน token ตรง ๆ
                     withCredentials([usernamePassword(credentialsId: 'docker-hub', usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_TOKEN')]) {
                         sh '''
                         echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USER --password-stdin
