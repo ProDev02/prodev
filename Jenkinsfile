@@ -64,11 +64,8 @@ pipeline {
 
     post {
         always {
-            // ต้องอยู่ใน node block ถึงจะใช้ sh ได้
-            node {
-                echo "🧹 Cleaning up containers..."
-                sh 'docker-compose -f ./docker-compose.yml down || true'
-            }
+            echo "🧹 Cleaning up containers..."
+            sh 'docker-compose -f ./docker-compose.yml down || true'
         }
         success {
             echo '✅ Build, Test, and Push completed successfully!'
