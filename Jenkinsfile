@@ -11,9 +11,10 @@ pipeline {
             steps {
                 script {
                     echo "🔨 Building backend and frontend Docker images..."
-                    // ตรวจสอบว่า Dockerfile อยู่ใน path ถูกต้อง
-                    sh 'docker build -t $BACKEND_IMAGE ./prodev'
-                    sh 'docker build -t $FRONTEND_IMAGE ./prodev-frontend/front-end'
+                    // backend จริงอยู่ที่ ./prodev/prodev
+                    sh 'docker build -t $BACKEND_IMAGE ./prodev/prodev'
+                    // frontend จริงอยู่ที่ ./prodev/prodev-frontend/front-end
+                    sh 'docker build -t $FRONTEND_IMAGE ./prodev/prodev-frontend/front-end'
                 }
             }
         }
@@ -22,9 +23,9 @@ pipeline {
             steps {
                 script {
                     echo "🚀 Starting containers with docker-compose..."
-                    // ระบุ path docker-compose.yml ถ้าอยู่ root ของ workspace
+                    // docker-compose.yml จริงอยู่ที่ ./prodev/docker-compose.yml
                     sh '''
-                    docker-compose -f ./docker-compose.yml up -d
+                    docker-compose -f ./prodev/docker-compose.yml up -d
                     echo "⏳ Waiting for backend & frontend to start..."
                     sleep 30
                     docker ps
@@ -35,7 +36,7 @@ pipeline {
 
         stage('Run E2E Tests') {
             steps {
-                dir('e2e') { // เปลี่ยน directory ไปที่ e2e
+                dir('prodev/e2e') { // E2E จริงอยู่ที่ ./prodev/e2e
                     echo "🧪 Running Cypress end-to-end tests..."
                     sh '''
                     npm ci
@@ -65,7 +66,7 @@ pipeline {
     post {
         always {
             echo "🧹 Cleaning up containers..."
-            sh 'docker-compose -f ./docker-compose.yml down || true'
+            sh 'docker-compose -f ./prodev/docker-compose.yml down || true'
         }
         success {
             echo '✅ Build, Test, and Push completed successfully!'
