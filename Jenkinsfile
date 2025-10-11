@@ -22,8 +22,8 @@ pipeline {
                 echo "🚀 Starting containers with docker-compose..."
                 bat """
                 docker-compose -f .\\docker-compose.yml up -d
-                echo ⏳ Waiting for backend & frontend to start...
-                timeout /t 30
+                echo Waiting for backend & frontend to start...
+                powershell -Command "Start-Sleep -Seconds 30"
                 docker ps
                 """
             }
@@ -35,7 +35,7 @@ pipeline {
                     echo "🧪 Running Cypress end-to-end tests..."
                     bat """
                     npm ci
-                    npx cypress run --headless --browser electron
+                    npx cypress run --headless --browser electron --config baseUrl=http://host.docker.internal:3000
                     """
                 }
             }
