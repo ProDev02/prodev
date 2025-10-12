@@ -22,7 +22,7 @@ pipeline {
                 bat """
                 docker-compose -f .\\docker-compose.yml up -d
                 echo Waiting for backend and frontend to start...
-                powershell -Command "Start-Sleep -Seconds 30"
+                powershell -Command "Start-Sleep -Seconds 60"
                 docker ps
                 """
             }
