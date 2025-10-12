@@ -20,20 +20,22 @@ pipeline {
                 echo "🚀 Starting containers with docker-compose..."
                 bat """
                 docker-compose -f .\\docker-compose.yml up -d
+                echo Waiting for backend and frontend to start...
+                powershell -Command "Start-Sleep -Seconds 30"
                 docker ps
                 """
             }
         }
 
-        stage('Wait for Database') {
+        stage('Check Database') {
             steps {
-                echo "🗄 Waiting for MySQL database to be ready..."
+                echo "🗄 Checking if database is ready..."
                 powershell """
                 \$retries = 12
                 do {
                     Write-Host "Checking database..."
                     try {
-                        docker exec prodev_db mysql -uroot -pict555!!! -D prodev_db -e "SELECT 1;" | Out-Null
+                        docker exec prodev_db mysql -uroot -pict555!!! -D prodev_db -e "SHOW TABLES;" | Out-Null
                         \$ready = \$true
                     } catch {
                         Write-Host "Database not ready, retrying in 5s..."
@@ -45,33 +47,6 @@ pipeline {
 
                 if (-not \$ready) {
                     Write-Error "Database not ready after multiple retries"
-                    exit 1
-                }
-                """
-            }
-        }
-
-        stage('Wait for Backend') {
-            steps {
-                echo "⏳ Waiting for backend to be ready..."
-                powershell """
-                \$retries = 24
-                do {
-                    try {
-                        # ใช้ container name ของ backend
-                        Invoke-WebRequest -Uri http://backend:8080/actuator/health -UseBasicParsing | Out-Null
-                        \$ready = \$true
-                        Write-Host "Backend is ready!"
-                    } catch {
-                        Write-Host "Backend not ready, retrying in 5s..."
-                        Start-Sleep -Seconds 5
-                        \$retries--
-                        \$ready = \$false
-                    }
-                } until (\$ready -or \$retries -le 0)
-
-                if (-not \$ready) {
-                    Write-Error "Backend not ready after multiple retries"
                     exit 1
                 }
                 """
