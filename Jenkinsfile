@@ -20,22 +20,20 @@ pipeline {
                 echo "🚀 Starting containers with docker-compose..."
                 bat """
                 docker-compose -f .\\docker-compose.yml up -d
-                echo Waiting for containers to start...
-                powershell -Command "Start-Sleep -Seconds 30"
                 docker ps
                 """
             }
         }
 
-        stage('Check Database') {
+        stage('Wait for Database') {
             steps {
-                echo "🗄 Checking if database is ready..."
+                echo "🗄 Waiting for MySQL database to be ready..."
                 powershell """
                 \$retries = 12
                 do {
                     Write-Host "Checking database..."
                     try {
-                        docker exec prodev_db mysql -uroot -pict555!!! -D prodev_db -e "SHOW TABLES;" | Out-Null
+                        docker exec prodev_db mysql -uroot -pict555!!! -D prodev_db -e "SELECT 1;" | Out-Null
                         \$ready = \$true
                     } catch {
                         Write-Host "Database not ready, retrying in 5s..."
@@ -57,11 +55,13 @@ pipeline {
             steps {
                 echo "⏳ Waiting for backend to be ready..."
                 powershell """
-                \$retries = 20
+                \$retries = 24
                 do {
                     try {
-                        Invoke-WebRequest -Uri http://host.docker.internal:8080/actuator/health -UseBasicParsing | Out-Null
+                        # ใช้ container name ของ backend
+                        Invoke-WebRequest -Uri http://backend:8080/actuator/health -UseBasicParsing | Out-Null
                         \$ready = \$true
+                        Write-Host "Backend is ready!"
                     } catch {
                         Write-Host "Backend not ready, retrying in 5s..."
                         Start-Sleep -Seconds 5
@@ -85,7 +85,7 @@ pipeline {
                     bat 'npm ci'
 
                     echo "🧪 Running Cypress end-to-end tests..."
-                    bat 'npx cypress run --headless --browser chrome --config baseUrl=http://localhost:3000'
+                    bat 'npx cypress run --headless --browser electron --config baseUrl=http://localhost:3000'
                 }
             }
         }
