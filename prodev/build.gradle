@@ -19,35 +19,24 @@ repositories {
 }
 
 dependencies {
-    // Spring Boot Web
     implementation 'org.springframework.boot:spring-boot-starter-web'
-
-    // Spring Data JPA
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-
-    // Spring Security
     implementation 'org.springframework.boot:spring-boot-starter-security'
-
-    // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
-
-    // MySQL
     runtimeOnly 'com.mysql:mysql-connector-j'
-
-    // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
-
-    // DevTools
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
-
-    // Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
-
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+// เพิ่มส่วนนี้เพื่อบอก Gradle ว่า Main Class อยู่ที่ไหน
+springBoot {
+    mainClass = 'aekkasit.prodev.backend.ProdevApplication'
 }

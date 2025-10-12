@@ -5,6 +5,7 @@ import aekkasit.prodev.backend.cart.model.Cart;
 import aekkasit.prodev.backend.cart.model.CartItem;
 import aekkasit.prodev.backend.cart.repository.CartItemRepository;
 import aekkasit.prodev.backend.cart.repository.CartRepository;
+import aekkasit.prodev.backend.cart.service.CartService;
 import aekkasit.prodev.backend.product.model.Product;
 import aekkasit.prodev.backend.product.repository.ProductRepository;
 import aekkasit.prodev.backend.user.model.User;

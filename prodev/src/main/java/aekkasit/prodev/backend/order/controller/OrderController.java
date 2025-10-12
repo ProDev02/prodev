@@ -1,11 +1,8 @@
 package aekkasit.prodev.backend.order.controller;
 
-import aekkasit.prodev.backend.cart.model.Cart;
-import aekkasit.prodev.backend.cart.model.CartItem;
 import aekkasit.prodev.backend.cart.service.CartService;
 import aekkasit.prodev.backend.order.model.Order;
 import aekkasit.prodev.backend.order.service.OrderService;
-import aekkasit.prodev.backend.product.model.Product;
 import aekkasit.prodev.backend.product.repository.ProductRepository;
 import aekkasit.prodev.backend.user.model.User;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
