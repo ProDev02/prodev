@@ -27,6 +27,16 @@ pipeline {
             }
         }
 
+        stage('Check Database') {
+            steps {
+                echo "🗄 Checking if database is ready..."
+                bat """
+                docker exec prodev_db mysql -uroot -pict555!!! -e "USE prodev_db; SHOW TABLES;"
+                docker exec prodev_db mysql -uroot -pict555!!! -e "SELECT COUNT(*) FROM products;"
+                """
+            }
+        }
+
         stage('Run E2E Tests') {
             steps {
                 dir('e2e') {
