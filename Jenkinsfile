@@ -20,7 +20,7 @@ pipeline {
                 echo "🚀 Starting containers with docker-compose..."
                 bat """
                 docker-compose -f .\\docker-compose.yml up -d
-                echo Waiting for backend and frontend to start...
+                echo Waiting for containers to start...
                 powershell -Command "Start-Sleep -Seconds 30"
                 docker ps
                 """
@@ -53,6 +53,31 @@ pipeline {
             }
         }
 
+        stage('Wait for Backend') {
+            steps {
+                echo "⏳ Waiting for backend to be ready..."
+                powershell """
+                \$retries = 20
+                do {
+                    try {
+                        Invoke-WebRequest -Uri http://localhost:8080/actuator/health -UseBasicParsing | Out-Null
+                        \$ready = \$true
+                    } catch {
+                        Write-Host "Backend not ready, retrying in 5s..."
+                        Start-Sleep -Seconds 5
+                        \$retries--
+                        \$ready = \$false
+                    }
+                } until (\$ready -or \$retries -le 0)
+
+                if (-not \$ready) {
+                    Write-Error "Backend not ready after multiple retries"
+                    exit 1
+                }
+                """
+            }
+        }
+
         stage('Run E2E Tests') {
             steps {
                 dir('e2e') {
@@ -60,7 +85,7 @@ pipeline {
                     bat 'npm ci'
 
                     echo "🧪 Running Cypress end-to-end tests..."
-                    bat 'npx cypress run --headless --browser electron --config baseUrl=http://localhost:3000'
+                    bat 'npx cypress run --headless --browser chrome --config baseUrl=http://localhost:3000'
                 }
             }
         }
