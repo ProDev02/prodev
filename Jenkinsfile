@@ -60,7 +60,7 @@ pipeline {
                 \$retries = 20
                 do {
                     try {
-                        Invoke-WebRequest -Uri http://localhost:8080/actuator/health -UseBasicParsing | Out-Null
+                        Invoke-WebRequest -Uri http://host.docker.internal:8080/actuator/health -UseBasicParsing | Out-Null
                         \$ready = \$true
                     } catch {
                         Write-Host "Backend not ready, retrying in 5s..."
