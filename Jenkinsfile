@@ -31,8 +31,8 @@ pipeline {
             steps {
                 echo "🗄 Checking if database is ready..."
                 bat """
-                docker exec prodev_db mysql -uroot -pict555!!! -e "USE prodev_db; SHOW TABLES;"
-                docker exec prodev_db mysql -uroot -pict555!!! -e "SELECT COUNT(*) FROM products;"
+                docker exec prodev_db mysql -uroot -pict555!!! -D prodev_db -e "SHOW TABLES;"
+                docker exec prodev_db mysql -uroot -pict555!!! -D prodev_db -e "SELECT COUNT(*) FROM products;"
                 """
             }
         }
