@@ -45,6 +45,20 @@ pipeline {
                     echo "🧪 Installing dependencies..."
                     bat 'npm ci'
 
+                    echo "⏳ Waiting for backend to be ready..."
+                    bat '''
+                    for /L %%i in (1,1,30) do (
+                        curl -s http://localhost:8080/actuator/health | find "UP" > nul
+                        if not errorlevel 1 (
+                            echo ✅ Backend is ready!
+                            goto :ready
+                        )
+                        echo Waiting for backend (attempt %%i)...
+                        powershell -Command "Start-Sleep -Seconds 5"
+                    )
+                    :ready
+                    '''
+
                     echo "🧪 Running Cypress end-to-end tests..."
                     bat 'npx cypress run --headless --browser electron --config baseUrl=http://localhost:3000'
                 }
