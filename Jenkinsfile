@@ -20,17 +20,30 @@ pipeline {
                 echo "🚀 Starting containers with docker-compose..."
                 bat """
                 docker-compose -f .\\docker-compose.yml up -d
-                echo Waiting for containers to start...
+                docker ps
                 """
             }
         }
 
-        stage('Check Database') {
+        stage('Wait Database Ready') {
             steps {
-                echo "🗄 Checking if database is ready..."
+                echo "⏳ Waiting for MySQL to be ready..."
                 bat """
-                docker exec prodev_db mysql -uroot -pict555!!! -D prodev_db -e "SHOW TABLES;" || echo "Check tables failed"
-                docker exec prodev_db mysql -uroot -pict555!!! -D prodev_db -e "SELECT * FROM products;" || echo "Check products failed"
+                powershell -Command "
+                \$dbReady = \$false
+                for (\$i=1; \$i -le 30; \$i++) {
+                    try {
+                        docker exec prodev_db mysqladmin ping -uroot -pict555!!! | findstr /C:'mysqld is alive'
+                        if (\$LASTEXITCODE -eq 0) {
+                            Write-Host '✅ MySQL is ready!'
+                            \$dbReady = \$true
+                            break
+                        }
+                    } catch {}
+                    Start-Sleep -Seconds 5
+                }
+                if (-not \$dbReady) { Write-Host '❌ MySQL did not start in time'; exit 1 }
+                "
                 """
             }
         }
@@ -38,7 +51,6 @@ pipeline {
         stage('Wait Backend Ready') {
             steps {
                 echo "⏳ Waiting for backend to open port 8080..."
-                // Polling port 8080 ภายใน container
                 bat """
                 powershell -Command "
                 \$backendReady = \$false
