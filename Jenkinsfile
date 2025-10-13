@@ -47,16 +47,19 @@ pipeline {
 
                     echo "⏳ Waiting for backend to be ready..."
                     bat '''
-                    for /L %%i in (1,1,30) do (
-                        curl -s http://localhost:8080/actuator/health | find "UP" > nul
-                        if not errorlevel 1 (
-                            echo ✅ Backend is ready!
-                            goto :ready
-                        )
-                        echo Waiting for backend (attempt %%i)...
-                        powershell -Command "Start-Sleep -Seconds 5"
-                    )
-                    :ready
+                    powershell -Command "
+                    for ($i=1; $i -le 30; $i++) {
+                        try {
+                            $resp = Invoke-WebRequest -UseBasicParsing http://localhost:8080/actuator/health
+                            if ($resp.Content -match 'UP') {
+                                Write-Host '✅ Backend is ready!'
+                                break
+                            }
+                        } catch {}
+                        Write-Host 'Waiting for backend (attempt ' + $i + ')...'
+                        Start-Sleep -Seconds 5
+                    }
+                    "
                     '''
 
                     echo "🧪 Running Cypress end-to-end tests..."
