@@ -18,12 +18,9 @@ pipeline {
         stage('Start Containers') {
             steps {
                 echo "🚀 Starting containers with docker-compose..."
-                // แก้ให้ใช้ & แทน `\` ต่อบรรทัดใน Windows
                 bat """
                 docker-compose -f .\\docker-compose.yml up -d
-                echo Waiting for backend and frontend to start...
-                powershell -Command "Start-Sleep -Seconds 60"
-                docker ps
+                echo Waiting for containers to start...
                 """
             }
         }
@@ -31,10 +28,34 @@ pipeline {
         stage('Check Database') {
             steps {
                 echo "🗄 Checking if database is ready..."
-                // เพิ่มการ check error แบบไม่ crash pipeline
                 bat """
                 docker exec prodev_db mysql -uroot -pict555!!! -D prodev_db -e "SHOW TABLES;" || echo "Check tables failed"
                 docker exec prodev_db mysql -uroot -pict555!!! -D prodev_db -e "SELECT * FROM products;" || echo "Check products failed"
+                """
+            }
+        }
+
+        stage('Wait Backend Ready') {
+            steps {
+                echo "⏳ Waiting for backend to open port 8080..."
+                // Polling port 8080 ภายใน container
+                bat """
+                powershell -Command "
+                \$backendReady = \$false
+                for (\$i=1; \$i -le 30; \$i++) {
+                    try {
+                        \$tcp = New-Object System.Net.Sockets.TcpClient('localhost', 8080)
+                        if (\$tcp.Connected) {
+                            Write-Host '✅ Backend port 8080 is open!'
+                            \$backendReady = \$true
+                            \$tcp.Close()
+                            break
+                        }
+                    } catch {}
+                    Start-Sleep -Seconds 5
+                }
+                if (-not \$backendReady) { Write-Host '❌ Backend did not start in time'; exit 1 }
+                "
                 """
             }
         }
@@ -44,9 +65,6 @@ pipeline {
                 dir('e2e') {
                     echo "🧪 Installing dependencies..."
                     bat 'npm ci'
-
-                    echo "⏳ Waiting for backend to be ready..."
-                    bat 'powershell -Command "for ($i=1; $i -le 30; $i++) { try { $resp = Invoke-WebRequest -UseBasicParsing http://localhost:8080/actuator/health; if ($resp.Content -match \'UP\') { Write-Host \'✅ Backend is ready!\'; break } } catch {}; Start-Sleep -Seconds 5 }"'
 
                     echo "🧪 Running Cypress end-to-end tests..."
                     bat 'npx cypress run --headless --browser electron --config baseUrl=http://localhost:3000'
