@@ -35,7 +35,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/products/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
-                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/api/favorites/**").hasRole("USER") // ✅ เพิ่มบรรทัดนี้
                         .requestMatchers("/api/orders/checkout").hasRole("USER")
                         .requestMatchers("/api/orders/my").hasRole("USER") // ดึง order ของตัวเอง
