@@ -4,7 +4,7 @@ pipeline {
     environment {
         BACKEND_IMAGE = 'armmer/prodev-backend'
         FRONTEND_IMAGE = 'armmer/prodev-frontend'
-        REACT_APP_BACKEND_URL = 'http://localhost:8080' // ให้ Cypress ใช้ host
+        REACT_APP_BACKEND_URL = 'http://backend:8080' // ให้ Cypress ใช้ host ของ docker network
     }
 
     stages {
