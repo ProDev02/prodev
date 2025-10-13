@@ -12,6 +12,9 @@ RUN gradle clean build -x test
 FROM eclipse-temurin:21-jdk-alpine
 WORKDIR /app
 
+# ✅ ติดตั้ง curl สำหรับ healthcheck
+RUN apk add --no-cache curl
+
 # Copy built JAR from stage 1
 COPY --from=build /app/build/libs/*.jar app.jar
 
