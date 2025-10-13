@@ -4,6 +4,7 @@ pipeline {
     environment {
         BACKEND_IMAGE = 'armmer/prodev-backend'
         FRONTEND_IMAGE = 'armmer/prodev-frontend'
+        REACT_APP_BACKEND_URL = 'http://localhost:8080' // ให้ Cypress ใช้ host
     }
 
     stages {
@@ -25,56 +26,6 @@ pipeline {
             }
         }
 
-        stage('Wait Database Ready') {
-            steps {
-                echo "⏳ Waiting for MySQL to be ready..."
-                powershell '''
-                $dbReady = $false
-                for ($i=1; $i -le 30; $i++) {
-                    try {
-                        $result = docker exec prodev_db mysqladmin ping -uroot -pict555!!! 2>&1
-                        if ($result -match "mysqld is alive") {
-                            Write-Host "✅ MySQL is ready!"
-                            $dbReady = $true
-                            break
-                        }
-                    } catch {}
-                    Start-Sleep -Seconds 5
-                }
-                if (-not $dbReady) { Write-Host "❌ MySQL did not start in time"; exit 1 }
-                '''
-            }
-        }
-
-        stage('Wait Backend Ready') {
-            steps {
-                echo "⏳ Waiting for backend to open port 8080..."
-                powershell '''
-                $backendReady = $false
-                for ($i=1; $i -le 30; $i++) {
-                    try {
-                        $tcp = New-Object System.Net.Sockets.TcpClient('localhost', 8080)
-                        if ($tcp.Connected) {
-                            Write-Host "✅ Backend port 8080 is open!"
-                            $backendReady = $true
-                            $tcp.Close()
-                            break
-                        }
-                    } catch {}
-                    Start-Sleep -Seconds 5
-                }
-                if (-not $backendReady) { Write-Host "❌ Backend did not start in time"; exit 1 }
-                '''
-            }
-        }
-
-        stage('Show Backend Logs') {
-            steps {
-                echo "📄 Showing backend logs (last 100 lines)..."
-                bat 'docker logs --tail 100 pipeline-backend-1'
-            }
-        }
-
         stage('Run E2E Tests') {
             steps {
                 dir('e2e') {
@@ -82,7 +33,8 @@ pipeline {
                     bat 'npm ci'
 
                     echo "🧪 Running Cypress end-to-end tests..."
-                    bat 'npx cypress run --headless --browser electron --config baseUrl=http://localhost:3000'
+                    // ใช้ environment variable REACT_APP_BACKEND_URL ให้ Cypress
+                    bat 'set REACT_APP_BACKEND_URL=%REACT_APP_BACKEND_URL% && npx cypress run --headless --browser electron --config baseUrl=http://localhost:3000'
                 }
             }
         }
