@@ -13,7 +13,7 @@ FROM eclipse-temurin:21-jdk-alpine
 WORKDIR /app
 
 # ✅ ติดตั้ง curl สำหรับ healthcheck
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl bash
 
 # Copy built JAR from stage 1
 COPY --from=build /app/build/libs/*.jar app.jar
