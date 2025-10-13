@@ -46,21 +46,7 @@ pipeline {
                     bat 'npm ci'
 
                     echo "⏳ Waiting for backend to be ready..."
-                    bat '''
-                    powershell -Command "
-                    for ($i=1; $i -le 30; $i++) {
-                        try {
-                            $resp = Invoke-WebRequest -UseBasicParsing http://localhost:8080/actuator/health
-                            if ($resp.Content -match 'UP') {
-                                Write-Host '✅ Backend is ready!'
-                                break
-                            }
-                        } catch {}
-                        Write-Host 'Waiting for backend (attempt ' + $i + ')...'
-                        Start-Sleep -Seconds 5
-                    }
-                    "
-                    '''
+                    bat 'powershell -Command "for ($i=1; $i -le 30; $i++) { try { $resp = Invoke-WebRequest -UseBasicParsing http://localhost:8080/actuator/health; if ($resp.Content -match \'UP\') { Write-Host \'✅ Backend is ready!\'; break } } catch {}; Start-Sleep -Seconds 5 }"'
 
                     echo "🧪 Running Cypress end-to-end tests..."
                     bat 'npx cypress run --headless --browser electron --config baseUrl=http://localhost:3000'
