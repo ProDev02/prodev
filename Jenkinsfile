@@ -71,7 +71,7 @@ pipeline {
         stage('Show Backend Logs') {
             steps {
                 echo "📄 Showing backend logs (last 100 lines)..."
-                bat 'docker logs --tail 100 prodev-backend'
+                bat 'docker logs --tail 100 pipeline-backend-1'
             }
         }
 
