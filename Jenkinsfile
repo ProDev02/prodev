@@ -28,47 +28,43 @@ pipeline {
         stage('Wait Database Ready') {
             steps {
                 echo "⏳ Waiting for MySQL to be ready..."
-                bat """
-                powershell -Command "
-                \$dbReady = \$false
-                for (\$i=1; \$i -le 30; \$i++) {
+                powershell '''
+                $dbReady = $false
+                for ($i=1; $i -le 30; $i++) {
                     try {
-                        docker exec prodev_db mysqladmin ping -uroot -pict555!!! | findstr /C:'mysqld is alive'
-                        if (\$LASTEXITCODE -eq 0) {
-                            Write-Host '✅ MySQL is ready!'
-                            \$dbReady = \$true
+                        $result = docker exec prodev_db mysqladmin ping -uroot -pict555!!! 2>&1
+                        if ($result -match "mysqld is alive") {
+                            Write-Host "✅ MySQL is ready!"
+                            $dbReady = $true
                             break
                         }
                     } catch {}
                     Start-Sleep -Seconds 5
                 }
-                if (-not \$dbReady) { Write-Host '❌ MySQL did not start in time'; exit 1 }
-                "
-                """
+                if (-not $dbReady) { Write-Host "❌ MySQL did not start in time"; exit 1 }
+                '''
             }
         }
 
         stage('Wait Backend Ready') {
             steps {
                 echo "⏳ Waiting for backend to open port 8080..."
-                bat """
-                powershell -Command "
-                \$backendReady = \$false
-                for (\$i=1; \$i -le 30; \$i++) {
+                powershell '''
+                $backendReady = $false
+                for ($i=1; $i -le 30; $i++) {
                     try {
-                        \$tcp = New-Object System.Net.Sockets.TcpClient('localhost', 8080)
-                        if (\$tcp.Connected) {
-                            Write-Host '✅ Backend port 8080 is open!'
-                            \$backendReady = \$true
-                            \$tcp.Close()
+                        $tcp = New-Object System.Net.Sockets.TcpClient('localhost', 8080)
+                        if ($tcp.Connected) {
+                            Write-Host "✅ Backend port 8080 is open!"
+                            $backendReady = $true
+                            $tcp.Close()
                             break
                         }
                     } catch {}
                     Start-Sleep -Seconds 5
                 }
-                if (-not \$backendReady) { Write-Host '❌ Backend did not start in time'; exit 1 }
-                "
-                """
+                if (-not $backendReady) { Write-Host "❌ Backend did not start in time"; exit 1 }
+                '''
             }
         }
 
