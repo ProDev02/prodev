@@ -68,6 +68,13 @@ pipeline {
             }
         }
 
+        stage('Show Backend Logs') {
+            steps {
+                echo "📄 Showing backend logs (last 100 lines)..."
+                bat 'docker logs --tail 100 prodev-backend'
+            }
+        }
+
         stage('Run E2E Tests') {
             steps {
                 dir('e2e') {
