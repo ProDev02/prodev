@@ -1,10 +1,9 @@
 pipeline {
-    agent any
+    agent { label 'armmer' }
 
     environment {
         BACKEND_IMAGE = 'armmer/prodev-backend'
         FRONTEND_IMAGE = 'armmer/prodev-frontend'
-        REACT_APP_BACKEND_URL = 'http://backend:8080' // ให้ Cypress ใช้ host ของ docker network
     }
 
     stages {
@@ -34,7 +33,7 @@ pipeline {
 
                     echo "🧪 Running Cypress end-to-end tests..."
                     // ใช้ environment variable REACT_APP_BACKEND_URL ให้ Cypress
-                    bat 'set REACT_APP_BACKEND_URL=%REACT_APP_BACKEND_URL% && npx cypress run --headless --browser electron --config baseUrl=http://localhost:3000'
+                    bat 'npx cypress run --headless --browser electron --config baseUrl=http://localhost:3000'
                 }
             }
         }
