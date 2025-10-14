@@ -1,19 +1,4 @@
-version: '3.8'
-
 services:
-  jenkins:
-    image: jenkins/jenkins:lts
-    container_name: jenkins
-    user: root
-    ports:
-      - "8081:8080"  # Jenkins UI
-    volumes:
-      - jenkins_home:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock  # ให้ Jenkins ใช้ Docker host
-      - .:/workspace  # mount project
-    networks:
-      - prodev_network  # อยู่ network เดียวกับ backend/db/frontend
-
   prodev_db:
     image: mysql:8.0
     container_name: prodev_db
@@ -25,8 +10,6 @@ services:
     volumes:
       - prodev_db_data:/var/lib/mysql
       - ./mysql-init:/docker-entrypoint-initdb.d
-    networks:
-      - prodev_network  # เพิ่ม network
 
   backend:
     build:
@@ -42,12 +25,12 @@ services:
       JWT_EXPIRATION: 86400000
       UPLOAD_DIR: uploads/products
     volumes:
+      # รูปเก่า
       - ./prodev/uploads/products:/uploads/products
+      # รูปใหม่
       - ./prodev/uploads/products:/app/uploads/products
     depends_on:
       - prodev_db
-    networks:
-      - prodev_network  # เพิ่ม network
 
   frontend:
     build:
@@ -59,13 +42,6 @@ services:
     tty: true
     depends_on:
       - backend
-    networks:
-      - prodev_network  # เพิ่ม network
 
 volumes:
   prodev_db_data:
-  jenkins_home:
-
-networks:
-  prodev_network:  # สร้าง network
-    driver: bridge
