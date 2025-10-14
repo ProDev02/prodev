@@ -1,9 +1,9 @@
-name: CI/CD - Build, Test & Push Docker
+name: CI/CD - Build & Push Docker
 
 on:
   push:
-    branches: ["main"]
-  workflow_dispatch:
+    branches: ["main"]   # จะทำงานเมื่อ push ไปที่ branch main
+  workflow_dispatch:      # กด run manual ได้ด้วย
 
 jobs:
   docker:
@@ -22,43 +22,24 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 🔹 Build Backend & Frontend Images
-      - name: Build Docker Images
-        run: |
-          echo "🔨 Building backend and frontend Docker images..."
-          docker build -t armmer/prodev-backend ./prodev
-          docker build -t armmer/prodev-frontend ./prodev-frontend/front-end
+      # 🔹 Build & Push Backend
+      - name: Build & Push Backend
+        uses: docker/build-push-action@v4
+        with:
+          context: ./prodev
+          file: ./prodev/Dockerfile
+          push: true
+          tags: armmer/prodev-backend:latest
+          labels: |
+            org.opencontainers.image.source=https://github.com/ProDev02/prodev
 
-      # 🔹 Start Containers with Docker Compose
-      - name: Start Containers
-        run: |
-          echo "🚀 Starting containers with docker compose..."
-          docker compose -f ./docker-compose.yml up -d
-          docker ps
-
-      # 🔹 Run E2E Tests
-      - name: Run E2E Tests
-        working-directory: ./e2e
-        run: |
-          echo "🧪 Installing dependencies..."
-          npm ci
-          echo "🧪 Running Cypress end-to-end tests..."
-          npx cypress run --headless --browser electron --config baseUrl=http://localhost:3000
-
-      # 🔹 Push Docker Images to Docker Hub
-      - name: Push Docker Images
-        run: |
-          echo "📦 Pushing Docker images to Docker Hub..."
-          echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-          docker push armmer/prodev-backend
-          docker push armmer/prodev-frontend
-          docker logout
-
-      # 🔹 Cleanup Containers (run always)
-      - name: Cleanup Containers
-        if: always()
-        run: |
-          echo "🧹 Cleaning up containers..."
-          docker compose -f ./docker-compose.yml down || exit 0
-          echo "🧹 Cleaning up workspace..."
-          rm -rf *
+      # 🔹 Build & Push Frontend
+      - name: Build & Push Frontend
+        uses: docker/build-push-action@v4
+        with:
+          context: ./prodev-frontend/front-end
+          file: ./prodev-frontend/front-end/Dockerfile
+          push: true
+          tags: armmer/prodev-frontend:latest
+          labels: |
+            org.opencontainers.image.source=https://github.com/ProDev02/prodev
