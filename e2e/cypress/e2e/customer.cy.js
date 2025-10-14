@@ -177,6 +177,8 @@ describe("WholeCart E2E Flow (Real DB + Mocked Cart) - Complete", () => {
                     .contains(/Add to cart/i, { timeout: 10000 })
                     .should("be.visible")
                     .click();
+
+                cy.wait(1000);
             });
 
             // เปิด cart sidebar
