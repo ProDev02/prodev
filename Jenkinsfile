@@ -4,7 +4,6 @@ pipeline {
     environment {
         BACKEND_IMAGE = 'armmer/prodev-backend'
         FRONTEND_IMAGE = 'armmer/prodev-frontend'
-        REACT_APP_BACKEND_URL = 'http://host.docker.internal:8080'
     }
 
     stages {
@@ -33,8 +32,7 @@ pipeline {
                     bat 'npm ci'
 
                     echo "🧪 Running Cypress end-to-end tests..."
-                    // ใช้ host.docker.internal เพื่อเรียก backend
-                    bat 'set REACT_APP_BACKEND_URL=%REACT_APP_BACKEND_URL% && npx cypress run --headless --browser electron --config baseUrl=http://localhost:3000'
+                    bat 'npx cypress run --headless --browser electron'
                 }
             }
         }
