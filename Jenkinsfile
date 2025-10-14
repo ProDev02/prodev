@@ -32,7 +32,7 @@ pipeline {
                     bat 'npm ci'
 
                     echo "🧪 Running Cypress end-to-end tests..."
-                    bat 'npx cypress run --headless --browser electron'
+                    bat 'npx cypress run --headless --browser electron --config baseUrl=http://localhost:3000'
                 }
             }
         }
