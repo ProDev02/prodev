@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'armmer' }
+    agent any
 
     environment {
         BACKEND_IMAGE = 'armmer/prodev-backend'
