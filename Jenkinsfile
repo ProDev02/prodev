@@ -10,18 +10,18 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 echo "🔨 Building backend and frontend Docker images..."
-                bat 'docker build -t %BACKEND_IMAGE% .\\prodev'
-                bat 'docker build -t %FRONTEND_IMAGE% .\\prodev-frontend\\front-end'
+                sh 'docker build -t $BACKEND_IMAGE ./prodev'
+                sh 'docker build -t $FRONTEND_IMAGE ./prodev-frontend/front-end'
             }
         }
 
         stage('Start Containers') {
             steps {
                 echo "🚀 Starting containers with docker-compose..."
-                bat """
-                docker-compose -f .\\docker-compose.yml up -d
+                sh '''
+                docker-compose -f ./docker-compose.yml up -d
                 docker ps
-                """
+                '''
             }
         }
 
@@ -29,10 +29,10 @@ pipeline {
             steps {
                 dir('e2e') {
                     echo "🧪 Installing dependencies..."
-                    bat 'npm ci'
+                    sh 'npm ci'
 
                     echo "🧪 Running Cypress end-to-end tests..."
-                    bat 'npx cypress run --headless --browser electron'
+                    sh 'npx cypress run --headless --browser electron'
                 }
             }
         }
@@ -41,12 +41,12 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub', usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_TOKEN')]) {
                     echo "📦 Pushing Docker images to Docker Hub..."
-                    bat """
-                    echo %DOCKERHUB_TOKEN% | docker login -u %DOCKERHUB_USER% --password-stdin
-                    docker push %BACKEND_IMAGE%
-                    docker push %FRONTEND_IMAGE%
+                    sh '''
+                    echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USER --password-stdin
+                    docker push $BACKEND_IMAGE
+                    docker push $FRONTEND_IMAGE
                     docker logout
-                    """
+                    '''
                 }
             }
         }
@@ -55,7 +55,7 @@ pipeline {
     post {
         always {
             echo "🧹 Cleaning up containers..."
-            bat "docker-compose -f .\\docker-compose.yml down || exit 0"
+            sh "docker-compose -f ./docker-compose.yml down || true"
             echo "🧹 Cleaning up workspace..."
             deleteDir()
         }
