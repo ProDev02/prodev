@@ -1,0 +1,190 @@
+# ===================== MySQL ConfigMap (prodev.sql) =====================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-init-config
+data:
+  prodev.sql: |
+    CREATE DATABASE IF NOT EXISTS prodev_db;
+    USE prodev_db;
+
+# ===================== MySQL Persistent Volume =====================
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prodev-db-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+# ===================== MySQL Deployment =====================
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prodev-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prodev-db
+  template:
+    metadata:
+      labels:
+        app: prodev-db
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: "ict555!!!"
+            - name: MYSQL_DATABASE
+              value: "prodev_db"
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+            - name: mysql-init
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: mysql-data
+          persistentVolumeClaim:
+            claimName: prodev-db-data
+        - name: mysql-init
+          configMap:
+            name: mysql-init-config
+            items:
+              - key: prodev.sql
+                path: prodev.sql
+
+# ===================== MySQL Service =====================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prodev-db
+spec:
+  selector:
+    app: prodev-db
+  type: NodePort
+  ports:
+    - port: 3306
+      targetPort: 3306
+      nodePort: 30307
+
+# Backend Persistent Volume Claim
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backend-uploads-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+# Backend Deployment
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: armmer/prodev-backend:latest
+          imagePullPolicy: Never
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://host.docker.internal:30307/prodev_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+            - name: SPRING_DATASOURCE_USERNAME
+              value: root
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: ict555!!!
+            - name: JWT_EXPIRATION
+              value: "86400000"
+            - name: UPLOAD_DIR
+              value: uploads/products
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: backend-uploads
+              mountPath: /uploads/products
+      volumes:
+        - name: backend-uploads
+          persistentVolumeClaim:
+            claimName: backend-uploads-pvc
+
+# ===================== Backend Service =====================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  selector:
+    app: backend
+  type: NodePort
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080
+
+# ===================== Frontend Deployment =====================
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: armmer/prodev-frontend:latest
+          env:
+            - name: REACT_APP_BACKEND_URL
+              value: http://localhost:30080
+          ports:
+            - containerPort: 3000
+          stdin: true
+          tty: true
+
+# ===================== Frontend Service =====================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+spec:
+  selector:
+    app: frontend
+  type: NodePort
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 30030
