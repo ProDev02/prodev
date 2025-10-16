@@ -1,6 +1,6 @@
 # E-commerce Website for a Food Store
 
-##### User Stories
+### User Stories
 1. สำหรับผู้ซื้อ (Customer)
     1) สมัครสมาชิก / เข้าสู่ระบบ
          * ในฐานะผู้ซื้อจะต้องสามารถสมัครสมาชิกและเข้าสู่ระบบได้โดยการกรอก Email และ Password ที่ถูกต้อง เพื่อให้สามารถสั่งซื้อสินค้าและดูรายการคำสั่งซื้อได โดยกดที่ Icon Account เพื่อเลือก Login / login Admin / Register
