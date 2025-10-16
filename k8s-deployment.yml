@@ -4,7 +4,9 @@ kind: ConfigMap
 metadata:
   name: mysql-init-config
 data:
-  prodev.sql: | 
+  prodev.sql: |
+    CREATE DATABASE IF NOT EXISTS prodev_db;
+    USE prodev_db;
 
 # ===================== MySQL Persistent Volume =====================
 ---
