@@ -5,6 +5,10 @@ metadata:
   name: mysql-init-config
 data:
   prodev.sql: |
+    INSERT INTO users (id, username, email, password) VALUES (1, 'admin', 'admin@example.com', 'hashed_password');
+    INSERT INTO products (id, name, quantity, price) VALUES
+                                                         (1, 'Product A', 10, 100),
+                                                         (2, 'Product B', 5, 200);
 
 # ===================== MySQL Persistent Volume =====================
 ---
@@ -48,19 +52,10 @@ spec:
           volumeMounts:
             - name: mysql-data
               mountPath: /var/lib/mysql
-            - name: mysql-init
-              mountPath: /docker-entrypoint-initdb.d
       volumes:
         - name: mysql-data
           persistentVolumeClaim:
             claimName: prodev-db-data
-        - name: mysql-init
-          configMap:
-            name: mysql-init-config
-            items:
-              - key: prodev.sql
-                path: prodev.sql
-
 # ===================== MySQL Service =====================
 ---
 apiVersion: v1
