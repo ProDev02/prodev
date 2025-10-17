@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: self-hosted  # ✅ เปลี่ยนเป็น self-hosted
+    runs-on: self-hosted
 
     steps:
       - name: Checkout code
