@@ -19,7 +19,7 @@ pipeline {
             steps {
                 echo "🚀 Starting containers with docker-compose..."
                 bat """
-                docker-compose -f .\\docker-compose.yml up -d --network prodev_network
+                docker-compose -f .\\docker-compose.yml up -d
                 docker ps
                 """
             }
