@@ -58,4 +58,4 @@ jobs:
     steps:
       - name: Clean up Docker containers
         run: |
-          docker-compose -f ./docker-compose.yml down || exit 0
+          if (!(docker-compose -f ./docker-compose.yml down)) { exit 0; }
