@@ -4,6 +4,7 @@ pipeline {
     environment {
         BACKEND_IMAGE = 'armmer/prodev-backend'
         FRONTEND_IMAGE = 'armmer/prodev-frontend'
+        MYSQL_HOST = 'docker.internal'
     }
 
     stages {
