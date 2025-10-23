@@ -43,10 +43,13 @@ jobs:
           npm ci
           npx cypress run --headless --browser electron --config baseUrl=http://localhost:3000
 
-      # Docker Login Step
-      - name: Docker Login
-        run: |
-          echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+      # Login docker hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
 
       - name: Push Docker images to Docker Hub
         run: |
