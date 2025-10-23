@@ -38,7 +38,6 @@ jobs:
 
       # Run E2E Tests
       - name: Install Cypress dependencies
-        shell: bash
         run: |
           cd e2e
           npm ci
