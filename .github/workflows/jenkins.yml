@@ -33,7 +33,7 @@ jobs:
       # Run Docker Compose
       - name: Start Docker containers
         run: |
-          docker-compose -f ./docker-compose.yml up -d
+          docker-compose -f ./docker-compose.yml up -d --build
           docker ps
 
       # Run E2E Tests
@@ -43,13 +43,17 @@ jobs:
           npm ci
           npx cypress run --headless --browser electron --config baseUrl=http://localhost:3000
 
-      # Push images to Docker Hub
+      # Docker Login Step
+      - name: Docker Login
+        run: |
+          echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+
       - name: Push Docker images to Docker Hub
         run: |
-          echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USER }} --password-stdin
-          docker push $env:BACKEND_IMAGE
-          docker push $env:FRONTEND_IMAGE
+          docker push ${{ env.BACKEND_IMAGE }}
+          docker push ${{ env.FRONTEND_IMAGE }}
           docker logout
+
 
   cleanup:
     name: Cleanup Containers
