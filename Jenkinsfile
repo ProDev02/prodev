@@ -17,21 +17,11 @@ pipeline {
 
         stage('Start Containers') {
             steps {
-                echo "🚀 Starting containers..."
-
-                // Create the custom Docker network
-                bat 'docker network create prodev-network'
-
-                // Start the MySQL container
-                bat 'docker run -d --name prodev_db --network prodev-network -e MYSQL_ROOT_PASSWORD=ict555!!! -e MYSQL_DATABASE=prodev_db -p 3307:3306 -v prodev_db_data:/var/lib/mysql -v ./mysql-init:/docker-entrypoint-initdb.d mysql:8.0'
-
-                // Start the backend container
+                echo "🚀 Starting containers with docker-compose..."
                 bat """
-                docker run -d --name backend --network prodev-network -e SPRING_DATASOURCE_URL=jdbc:mysql://prodev_db:3306/prodev_db?useSSL=false^&allowPublicKeyRetrieval=true^&serverTimezone=UTC -e SPRING_DATASOURCE_USERNAME=root -e SPRING_DATASOURCE_PASSWORD=ict555!!! -e JWT_EXPIRATION=86400000 -e UPLOAD_DIR=uploads/products -v ./prodev/uploads/products:/uploads/products -v ./prodev/uploads/products:/app/uploads/products -p 8080:8080 %BACKEND_IMAGE%
+                docker-compose -f .\\docker-compose.yml up -d
+                docker ps
                 """
-
-                // Start the frontend container
-                bat 'docker run -d --name frontend --network prodev-network -p 3000:3000 %FRONTEND_IMAGE%'
             }
         }
 
@@ -65,10 +55,7 @@ pipeline {
     post {
         always {
             echo "🧹 Cleaning up containers..."
-            bat """
-            docker stop frontend backend prodev_db || exit 0
-            docker rm frontend backend prodev_db || exit 0
-            """
+            bat "docker-compose -f .\\docker-compose.yml down || exit 0"
             echo "🧹 Cleaning up workspace..."
             deleteDir()
         }
