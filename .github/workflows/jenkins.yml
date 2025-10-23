@@ -41,7 +41,7 @@ jobs:
         run: |
           cd e2e
           npm ci
-          npx cypress run --headless --browser electron --config baseUrl=http://localhost:3000
+          cmd /C "npx cypress run --headless --browser electron --config baseUrl=http://localhost:3000"
 
       # Push images to Docker Hub
       - name: Push Docker images to Docker Hub
