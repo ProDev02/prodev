@@ -38,10 +38,11 @@ jobs:
 
       # Run E2E Tests
       - name: Install Cypress dependencies
+        shell: pwsh
         run: |
           cd e2e
           npm ci
-          cmd /C "npx cypress run --headless --browser electron --config baseUrl=http://localhost:3000"
+          npx cypress run --headless --browser electron --config baseUrl=http://localhost:3000
 
       # Push images to Docker Hub
       - name: Push Docker images to Docker Hub
