@@ -25,8 +25,8 @@ jobs:
       # Build Docker images
       - name: Build Docker images for backend and frontend
         run: |
-          $env:BACKEND_IMAGE = 'armmer/prodev-backend'
-          $env:FRONTEND_IMAGE = 'armmer/prodev-frontend'
+          $env:BACKEND_IMAGE = 'armmer/prodev-backend:latest'
+          $env:FRONTEND_IMAGE = 'armmer/prodev-frontend:latest'
           docker build -t $env:BACKEND_IMAGE ./prodev
           docker build -t $env:FRONTEND_IMAGE ./prodev-frontend/front-end
 
