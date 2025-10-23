@@ -19,14 +19,19 @@ pipeline {
             steps {
                 echo "🚀 Starting containers..."
 
+                // Create the custom Docker network
+                bat 'docker network create prodev-network'
+
                 // Start the MySQL container
-                bat 'docker run -d --name prodev_db -e MYSQL_ROOT_PASSWORD=ict555!!! -e MYSQL_DATABASE=prodev_db -p 3307:3306 -v prodev_db_data:/var/lib/mysql -v ./mysql-init:/docker-entrypoint-initdb.d mysql:8.0'
+                bat 'docker run -d --name prodev_db --network prodev-network -e MYSQL_ROOT_PASSWORD=ict555!!! -e MYSQL_DATABASE=prodev_db -p 3307:3306 -v prodev_db_data:/var/lib/mysql -v ./mysql-init:/docker-entrypoint-initdb.d mysql:8.0'
 
                 // Start the backend container
-                bat 'docker run -d --name backend -e SPRING_DATASOURCE_URL=jdbc:mysql://prodev_db:3306/prodev_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC -e SPRING_DATASOURCE_USERNAME=root -e SPRING_DATASOURCE_PASSWORD=ict555!!! -e JWT_EXPIRATION=86400000 -e UPLOAD_DIR=uploads/products -v ./prodev/uploads/products:/uploads/products -v ./prodev/uploads/products:/app/uploads/products -p 8080:8080 --link prodev_db:prodev_db %BACKEND_IMAGE%'
+                bat """
+                docker run -d --name backend --network prodev-network -e SPRING_DATASOURCE_URL=jdbc:mysql://prodev_db:3306/prodev_db?useSSL=false^&allowPublicKeyRetrieval=true^&serverTimezone=UTC -e SPRING_DATASOURCE_USERNAME=root -e SPRING_DATASOURCE_PASSWORD=ict555!!! -e JWT_EXPIRATION=86400000 -e UPLOAD_DIR=uploads/products -v ./prodev/uploads/products:/uploads/products -v ./prodev/uploads/products:/app/uploads/products -p 8080:8080 %BACKEND_IMAGE%
+                """
 
                 // Start the frontend container
-                bat 'docker run -d --name frontend -p 3000:3000 --link backend:backend %FRONTEND_IMAGE%'
+                bat 'docker run -d --name frontend --network prodev-network -p 3000:3000 %FRONTEND_IMAGE%'
             }
         }
 
@@ -61,8 +66,8 @@ pipeline {
         always {
             echo "🧹 Cleaning up containers..."
             bat """
-            docker stop frontend backend prodev_db
-            docker rm frontend backend prodev_db
+            docker stop frontend backend prodev_db || exit 0
+            docker rm frontend backend prodev_db || exit 0
             """
             echo "🧹 Cleaning up workspace..."
             deleteDir()
