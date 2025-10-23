@@ -11,12 +11,13 @@ export default function CheckoutPage() {
     const cartContext = useContext(CartContext) || {};
     const fetchCart = cartContext.fetchCart || (() => {});
 
-    // รับข้อมูลจาก CartSidebar
     const cartItems = state?.cartItems || [];
 
     const [selectedDelivery, setSelectedDelivery] = useState("Standard");
+    const [selectedCoupon, setSelectedCoupon] = useState(null); // ตัวแปรเลือกคูปอง
     const [showModal, setShowModal] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [couponError, setCouponError] = useState(""); // สถานะข้อผิดพลาดของคูปอง
 
     const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -68,6 +69,31 @@ export default function CheckoutPage() {
             setLoading(false);
         }
     };
+
+    // คูปอง
+    const coupons = [
+        { code: "GIFT1", discount: 5, description: "5% Discount" },
+        { code: "GIFT2", discount: 10, description: "10% Discount" },
+        { code: "GIFT3", discount: 15, description: "15% Discount" }
+    ];
+
+    const handleCouponSelect = (event) => {
+        const selectedCouponCode = event.target.value;
+        const coupon = coupons.find(coupon => coupon.code === selectedCouponCode);
+
+        if (subtotal < 299) {
+            setCouponError("You need to spend at least ฿499 to use a coupon.");
+            setSelectedCoupon(null); // รีเซ็ทคูปอง
+        } else {
+            setCouponError(""); // ไม่มีข้อผิดพลาด
+            setSelectedCoupon(coupon || null); // เลือกคูปอง
+        }
+    };
+
+    // คำนวณราคาหลังหักส่วนลด
+    const discountedSubtotal = selectedCoupon
+        ? subtotal - (subtotal * (selectedCoupon.discount / 100))
+        : subtotal;
 
     return (
         <div className="min-h-screen bg-white">
@@ -122,11 +148,7 @@ export default function CheckoutPage() {
                                     {deliveryOptions.map((opt) => (
                                         <label
                                             key={opt.id}
-                                            className={`flex justify-between items-center p-3 border rounded cursor-pointer transition ${
-                                                selectedDelivery === opt.id
-                                                    ? "border-green-600 bg-green-50"
-                                                    : "border-gray-300"
-                                            }`}
+                                            className={`flex justify-between items-center p-3 border rounded cursor-pointer transition ${selectedDelivery === opt.id ? "border-green-600 bg-green-50" : "border-gray-300"}`}
                                         >
                                             <div className="flex items-center gap-2">
                                                 <input
@@ -214,12 +236,29 @@ export default function CheckoutPage() {
                                 />
                                 <div className="flex-1">
                                     <h3 className="font-semibold text-sm">{item.productName}</h3>
-                                    <p className="text-gray-500 text-xs">categories: {item.category}</p>
                                     <p className="text-gray-500 text-xs">Quantity: {item.quantity}</p>
                                 </div>
                                 <p className="font-semibold">฿{(item.price * item.quantity).toFixed(2)}</p>
                             </div>
                         ))}
+                    </div>
+
+                    {/* คูปอง - Dropdown */}
+                    <div className="mt-4">
+                        <h3 className="font-medium mb-2">Choose a Coupon</h3>
+                        <select
+                            className="w-full p-2 border rounded"
+                            value={selectedCoupon?.code || ""}
+                            onChange={handleCouponSelect}
+                        >
+                            <option value="">Select a coupon</option>
+                            {coupons.map((coupon) => (
+                                <option key={coupon.code} value={coupon.code}>
+                                    {coupon.description} - {coupon.discount}% off
+                                </option>
+                            ))}
+                        </select>
+                        {couponError && <p className="text-red-500 text-sm mt-2">{couponError}</p>}
                     </div>
 
                     <div className="mt-4 border-t pt-4 space-y-2 text-sm">
@@ -228,12 +267,21 @@ export default function CheckoutPage() {
                             <span>฿{subtotal.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span>Delivery ({selectedOption?.label} delivery)</span>
+                            <span>Delivery ({selectedOption?.label})</span>
                             <span>{selectedOption?.price === 0 ? "Free" : `฿${selectedOption?.price.toFixed(2)}`}</span>
                         </div>
+
+                        {/* การแสดงราคาหลังหักส่วนลด */}
+                        {selectedCoupon && (
+                            <div className="flex justify-between text-red-600">
+                                <span>Discount ({selectedCoupon.discount}%)</span>
+                                <span>-฿{(subtotal * (selectedCoupon.discount / 100)).toFixed(2)}</span>
+                            </div>
+                        )}
+
                         <div className="flex justify-between font-bold text-lg">
                             <span>Total (SubTotal + Delivery)</span>
-                            <span>฿{(subtotal + (selectedOption?.price || 0)).toFixed(2)}</span>
+                            <span>฿{(discountedSubtotal + (selectedOption?.price || 0)).toFixed(2)}</span>
                         </div>
                     </div>
                 </div>

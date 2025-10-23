@@ -1,9 +1,9 @@
-// SearchPage.jsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Utensils, Smartphone, Sofa, ShowerHead, Shirt, Tv, Cookie } from "lucide-react";
+import Fuse from "fuse.js"; // นำเข้า Fuse.js สำหรับการค้นหาแบบ fuzzy
 
 export default function SearchPage() {
     const navigate = useNavigate();
@@ -103,6 +103,25 @@ export default function SearchPage() {
 
     const totalPages = Math.ceil(totalProducts / itemsPerPage);
 
+    // ใช้ Fuse.js ในการค้นหาที่รองรับคำบางส่วนและสะกดผิด
+    const fuse = new Fuse(products, {
+        keys: ["name", "description"],
+        threshold: 0.3, // ค่า threshold สำหรับการจับคำ
+    });
+
+    const handleSearch = (e) => {
+        const searchTerm = e.target.value;
+        setKeyword(searchTerm);
+        setCurrentPage(1);
+        if (searchTerm) {
+            const results = fuse.search(searchTerm);
+            setProducts(results.map(result => result.item));
+        } else {
+            // หากไม่มีคำค้นหาจะคืนค่าผลลัพธ์เดิมทั้งหมด
+            setProducts(products);
+        }
+    };
+
     return (
         <main className="min-h-screen max-w-7xl mx-auto px-6 py-10 flex gap-8">
             <aside className="w-1/4">
@@ -115,7 +134,7 @@ export default function SearchPage() {
                     type="text"
                     placeholder="Search products..."
                     value={keyword}
-                    onChange={(e) => { setKeyword(e.target.value); setCurrentPage(1); }}
+                    onChange={handleSearch} // เรียกฟังก์ชัน handleSearch
                     className="w-full mb-4 px-3 py-2 border rounded"
                 />
 
