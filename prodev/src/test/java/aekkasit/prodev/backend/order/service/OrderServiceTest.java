@@ -89,11 +89,13 @@ class OrderServiceTest {
         order.setStatus(Order.Status.FULFILLED);
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(order)).thenReturn(order);
 
         Optional<Order> result = orderService.receiveOrder(1L, user);
 
         assertTrue(result.isPresent());
-        verify(orderRepository, times(1)).delete(order);
+        assertEquals(Order.Status.RECEIVED, result.get().getStatus()); // ตรวจสอบว่า status เปลี่ยนแล้ว
+        verify(orderRepository, times(1)).save(order); // verify save แทน delete
     }
 
     @Test

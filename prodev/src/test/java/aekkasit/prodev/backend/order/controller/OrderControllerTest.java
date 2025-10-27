@@ -157,7 +157,8 @@ class OrderControllerTest {
         ResponseEntity<?> response = orderController.receiveOrder(1L, user);
 
         assertEquals(200, response.getStatusCode().value());
-        verify(orderService, times(1)).deleteOrder(1L);
+        assertEquals(order, response.getBody()); // ตรวจสอบว่า return order ถูกต้อง
+        verify(orderService, times(1)).receiveOrder(1L, user); // verify ถูกต้อง
     }
 
     @Test

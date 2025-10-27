@@ -12,12 +12,17 @@ import aekkasit.prodev.backend.cart.model.CartItem;
 import aekkasit.prodev.backend.user.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Optional;
-import java.util.Map;
+
+import java.util.*;
+
 import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
+
+import com.lowagie.text.*;
+import com.lowagie.text.pdf.*;
+import java.io.ByteArrayOutputStream;
+import java.awt.Color;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -80,12 +85,16 @@ public class OrderService {
         // 2️⃣ สร้าง order
         List<Order> orders = createOrders(user, cartItems);
 
-        // 3️⃣ เคลียร์ cart
+        // 3️⃣ สร้าง PDF จาก cartItems ปัจจุบัน
+        byte[] pdfBytes = generateOrderPdfFromCartItems(cartItems);
+
+        // 4️⃣ เคลียร์ cart
         cartService.clearCart(user);
 
         return Map.of(
                 "orders", orders,
-                "updatedProducts", updatedProducts
+                "updatedProducts", updatedProducts,
+                "pdfBytes", Base64.getEncoder().encodeToString(pdfBytes) // เพิ่มตรงนี้ให้ frontend โหลด PDF ได้ทันที
         );
     }
 
@@ -154,5 +163,96 @@ public class OrderService {
 
         int qty = order.getQuantity();
         return cartService.addToCart(user, product.getId(), qty);
+    }
+
+    @Transactional
+    public byte[] generateOrderPdfFromCartItems(List<CartItem> cartItems) {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            Document document = new Document(PageSize.A4, 36, 36, 54, 36);
+            PdfWriter.getInstance(document, baos);
+            document.open();
+
+            // Fonts
+            Font titleFont = new Font(Font.HELVETICA, 20, Font.BOLD, new Color(0, 128, 0));
+            Font headerFont = new Font(Font.HELVETICA, 12, Font.BOLD, Color.WHITE);
+            Font rowFont = new Font(Font.HELVETICA, 12);
+            Font totalFont = new Font(Font.HELVETICA, 14, Font.BOLD);
+
+            // Title
+            Paragraph title = new Paragraph("Order Summary", titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            title.setSpacingAfter(20);
+            document.add(title);
+
+            // Table
+            PdfPTable table = new PdfPTable(5);
+            table.setWidthPercentage(100);
+            table.setWidths(new float[]{1, 3, 1, 1, 1});
+
+            // Header
+            String[] headers = {"Image", "Product", "Quantity", "Price", "Total"};
+            for (String h : headers) {
+                PdfPCell cell = new PdfPCell(new Phrase(h, headerFont));
+                cell.setBackgroundColor(new Color(0, 128, 0));
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cell.setPadding(5);
+                table.addCell(cell);
+            }
+
+            double totalAmount = 0;
+            for (CartItem item : cartItems) {
+                // Image
+                Image img = null;
+                try {
+                    if (item.getProduct().getImages() != null && !item.getProduct().getImages().isEmpty()) {
+                        img = Image.getInstance(item.getProduct().getImages().get(0));
+                        img.scaleToFit(50, 50);
+                    }
+                } catch (Exception e) {
+                    log.warn("Cannot load image: {}", item.getProduct().getName());
+                }
+
+                PdfPCell imgCell = new PdfPCell();
+                imgCell.setPadding(5);
+                imgCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                if (img != null) imgCell.addElement(img);
+                table.addCell(imgCell);
+
+                // Product name
+                table.addCell(new PdfPCell(new Phrase(item.getProduct().getName(), rowFont)));
+
+                // Quantity
+                PdfPCell qtyCell = new PdfPCell(new Phrase(String.valueOf(item.getQuantity()), rowFont));
+                qtyCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                table.addCell(qtyCell);
+
+                // Price
+                PdfPCell priceCell = new PdfPCell(new Phrase(String.format("฿%.2f", item.getProduct().getPrice()), rowFont));
+                priceCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                table.addCell(priceCell);
+
+                // Total
+                double total = item.getQuantity() * item.getProduct().getPrice();
+                PdfPCell totalCell = new PdfPCell(new Phrase(String.format("฿%.2f", total), rowFont));
+                totalCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                table.addCell(totalCell);
+
+                totalAmount += total;
+            }
+
+            document.add(table);
+
+            // Total
+            Paragraph totalPara = new Paragraph("Total: ฿" + String.format("%.2f", totalAmount), totalFont);
+            totalPara.setAlignment(Element.ALIGN_RIGHT);
+            totalPara.setSpacingBefore(10);
+            document.add(totalPara);
+
+            document.close();
+            return baos.toByteArray();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate PDF", e);
+        }
     }
 }
