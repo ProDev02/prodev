@@ -62,6 +62,23 @@ export default function CheckoutPage() {
             // แสดง modal success
             setShowModal(true);
 
+            // โหลด PDF ทันทีจาก backend
+            if (data.pdfBytes) {
+                const byteCharacters = atob(data.pdfBytes); // decode base64
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: "application/pdf" });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "order_summary.pdf";
+                a.click();
+                window.URL.revokeObjectURL(url);
+            }
+
         } catch (error) {
             console.error(error);
             alert(error.message);
@@ -82,7 +99,7 @@ export default function CheckoutPage() {
         const coupon = coupons.find(coupon => coupon.code === selectedCouponCode);
 
         if (subtotal < 299) {
-            setCouponError("You need to spend at least ฿499 to use a coupon.");
+            setCouponError("You need to spend at least ฿299 to use a coupon.");
             setSelectedCoupon(null); // รีเซ็ทคูปอง
         } else {
             setCouponError(""); // ไม่มีข้อผิดพลาด
