@@ -4,6 +4,7 @@ import aekkasit.prodev.backend.cart.service.CartService;
 import aekkasit.prodev.backend.order.model.Order;
 import aekkasit.prodev.backend.order.service.OrderService;
 import aekkasit.prodev.backend.product.repository.ProductRepository;
+import aekkasit.prodev.backend.cart.dto.CartResponse;
 import aekkasit.prodev.backend.user.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -62,10 +63,24 @@ public class OrderController {
     @PatchMapping("/{id}/receive")
     public ResponseEntity<?> receiveOrder(@PathVariable Long id, @AuthenticationPrincipal User user) {
         return orderService.receiveOrder(id, user)
-                .map(order -> {
-                    orderService.deleteOrder(order.getId());
-                    return ResponseEntity.ok().build();
-                })
+                .map(order -> ResponseEntity.ok(order)) // ส่งกลับ order ที่อัปเดตแล้ว
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    // Order History
+    @GetMapping("/history")
+    public ResponseEntity<List<Order>> getOrderHistory(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(orderService.getOrderHistory(user));
+    }
+
+    // Reorder
+    @PostMapping("/{id}/reorder")
+    public ResponseEntity<CartResponse> reorder(@PathVariable Long id, @AuthenticationPrincipal User user) {
+        try {
+            CartResponse cartResponse = orderService.reorder(user, id);
+            return ResponseEntity.ok(cartResponse);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
     }
 }

@@ -39,6 +39,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/orders/checkout").hasRole("USER")
                         .requestMatchers("/api/orders/my").hasRole("USER") // ดึง order ของตัวเอง
                         .requestMatchers("/api/orders/*/receive").hasRole("USER")
+                        .requestMatchers("/api/orders/checkout", "/api/orders/my", "/api/orders/history", "/api/orders/*/receive")
+                        .hasRole("USER")
+                        .requestMatchers("/api/orders/*/reorder").hasRole("USER")
                         .requestMatchers("/api/orders/**").hasRole("ADMIN") // ที่เหลือเป็น admin
                         .anyRequest().authenticated()
                 )

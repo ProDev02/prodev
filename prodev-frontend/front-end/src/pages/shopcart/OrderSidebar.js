@@ -53,9 +53,10 @@ export default function OrderTab() {
     };
 
     // กรองตาม search
-    const filteredOrders = orders.filter((o) =>
-        o.name.toLowerCase().includes(search.toLowerCase())
-    );
+    // กรอง order ที่ยังไม่รับ
+    const filteredOrders = orders
+        .filter(o => o.status !== "RECEIVED")  // เพิ่มบรรทัดนี้
+        .filter(o => o.name.toLowerCase().includes(search.toLowerCase()));
 
     return (
         <div className="space-y-4">
