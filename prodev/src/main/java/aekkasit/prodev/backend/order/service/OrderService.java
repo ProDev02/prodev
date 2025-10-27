@@ -4,6 +4,7 @@ import aekkasit.prodev.backend.cart.model.Cart;
 import aekkasit.prodev.backend.order.model.Order;
 import aekkasit.prodev.backend.order.repository.OrderRepository;
 import aekkasit.prodev.backend.cart.service.CartService;
+import aekkasit.prodev.backend.cart.dto.CartResponse;
 import aekkasit.prodev.backend.cart.repository.CartItemRepository;
 import aekkasit.prodev.backend.product.repository.ProductRepository;
 import aekkasit.prodev.backend.product.model.Product;
@@ -59,8 +60,8 @@ public class OrderService {
                 .filter(o -> o.getUser().equals(user) && o.getStatus() == Order.Status.FULFILLED)
                 .map(order -> {
                     // ลบ order จากฐานข้อมูล
-                    orderRepository.delete(order);
-                    return order;
+                    order.setStatus(Order.Status.RECEIVED);
+                    return orderRepository.save(order);
                 });
     }
 
@@ -127,10 +128,31 @@ public class OrderService {
                     .price(product.getPrice())
                     .status(Order.Status.PENDING)
                     .user(user)
+                    .product(product)
                     .build();
             orders.add(orderRepository.save(order));
         }
 
         return orders;
+    }
+
+    // Order History
+    public List<Order> getOrderHistory(User user) {
+        return orderRepository.findByUserOrderByCreatedAtDesc(user);
+    }
+
+    // Reorder -> เพิ่มกลับ Cart
+    @Transactional
+    public CartResponse reorder(User user, Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        Product product = order.getProduct();
+        if (product == null) {
+            throw new RuntimeException("Product not available for reorder");
+        }
+
+        int qty = order.getQuantity();
+        return cartService.addToCart(user, product.getId(), qty);
     }
 }

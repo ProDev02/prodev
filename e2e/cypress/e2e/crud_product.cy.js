@@ -80,6 +80,8 @@ describe("Admin Dashboard - Products (Real Backend)", () => {
             expect(txt).to.contains("✅ Product created successfully!");
         });
 
+        cy.wait(3000);
+
         cy.request({
             method: "GET",
             url: `${BACKEND_URL}/api/products/all`,

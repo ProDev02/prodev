@@ -12,6 +12,7 @@ import {
     Gift,
 } from "lucide-react";
 import OrderTab from "./OrderSidebar";
+import OrderHistoryTab from "./OrderHistoryTab";
 import { useNavigate } from "react-router-dom";
 
 export default function CartSidebar({
@@ -24,6 +25,7 @@ export default function CartSidebar({
                                         activeTab,
                                         setActiveTab,
                                         total,
+                                        user,
                                     }) {
     const navigate = useNavigate();
     const [stockWarnings, setStockWarnings] = useState({});
@@ -133,6 +135,18 @@ export default function CartSidebar({
                         <List size={16} />
                         <span>Order</span>
                     </button>
+                    <span>/</span>
+                    <button
+                        onClick={() => setActiveTab("history")}
+                        className={`flex items-center space-x-1 ${
+                            activeTab === "history"
+                                ? "text-green-600 font-medium"
+                                : "text-gray-500"
+                        }`}
+                    >
+                        <List size={16} />
+                        <span>Order History</span>
+                    </button>
                 </div>
 
                 {/* เนื้อหา */}
@@ -199,6 +213,8 @@ export default function CartSidebar({
 
                     {/* order tab */}
                     {activeTab === "order" && <OrderTab orders={[]} />}
+
+                    {activeTab === "history" && <OrderHistoryTab userId={user?.userId} />}
                 </div>
 
                 {/* ปุ่มจ่ายเงิน */}
