@@ -11,12 +11,12 @@ export default function AdminDashboard() {
     const [sort, setSort] = useState("lowToHigh");
     const [dropdownOpen, setDropdownOpen] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const navigate = useNavigate();
+    const [showPopup, setShowPopup] = useState(false);
+    const [outOfStockProducts, setOutOfStockProducts] = useState([]);
 
+    const navigate = useNavigate();
     const ITEMS_PER_PAGE = 5;
     const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-
-    // --- Get token / username from localStorage ---
     const token = localStorage.getItem("admin_token");
     const username = localStorage.getItem("admin_username");
 
@@ -36,7 +36,6 @@ export default function AdminDashboard() {
                 if (!res.ok) throw new Error("Failed to fetch products");
                 const data = await res.json();
 
-                // --- map images to full URL ---
                 const dataWithFullImages = data.map((p) => ({
                     ...p,
                     images: p.images?.map((img) =>
@@ -45,6 +44,19 @@ export default function AdminDashboard() {
                 }));
 
                 setProducts(dataWithFullImages);
+
+                // --- Identify out-of-stock products ---
+                const outStock = dataWithFullImages.filter(
+                    (p) => p.statusStock === "Out of stock" || p.quantity <= 0
+                );
+                setOutOfStockProducts(outStock);
+
+                // --- Show popup once per login ---
+                const popupShownForToken = sessionStorage.getItem("outOfStockPopupShownForToken");
+                if (outStock.length > 0 && popupShownForToken !== token) {
+                    setShowPopup(true);
+                    sessionStorage.setItem("outOfStockPopupShownForToken", token);
+                }
             } catch (err) {
                 console.error(err);
                 navigate("/signup");
@@ -87,6 +99,10 @@ export default function AdminDashboard() {
             console.error(err);
         }
     };
+
+    // --- Popup handlers ---
+    const handleClosePopup = () => setShowPopup(false);
+    const handleGoToOutOfStock = () => navigate("/out-of-stock");
 
     return (
         <AdminLayout stats={{ total: totalProducts, outOfStock: outOfStockCount, pending: pendingCount }}>
@@ -210,6 +226,60 @@ export default function AdminDashboard() {
                     </div>
                 )}
             </div>
+
+            {/* --- Out-of-stock Popup --- */}
+            {showPopup && (
+                <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-96 max-h-[80vh] overflow-y-auto shadow-lg relative animate-fadeIn">
+                        <h2 className="text-lg font-bold mb-4 text-red-600 flex justify-between items-center">
+                            ⚠️ Out of Stock Products
+                            <button
+                                className="text-gray-500 hover:text-gray-700 text-xl"
+                                onClick={handleClosePopup}
+                            >
+                                ✖
+                            </button>
+                        </h2>
+
+                        <ul className="mb-4 divide-y divide-gray-200">
+                            {outOfStockProducts.map((p) => (
+                                <li
+                                    key={p.id}
+                                    className="flex justify-between items-center py-2"
+                                >
+                                    <div className="flex flex-col gap-1">
+                                        <div className="flex items-center gap-2">
+                                            {p.images?.[0] && (
+                                                <img src={p.images[0]} alt={p.name} className="w-10 h-10 object-cover rounded" />
+                                            )}
+                                            <span className="font-medium">{p.name}</span>
+                                        </div>
+                                        <span className="text-sm text-gray-500">Category: {p.category}</span>
+                                    </div>
+                                    <button
+                                        className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                                        onClick={() => {
+                                            handleClosePopup();
+                                            navigate("/update/" + p.id, { state: { productId: p.id, username } });
+                                        }}
+                                    >
+                                        Update
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+
+                        <div className="flex justify-end">
+                            <button
+                                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                                onClick={handleClosePopup}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AdminLayout>
     );
 }
