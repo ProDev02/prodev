@@ -123,8 +123,12 @@ spec:
           ports:
             - containerPort: 8080
           volumeMounts:
+            # รูปเก่า
             - name: backend-uploads
               mountPath: /uploads/products
+            # รูปใหม่
+            - name: backend-uploads
+              mountPath: /app/uploads/products
       volumes:
         - name: backend-uploads
           persistentVolumeClaim:
