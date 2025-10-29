@@ -201,17 +201,20 @@ public class OrderService {
 
             double totalAmount = 0;
             for (CartItem item : cartItems) {
-                // Image
+                String imgUrl = item.getProduct().getImages().isEmpty() ? null : item.getProduct().getImages().get(0);
                 Image img = null;
-                try {
-                    if (item.getProduct().getImages() != null && !item.getProduct().getImages().isEmpty()) {
-                        img = Image.getInstance(item.getProduct().getImages().get(0));
+
+                if (imgUrl != null && !imgUrl.isEmpty()) {
+                    try {
+                        // โหลดรูปจาก URL หรือ path ที่ CartItem เก็บไว้
+                        img = Image.getInstance(imgUrl);
                         img.scaleToFit(50, 50);
+                    } catch (Exception e) {
+                        log.warn("Cannot load image for product {}: {}", item.getProduct().getName(), e.getMessage());
                     }
-                } catch (Exception e) {
-                    log.warn("Cannot load image: {}", item.getProduct().getName());
                 }
 
+                // Image cell
                 PdfPCell imgCell = new PdfPCell();
                 imgCell.setPadding(5);
                 imgCell.setHorizontalAlignment(Element.ALIGN_CENTER);
