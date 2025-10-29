@@ -112,6 +112,7 @@ export default function OrderProduct() {
                         <thead>
                         <tr className="bg-green-600 text-white">
                             <th className="p-2">Order ID</th>
+                            <th className="p-2">User email</th>
                             <th className="p-2">Image</th>
                             <th className="p-2">Product Name</th>
                             <th className="p-2">Category</th>
@@ -125,6 +126,7 @@ export default function OrderProduct() {
                         {paginatedOrders.map((o) => (
                             <tr key={o.id} className="border-b hover:bg-gray-50">
                                 <td className="p-2">ORD{o.id}</td>
+                                <td className="p-2">{o.user?.email}</td>
                                 <td className="p-2">
                                     <img
                                         src={`http://localhost:8080${o.image}`}
