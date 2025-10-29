@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.Map;
 import java.io.File;
@@ -237,5 +238,41 @@ public class ProductController {
                 "total", total,
                 "items", items
         ));
+    }
+
+    //week report
+    @GetMapping("/reports/weekly-stock")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getWeeklyStockReport() {
+        List<Product> allProducts = productRepository.findAll();
+
+        int totalProducts = allProducts.size();
+        int outOfStock = (int) allProducts.stream()
+                .filter(p -> p.getQuantity() == 0 || "Out of stock".equalsIgnoreCase(p.getStatusStock()))
+                .count();
+        int lowStock = (int) allProducts.stream()
+                .filter(p -> p.getQuantity() > 0 && p.getQuantity() <= 10)
+                .count();
+
+        // map ผลลัพธ์เป็น JSON-friendly
+        List<Map<String, Object>> productList = allProducts.stream().map(p -> Map.of(
+                "id", p.getId(),
+                "name", p.getName(),
+                "category", p.getCategory(),
+                "quantity", p.getQuantity(),
+                "statusStock", p.getStatusStock(),
+                "price", p.getPrice(),
+                "images", p.getImages(),        // ส่ง path รูป
+                "createdAt", p.getCreatedAt()   // ส่งวันที่สร้าง
+        )).toList();
+
+        Map<String, Object> report = Map.of(
+                "totalProducts", totalProducts,
+                "outOfStock", outOfStock,
+                "lowStock", lowStock,
+                "products", productList
+        );
+
+        return ResponseEntity.ok(report);
     }
 }
