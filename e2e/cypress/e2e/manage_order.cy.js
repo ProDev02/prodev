@@ -126,7 +126,7 @@ describe("WholeCart E2E Flow (Real DB + Mocked Cart) - Complete", () => {
         cy.contains("Payment Successful!").should("exist");
     });
 
-    // -------- Admin Flow --------
+    //order
     describe("Admin Dashboard - Orders (Real Backend)", () => {
         const BACKEND_URL = Cypress.env("BACKEND_URL") || "http://localhost:8080";
 
@@ -160,7 +160,7 @@ describe("WholeCart E2E Flow (Real DB + Mocked Cart) - Complete", () => {
         // 🔹 recursive helper function Cypress-friendly
         function findPendingAndClickDropdown() {
             return cy.get("table tbody tr", { timeout: 10000 }).then(($rows) => {
-                const pendingRow = $rows.toArray().find(row => row.cells[5].innerText === "PENDING");
+                const pendingRow = $rows.toArray().find(row => row.cells[6].innerText === "PENDING");
 
                 if (pendingRow) {
                     return cy.wrap(pendingRow).scrollIntoView().within(() => {
@@ -184,13 +184,23 @@ describe("WholeCart E2E Flow (Real DB + Mocked Cart) - Complete", () => {
 
         it("should fulfill a pending order", () => {
             findPendingAndClickDropdown().then(pendingRow => {
-                if (!pendingRow) return; // ไม่เจอ PENDING
+                if (!pendingRow) {
+                    throw new Error("No PENDING order found");
+                }
 
+                const orderIdText = pendingRow[0].cells[0].innerText;
+
+                // กด Fulfilled
                 cy.contains("✅ Fulfilled").click();
 
-                cy.wrap(pendingRow).within(() => {
-                    cy.get("td").eq(5).should("contain", "FULFILLED");
-                });
+                // รอให้ status update โดยเฉพาะในแถวที่เรากด
+                cy.get("table tbody tr")
+                    .contains(orderIdText)
+                    .parents("tr")
+                    .within(() => {
+                        cy.get("td span")
+                            .contains("FULFILLED", { timeout: 10000 }); // retry จนเจอ
+                    });
             });
         });
 
@@ -200,10 +210,11 @@ describe("WholeCart E2E Flow (Real DB + Mocked Cart) - Complete", () => {
 
                 const orderIdText = pendingRow[0].cells[0].innerText;
 
+                // กด Cancel
                 cy.contains("❌ Cancel").click();
 
                 // ตรวจสอบว่าลบจากตารางแล้ว
-                cy.get("table tbody tr").should("not.contain", orderIdText);
+                cy.get("table tbody tr").should("not.contain", orderIdText); // ตรวจสอบว่าไม่มีคำสั่งซื้อนั้นในตาราง
             });
         });
     });
@@ -252,24 +263,27 @@ describe("User - Orders > CartSidebar (Real Backend)", () => {
             headers: { Authorization: `Bearer ${Cypress.env("userToken")}` },
         }).then((res) => {
             expect(res.status).to.eq(200);
-            const orders = res.body;
+
+            const orders = res.body.filter(o => o.status !== "RECEIVED");
 
             if (orders.length === 0) {
                 cy.contains("📦 You have no orders yet.").should("exist");
                 return;
             }
 
-            orders.forEach((order) => {
-                cy.get(`[data-testid="order-row-${order.id}"]`).within(() => {
-                    cy.contains(order.name).should("exist");
-                    cy.contains(order.status).should("exist");
+            orders.forEach(order => {
+                cy.get(`[data-testid="order-row-${order.id}"]`, { timeout: 10000 })
+                    .should("exist")
+                    .within(() => {
+                        cy.contains(order.name).should("exist");
+                        cy.contains(order.status).should("exist");
 
-                    if (order.status === "FULFILLED") {
-                        cy.contains("Receive").should("exist");
-                    } else {
-                        cy.contains("Receive").should("not.exist");
-                    }
-                });
+                        if (order.status === "FULFILLED") {
+                            cy.contains("Receive").should("exist");
+                        } else {
+                            cy.contains("Receive").should("not.exist");
+                        }
+                    });
             });
         });
     });
@@ -290,7 +304,7 @@ describe("User - Orders > CartSidebar (Real Backend)", () => {
             cy.get(`[data-testid="order-row-${fulfilledOrder.id}"]`)
                 .should("be.visible")
                 .within(() => {
-                    cy.contains("Receive").click();
+                    cy.contains("Receive").click(); // คลิกปุ่ม "Receive"
                 });
 
             // หลังคลิก Receive → order row หายจาก DOM
@@ -309,4 +323,5 @@ describe("User - Orders > CartSidebar (Real Backend)", () => {
         });
     });
 });
+
 
