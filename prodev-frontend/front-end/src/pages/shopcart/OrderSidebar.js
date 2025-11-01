@@ -59,7 +59,7 @@ export default function OrderTab() {
         .filter(o => o.name.toLowerCase().includes(search.toLowerCase()));
 
     return (
-        <div className="space-y-4">
+        <div data-testid="order-tab" className="space-y-4">
             <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold">My Orders</h3>
                 <input

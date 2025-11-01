@@ -28,6 +28,19 @@ function findProductById(productId) {
 describe("Admin Dashboard - Products (Real Backend)", () => {
     let createdProductId;
 
+    function closePopupIfVisible() {
+        cy.wait(1000); // รอให้ popup แสดงทัน (ปรับตาม UI จริงได้)
+        cy.get("body").then(($body) => {
+            const closeBtn = $body.find('button:contains("✖")');
+            if (closeBtn.length) {
+                cy.wrap(closeBtn).click({ force: true });
+                cy.log("✅ Popup closed before test starts");
+            } else {
+                cy.log("ℹ️ No popup found");
+            }
+        });
+    }
+
     before(() => {
         // Login admin จริงและเก็บ token
         cy.request("POST", `${BACKEND_URL}/api/auth/login`, {
@@ -51,6 +64,9 @@ describe("Admin Dashboard - Products (Real Backend)", () => {
                 win.localStorage.setItem("admin_username", username);
             }
         });
+
+        cy.wait(2000);
+        closePopupIfVisible();
     });
 
     // -------- 1️⃣ เพิ่ม Product --------
@@ -96,6 +112,7 @@ describe("Admin Dashboard - Products (Real Backend)", () => {
     // -------- 2️⃣ แก้ไข Product --------
     it("should update the created product", () => {
         expect(createdProductId).to.exist;
+        closePopupIfVisible();
 
         findProductById(createdProductId).then(() => {
             cy.get(`[data-cy="product-actions-${createdProductId}"]`).click();
@@ -148,6 +165,7 @@ describe("Admin Dashboard - Products (Real Backend)", () => {
     // -------- 3️⃣ ลบ Product --------
     it("should delete the created product", () => {
         expect(createdProductId).to.exist;
+        closePopupIfVisible();
 
         findProductById(createdProductId).then(() => {
             cy.get(`[data-cy="product-actions-${createdProductId}"]`).click();
