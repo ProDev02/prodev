@@ -112,27 +112,29 @@ class ProductControllerTest {
 
     @Test
     void testSearchProducts_FilterAndPagination() {
-        Product p1 = new Product(); p1.setName("Apple"); p1.setPrice(50.0); p1.setCategory("Fruit"); p1.setImages(new ArrayList<>()); p1.setQuantity(10);
+        // Mock ข้อมูลสินค้า
+        Product p1 = new Product(); p1.setName("Be Nice"); p1.setPrice(50.0); p1.setCategory("Motivational"); p1.setImages(new ArrayList<>()); p1.setQuantity(10);
         Product p2 = new Product(); p2.setName("Banana"); p2.setPrice(30.0); p2.setCategory("Fruit"); p2.setImages(new ArrayList<>()); p2.setQuantity(5);
         Product p3 = new Product(); p3.setName("Carrot"); p3.setPrice(20.0); p3.setCategory("Vegetable"); p3.setImages(new ArrayList<>()); p3.setQuantity(0);
 
         List<Product> allProducts = Arrays.asList(p1, p2, p3);
         when(productRepository.findAll()).thenReturn(allProducts);
 
+        // ทดสอบการกรองพร้อมการค้นหาที่ทนทานต่อการสะกดผิด (คำว่า "be nace" ควรจะตรงกับ "Be Nice")
         @SuppressWarnings("unchecked")
         ResponseEntity<?> response = productController.searchProducts(
-                "Fruit", 25.0, 60.0, "a", 1, 10
+                "Motivational", 25.0, 60.0, "be nace", 1, 10 // คำสะกดผิด "be nace"
         );
 
         @SuppressWarnings("unchecked")
         Map<String, Object> result = (Map<String, Object>) response.getBody();
         assertNotNull(result);
-        assertEquals(2, result.get("total")); // ✅ เฉพาะ p1, p2 ที่ quantity > 0
+        assertEquals(1, result.get("total")); // ✅ ควรมีแค่ p1 ที่ตรงกับ "be nice"
 
         @SuppressWarnings("unchecked")
         List<Product> items = (List<Product>) result.get("items");
         assertNotNull(items);
-        assertEquals(2, items.size());
-        assertTrue(items.stream().allMatch(p -> p.getCategory().equalsIgnoreCase("Fruit")));
+        assertEquals(1, items.size());
+        assertTrue(items.stream().allMatch(p -> p.getCategory().equalsIgnoreCase("Motivational")));
     }
 }

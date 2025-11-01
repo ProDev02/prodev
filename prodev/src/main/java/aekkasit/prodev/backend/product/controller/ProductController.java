@@ -10,12 +10,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.security.access.prepost.PreAuthorize;
+import me.xdrop.fuzzywuzzy.FuzzySearch;
 
 import java.util.Map;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/products")
@@ -198,34 +200,47 @@ public class ProductController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "8") int limit
     ) {
-        // ดึงข้อมูลทั้งหมดจาก DB
         List<Product> all = productRepository.findAll();
 
         // Filter ตาม category
         if (category != null && !category.equalsIgnoreCase("All")) {
             all = all.stream()
                     .filter(p -> p.getCategory().equalsIgnoreCase(category))
-                    .toList();
+                    .collect(Collectors.toList());
         }
 
         // Filter ตาม price
         if (minPrice != null) {
-            all = all.stream().filter(p -> p.getPrice() >= minPrice).toList();
+            all = all.stream().filter(p -> p.getPrice() >= minPrice).collect(Collectors.toList());
         }
         if (maxPrice != null) {
-            all = all.stream().filter(p -> p.getPrice() <= maxPrice).toList();
+            all = all.stream().filter(p -> p.getPrice() <= maxPrice).collect(Collectors.toList());
         }
 
-        // Filter ตาม keyword
+        // Fuzzy Search รองรับตัวอักษรน้อย + พิมพ์ผิด
         if (keyword != null && !keyword.isEmpty()) {
+            String search = keyword.toLowerCase();
+
             all = all.stream()
-                    .filter(p -> p.getName().toLowerCase().contains(keyword.toLowerCase())
-                            || p.getDescription().toLowerCase().contains(keyword.toLowerCase()))
-                    .toList();
+                    .filter(p -> {
+                        String name = p.getName() != null ? p.getName().toLowerCase() : "";
+                        String desc = p.getDescription() != null ? p.getDescription().toLowerCase() : "";
+
+                        // ถ้ามีคำค้นอยู่ตรง ๆ หรือเป็น substring
+                        if (name.contains(search) || desc.contains(search)) return true;
+
+                        // Fuzzy matching: ใช้ Levenshtein Ratio
+                        int nameScore = FuzzySearch.ratio(search, name);
+                        int descScore = FuzzySearch.ratio(search, desc);
+
+                        // threshold ต่ำ 20 → ตัวอักษรเดียวก็ match
+                        return nameScore >= 20 || descScore >= 20;
+                    })
+                    .collect(Collectors.toList());
         }
 
-        // **กรองเฉพาะสินค้าที่มี quantity > 0**
-        all = all.stream().filter(p -> p.getQuantity() > 0).toList();
+        // กรองเฉพาะสินค้าที่มี quantity > 0
+        all = all.stream().filter(p -> p.getQuantity() > 0).collect(Collectors.toList());
 
         int total = all.size();
 

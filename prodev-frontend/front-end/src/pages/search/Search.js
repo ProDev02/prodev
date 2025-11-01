@@ -53,6 +53,7 @@ export default function SearchPage() {
     useEffect(() => {
         const fetchProducts = async () => {
             try {
+                // กำหนดราคาให้ถูกต้อง
                 const minPrice = selectedPrices.length
                     ? Math.min(...selectedPrices.map(label => priceRanges.find(r => r.label === label).min))
                     : undefined;
@@ -60,17 +61,20 @@ export default function SearchPage() {
                     ? Math.max(...selectedPrices.map(label => priceRanges.find(r => r.label === label).max))
                     : undefined;
 
+                // สร้าง URLSearchParams สำหรับส่งข้อมูลไปยัง backend
                 const params = new URLSearchParams();
                 if (selectedCategory && selectedCategory !== "All") params.append("category", selectedCategory);
                 if (minPrice !== undefined) params.append("minPrice", minPrice);
                 if (maxPrice !== undefined) params.append("maxPrice", maxPrice);
-                if (keyword) params.append("keyword", keyword);
+                if (keyword) params.append("keyword", keyword);  // ส่ง keyword ไปพร้อมกับการค้นหา
                 params.append("page", currentPage);
                 params.append("limit", itemsPerPage);
 
+                // ส่งคำขอไปยัง API เพื่อดึงข้อมูลสินค้าตามคำค้นหานี้
                 const res = await fetch(`${BACKEND_URL}/api/products/search?${params.toString()}`);
                 const data = await res.json();
 
+                // เก็บข้อมูลสินค้าที่กรองจาก backend
                 setProducts(
                     data.items
                         .filter(p => p.quantity > 0) // กรองเฉพาะสินค้าที่มี stock
@@ -80,6 +84,7 @@ export default function SearchPage() {
                         }))
                 );
 
+                // เก็บจำนวนสินค้าทั้งหมด
                 setTotalProducts(data.total);
             } catch (err) {
                 console.error(err);
@@ -88,6 +93,7 @@ export default function SearchPage() {
 
         fetchProducts();
     }, [selectedCategory, selectedPrices, currentPage, keyword]);
+
 
     const handleCategoryClick = (name) => {
         setSelectedCategory(name);
@@ -103,23 +109,10 @@ export default function SearchPage() {
 
     const totalPages = Math.ceil(totalProducts / itemsPerPage);
 
-    // ใช้ Fuse.js ในการค้นหาที่รองรับคำบางส่วนและสะกดผิด
-    const fuse = new Fuse(products, {
-        keys: ["name", "description"],
-        threshold: 0.3, // ค่า threshold สำหรับการจับคำ
-    });
-
     const handleSearch = (e) => {
         const searchTerm = e.target.value;
         setKeyword(searchTerm);
         setCurrentPage(1);
-        if (searchTerm) {
-            const results = fuse.search(searchTerm);
-            setProducts(results.map(result => result.item));
-        } else {
-            // หากไม่มีคำค้นหาจะคืนค่าผลลัพธ์เดิมทั้งหมด
-            setProducts(products);
-        }
     };
 
     return (
