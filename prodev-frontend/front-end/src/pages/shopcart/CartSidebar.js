@@ -34,6 +34,8 @@ export default function CartSidebar({
     const [collectedCoupons, setCollectedCoupons] = useState([]);
     const [showCollectedCoupons, setShowCollectedCoupons] = useState(false);
 
+    const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
     // 🔹 สุ่มคูปองส่วนลด 3 ใบ (1% - 3% รวม .5 ได้)
     const generateCoupons = () => {
         const newCoupons = Array.from({ length: 3 }, (_, i) => {
@@ -52,15 +54,42 @@ export default function CartSidebar({
         generateCoupons();
     }, []);
 
-    const handleCollectCoupon = (coupon) => {
-        if (!collectedCoupons.find((c) => c.code === coupon.code)) {
-            setCollectedCoupons([...collectedCoupons, coupon]);
-            setShowCollectedCoupons(true);
-            // Show popup for 4 seconds
+    const handleCollectCoupon = async (coupon) => {
+        try {
+            const token = localStorage.getItem("token"); // หรือเปลี่ยนตามที่คุณเก็บ JWT ไว้
+            if (!token) {
+                alert("กรุณาเข้าสู่ระบบก่อนเก็บคูปอง");
+                return;
+            }
 
-            setTimeout(() => {
-                setShowCollectedCoupons(false);
-            }, 4000); // 4 seconds
+            const response = await fetch(`${BACKEND_URL}/api/coupons/collect`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    couponCode: coupon.code,
+                    discount: coupon.discount,
+                    description: coupon.description
+                }),
+            });
+
+            const data = await response.text();
+
+            if (response.ok) {
+                setCollectedCoupons([...collectedCoupons, coupon]);
+                setShowCollectedCoupons(true);
+
+                setTimeout(() => setShowCollectedCoupons(false), 4000);
+
+                alert("✅ เก็บคูปองเรียบร้อยแล้ว");
+            } else {
+                alert(`❌ ${data}`);
+            }
+        } catch (error) {
+            console.error("Error collecting coupon:", error);
+            alert("เกิดข้อผิดพลาดในการเก็บคูปอง");
         }
     };
 

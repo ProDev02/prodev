@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { CheckCircle, ShoppingCart } from "lucide-react";
+import { CheckCircle, ShoppingCart, Gift, ChevronDown } from "lucide-react";
 import { CartContext } from "../../AppLayout";
 
 export default function CheckoutPage() {
@@ -18,6 +18,7 @@ export default function CheckoutPage() {
     const [showModal, setShowModal] = useState(false);
     const [loading, setLoading] = useState(false);
     const [couponError, setCouponError] = useState(""); // สถานะข้อผิดพลาดของคูปอง
+    const [availableCoupons, setAvailableCoupons] = useState([]);
 
     const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -87,29 +88,50 @@ export default function CheckoutPage() {
         }
     };
 
-    // คูปอง
-    const coupons = [
-        { code: "GIFT1", discount: 5, description: "5% Discount" },
-        { code: "GIFT2", discount: 10, description: "10% Discount" },
-        { code: "GIFT3", discount: 15, description: "15% Discount" }
-    ];
+    // --- FETCH COUPONS FROM API ---
+    useEffect(() => {
+        const fetchCoupons = async () => {
+            try {
+                const token = localStorage.getItem("token");
+                if (!token) return;
 
+                const res = await fetch(`${BACKEND_URL}/api/coupons/user`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (!res.ok) throw new Error("Failed to fetch coupons");
+
+                const data = await res.json();
+                // ตัวอย่าง data: [{ id, code, used, collectedAt }]
+                const filtered = data.filter(c => !c.used); // เอาที่ยังไม่ถูกใช้
+                setAvailableCoupons(filtered);
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        fetchCoupons();
+    }, [BACKEND_URL]);
+
+    // --- HANDLE COUPON SELECTION ---
     const handleCouponSelect = (event) => {
-        const selectedCouponCode = event.target.value;
-        const coupon = coupons.find(coupon => coupon.code === selectedCouponCode);
+        const selectedCode = event.target.value;
+        const coupon = availableCoupons.find(c => c.code === selectedCode);
 
         if (subtotal < 299) {
             setCouponError("You need to spend at least ฿299 to use a coupon.");
-            setSelectedCoupon(null); // รีเซ็ทคูปอง
+            setSelectedCoupon(null);
         } else {
-            setCouponError(""); // ไม่มีข้อผิดพลาด
-            setSelectedCoupon(coupon || null); // เลือกคูปอง
+            setCouponError("");
+            setSelectedCoupon(coupon || null);
         }
     };
 
-    // คำนวณราคาหลังหักส่วนลด
+    // --- CALCULATE DISCOUNTED TOTAL ---
     const discountedSubtotal = selectedCoupon
-        ? subtotal - (subtotal * (selectedCoupon.discount / 100))
+        ? subtotal - subtotal * (selectedCoupon.discount / 100)
         : subtotal;
 
     return (
@@ -261,22 +283,30 @@ export default function CheckoutPage() {
                     </div>
 
                     {/* คูปอง - Dropdown */}
-                    <div className="mt-4">
+                    <div className="mt-4 relative">
                         <h3 className="font-medium mb-2">Choose a Coupon</h3>
-                        <select
-                            className="w-full p-2 border rounded"
-                            value={selectedCoupon?.code || ""}
-                            onChange={handleCouponSelect}
-                        >
-                            <option value="">Select a coupon</option>
-                            {coupons.map((coupon) => (
-                                <option key={coupon.code} value={coupon.code}>
-                                    {coupon.description} - {coupon.discount}% off
-                                </option>
-                            ))}
-                        </select>
+                        <div className="relative">
+                            <select
+                                className="w-full p-2 border rounded appearance-none pr-10"
+                                value={selectedCoupon?.code || ""}
+                                onChange={handleCouponSelect}
+                            >
+                                <option value="">Select a coupon</option>
+                                {availableCoupons.map((coupon) => (
+                                    <option key={coupon.code} value={coupon.code}>
+                                        {coupon.code} - ส่วนลด {coupon.discount}%
+                                    </option>
+                                ))}
+                            </select>
+                            {/* Icon ขวา */}
+                            <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
+                                <Gift className="w-5 h-5 text-green-600" />
+                                <ChevronDown className="w-4 h-4 text-gray-500 ml-1" />
+                            </div>
+                        </div>
                         {couponError && <p className="text-red-500 text-sm mt-2">{couponError}</p>}
                     </div>
+
 
                     <div className="mt-4 border-t pt-4 space-y-2 text-sm">
                         <div className="flex justify-between">
