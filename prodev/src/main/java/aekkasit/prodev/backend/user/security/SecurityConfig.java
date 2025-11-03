@@ -36,7 +36,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/products/reports/weekly-stock").hasRole("ADMIN")
                         .requestMatchers("/api/products/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/api/coupons/**").hasRole("USER")
                         .requestMatchers("/api/favorites/**").hasRole("USER") // ✅ เพิ่มบรรทัดนี้
+                        .requestMatchers("/api/coupons/**").hasRole("USER")
                         .requestMatchers("/api/orders/checkout").hasRole("USER")
                         .requestMatchers("/api/orders/my").hasRole("USER") // ดึง order ของตัวเอง
                         .requestMatchers("/api/orders/*/receive").hasRole("USER")
