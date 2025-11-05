@@ -86,7 +86,7 @@ public class OrderService {
         List<Order> orders = createOrders(user, cartItems);
 
         // 3️⃣ สร้าง PDF จาก cartItems ปัจจุบัน
-        byte[] pdfBytes = generateOrderPdfFromCartItems(cartItems);
+        byte[] pdfBytes = generateOrderPdfFromCartItems(cartItems, user);
 
         // 4️⃣ เคลียร์ cart
         cartService.clearCart(user);
@@ -166,7 +166,7 @@ public class OrderService {
     }
 
     @Transactional
-    public byte[] generateOrderPdfFromCartItems(List<CartItem> cartItems) {
+    public byte[] generateOrderPdfFromCartItems(List<CartItem> cartItems, User user) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             Document document = new Document(PageSize.A4, 36, 36, 54, 36);
             PdfWriter.getInstance(document, baos);
@@ -177,6 +177,7 @@ public class OrderService {
             Font headerFont = new Font(Font.HELVETICA, 12, Font.BOLD, Color.WHITE);
             Font rowFont = new Font(Font.HELVETICA, 12);
             Font totalFont = new Font(Font.HELVETICA, 14, Font.BOLD);
+            Font userInfoFont = new Font(Font.HELVETICA, 10, Font.ITALIC, Color.DARK_GRAY);
 
             // Title
             Paragraph title = new Paragraph("Order Summary", titleFont);
@@ -184,13 +185,21 @@ public class OrderService {
             title.setSpacingAfter(20);
             document.add(title);
 
+            // User info (username)
+            Paragraph userInfo = new Paragraph("Username: " + user.getUsername(), userInfoFont);
+            userInfo.setAlignment(Element.ALIGN_LEFT);
+            userInfo.setSpacingAfter(10);
+            document.add(userInfo);
+
             // Table
-            PdfPTable table = new PdfPTable(5);
+            PdfPTable table = new PdfPTable(4);  // Image column removed
             table.setWidthPercentage(100);
-            table.setWidths(new float[]{1, 3, 1, 1, 1});
+
+            // Set the column widths
+            table.setWidths(new float[]{3, 4, 2, 3});  // Adjusted for fewer columns
 
             // Header
-            String[] headers = {"Image", "Product", "Quantity", "Price", "Total"};
+            String[] headers = {"Product", "Quantity", "Price", "Total"};
             for (String h : headers) {
                 PdfPCell cell = new PdfPCell(new Phrase(h, headerFont));
                 cell.setBackgroundColor(new Color(0, 128, 0));
@@ -201,26 +210,6 @@ public class OrderService {
 
             double totalAmount = 0;
             for (CartItem item : cartItems) {
-                String imgUrl = item.getProduct().getImages().isEmpty() ? null : item.getProduct().getImages().get(0);
-                Image img = null;
-
-                if (imgUrl != null && !imgUrl.isEmpty()) {
-                    try {
-                        // โหลดรูปจาก URL หรือ path ที่ CartItem เก็บไว้
-                        img = Image.getInstance(imgUrl);
-                        img.scaleToFit(50, 50);
-                    } catch (Exception e) {
-                        log.warn("Cannot load image for product {}: {}", item.getProduct().getName(), e.getMessage());
-                    }
-                }
-
-                // Image cell
-                PdfPCell imgCell = new PdfPCell();
-                imgCell.setPadding(5);
-                imgCell.setHorizontalAlignment(Element.ALIGN_CENTER);
-                if (img != null) imgCell.addElement(img);
-                table.addCell(imgCell);
-
                 // Product name
                 table.addCell(new PdfPCell(new Phrase(item.getProduct().getName(), rowFont)));
 
@@ -251,6 +240,7 @@ public class OrderService {
             totalPara.setSpacingBefore(10);
             document.add(totalPara);
 
+            // Closing the document
             document.close();
             return baos.toByteArray();
 
