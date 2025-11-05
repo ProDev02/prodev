@@ -1,15 +1,12 @@
 package aekkasit.prodev.backend.order.controller;
 
-import aekkasit.prodev.backend.cart.service.CartService;
 import aekkasit.prodev.backend.order.model.Order;
 import aekkasit.prodev.backend.order.service.OrderService;
-import aekkasit.prodev.backend.product.repository.ProductRepository;
 import aekkasit.prodev.backend.cart.dto.CartResponse;
 import aekkasit.prodev.backend.user.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 
@@ -22,8 +19,6 @@ import java.util.Map;
 public class OrderController {
 
     private final OrderService orderService;
-    private final CartService cartService;
-    private final ProductRepository productRepository;
 
     @PostMapping("/checkout")
     public ResponseEntity<?> checkout(Authentication authentication) {

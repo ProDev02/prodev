@@ -53,15 +53,9 @@ public class CouponService {
         return userCouponRepository.findByUserId(userId);
     }
 
-    // ดึง discount ของ coupon
-    public Double getDiscountByCode(String code) {
-        Optional<Coupon> coupon = couponRepository.findByCode(code);
-        return coupon.map(Coupon::getDiscount).orElse(0.0);
+
+    public UserCoupon saveUserCoupon(UserCoupon userCoupon) {
+        return userCouponRepository.save(userCoupon);
     }
 
-    // ดึง description ของ coupon
-    public String getDescriptionByCode(String code) {
-        Optional<Coupon> coupon = couponRepository.findByCode(code);
-        return coupon.map(Coupon::getDescription).orElse("");
-    }
 }

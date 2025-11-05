@@ -8,6 +8,8 @@ import aekkasit.prodev.backend.user.model.User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import java.util.List;
@@ -56,4 +58,32 @@ public class CouponController {
 
         return ResponseEntity.ok(response);
     }
+
+
+    @PutMapping("/use")
+    public ResponseEntity<?> useCoupon(@RequestBody CouponRequest request, Authentication auth) {
+        try {
+            User user = getCurrentUser(auth);
+            String couponCode = request.getCouponCode();
+
+            // ตรวจสอบว่าผู้ใช้มีคูปองที่เลือกหรือไม่
+            List<UserCoupon> userCoupons = couponService.getUserCoupons(user.getId());
+            Optional<UserCoupon> userCoupon = userCoupons.stream()
+                    .filter(uc -> uc.getCode().equals(couponCode) && !uc.isUsed())
+                    .findFirst();
+
+            if (userCoupon.isPresent()) {
+                UserCoupon coupon = userCoupon.get();
+                coupon.setUsed(true); // ตั้งคูปองว่าใช้แล้ว
+                couponService.saveUserCoupon(coupon); // บันทึกสถานะใหม่
+
+                return ResponseEntity.ok("Coupon applied successfully");
+            } else {
+                return ResponseEntity.badRequest().body("Coupon not available or already used");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("An error occurred while applying the coupon");
+        }
+    }
+
 }
