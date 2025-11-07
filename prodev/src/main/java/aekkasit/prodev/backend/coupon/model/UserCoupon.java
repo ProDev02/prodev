@@ -36,5 +36,7 @@ public class UserCoupon {
 
     @Column(nullable = false)
     private String description;
-}
 
+    @Column(nullable = false)
+    private boolean isSelected = false; // ฟิลด์ใหม่ เพื่อบ่งบอกว่าคูปองถูกเลือกหรือไม่
+}

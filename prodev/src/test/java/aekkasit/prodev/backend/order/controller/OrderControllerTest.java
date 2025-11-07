@@ -1,8 +1,7 @@
 package aekkasit.prodev.backend.order.controller;
 
-import aekkasit.prodev.backend.cart.model.Cart;
 import aekkasit.prodev.backend.cart.model.CartItem;
-import aekkasit.prodev.backend.cart.repository.CartRepository;
+import aekkasit.prodev.backend.coupon.service.CouponService;
 import aekkasit.prodev.backend.order.model.Order;
 import aekkasit.prodev.backend.order.service.OrderService;
 import aekkasit.prodev.backend.product.model.Product;
@@ -28,7 +27,7 @@ class OrderControllerTest {
     private OrderService orderService;
 
     @Mock
-    private CartRepository cartRepository;
+    private CouponService couponService;
 
     @Mock
     private Authentication authentication;
@@ -38,7 +37,10 @@ class OrderControllerTest {
         // Mock user
         User user = new User();
         user.setId(1L);
+        user.setUsername("testuser");
 
+        // Mock authentication and return the user as principal
+        Authentication authentication = mock(Authentication.class);
         when(authentication.getPrincipal()).thenReturn(user);
 
         // Mock product
@@ -66,11 +68,16 @@ class OrderControllerTest {
         result.put("orders", orders);
         result.put("updatedProducts", updatedProducts);
 
-        when(orderService.checkout(user)).thenReturn(result);
+        when(orderService.checkout(user, "testCouponCode")).thenReturn(result);
 
-        // Call checkout
-        ResponseEntity<?> response = orderController.checkout(authentication);
+        // Prepare the request body
+        Map<String, Object> request = new HashMap<>();
+        request.put("couponCode", "testCouponCode");
 
+        // Call checkout with request body and authentication
+        ResponseEntity<?> response = orderController.checkout(request, authentication);
+
+        // Verify the response
         assertEquals(200, response.getStatusCode().value());
 
         @SuppressWarnings("unchecked")
@@ -88,6 +95,7 @@ class OrderControllerTest {
         assertEquals("image1.jpg", responseOrder.getImage());
         assertEquals(100.0, responseOrder.getPrice());
     }
+
 
     @Test
     void testGetMyOrders() {

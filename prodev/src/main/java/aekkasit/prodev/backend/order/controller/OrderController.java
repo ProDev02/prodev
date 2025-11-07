@@ -1,10 +1,12 @@
 package aekkasit.prodev.backend.order.controller;
 
+import aekkasit.prodev.backend.cart.model.CartItem;
 import aekkasit.prodev.backend.order.model.Order;
 import aekkasit.prodev.backend.order.service.OrderService;
 import aekkasit.prodev.backend.cart.dto.CartResponse;
 import aekkasit.prodev.backend.user.model.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -21,16 +23,19 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping("/checkout")
-    public ResponseEntity<?> checkout(Authentication authentication) {
+    public ResponseEntity<?> checkout(@RequestBody Map<String, Object> request, Authentication authentication) {
         User user = (User) authentication.getPrincipal();
+
+        // รับ couponCode จาก request body
+        String couponCode = (String) request.get("couponCode");
+
         try {
-            Map<String, Object> result = orderService.checkout(user);
+            Map<String, Object> result = orderService.checkout(user, couponCode);
             return ResponseEntity.ok(result);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
 
     @GetMapping("/my")
     public ResponseEntity<List<Order>> getMyOrders(@AuthenticationPrincipal User user) {

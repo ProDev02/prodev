@@ -42,11 +42,19 @@ export default function CheckoutPage() {
             const token = localStorage.getItem("token");
             if (!token) throw new Error("You must login first!");
 
+            console.log("Selected Coupon:", selectedCoupon);
+
+            const couponCode = selectedCoupon?.code || null;
+
             const response = await fetch(`${BACKEND_URL}/api/orders/checkout`, {
                 method: "POST",
                 headers: {
-                    "Authorization": `Bearer ${token}`
-                }
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    couponCode: couponCode   // ส่งคูปองไปด้วย
+                })
             });
 
             if (!response.ok) {
