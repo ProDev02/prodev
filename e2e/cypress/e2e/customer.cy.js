@@ -130,16 +130,24 @@ describe("WholeCart E2E Flow (Real DB + Mocked Cart) - Complete", () => {
     });
 
     it("Search and filter products", () => {
+        // ไปที่หน้า /search
         cy.visit(BASE_URL + "/search");
-        cy.get('input[placeholder="Search for products"]').type("Shower");
+
+        // กรอกคำค้นหาใน input ที่มี placeholder "Search products..."
+        cy.get('input[placeholder="Search products..."]')
+            .type("Shower") // พิมพ์คำว่า "Shower"
+            .should("have.value", "Shower"); // ตรวจสอบว่าค่าที่กรอกใน input เป็น "Shower"
+
+        // ทำการตรวจสอบ API หรือการแสดงผลของคำค้นหาบนหน้า
         cy.request(`${API_BASE}/api/products/search?keyword=Shower`).then(res => {
-            expect(res.status).to.eq(200);
+            expect(res.status).to.eq(200); // ตรวจสอบว่า request สำเร็จ
             const items = res.body.items;
             items.forEach(p => {
-                cy.contains(p.name).should("exist");
+                cy.contains(p.name).should("exist"); // ตรวจสอบว่าผลลัพธ์แสดงสินค้าที่เกี่ยวข้องกับคำค้นหา
             });
         });
     });
+
 
     it("Register a new user", () => {
         const username = `testuser_${Date.now()}`;

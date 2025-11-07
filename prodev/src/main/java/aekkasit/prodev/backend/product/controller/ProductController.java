@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Arrays;  // เพิ่มการ import นี้
 import java.util.stream.Collectors;
 
 @RestController
@@ -217,24 +218,30 @@ public class ProductController {
             all = all.stream().filter(p -> p.getPrice() <= maxPrice).collect(Collectors.toList());
         }
 
-        // Fuzzy Search รองรับตัวอักษรน้อย + พิมพ์ผิด
+        // Fuzzy Search รองรับการแยกคำจาก keyword
         if (keyword != null && !keyword.isEmpty()) {
             String search = keyword.toLowerCase();
+            // แยกคำจาก keyword
+            String[] searchTerms = search.split("\\s+");
 
             all = all.stream()
                     .filter(p -> {
                         String name = p.getName() != null ? p.getName().toLowerCase() : "";
                         String desc = p.getDescription() != null ? p.getDescription().toLowerCase() : "";
 
-                        // ถ้ามีคำค้นอยู่ตรง ๆ หรือเป็น substring
-                        if (name.contains(search) || desc.contains(search)) return true;
+                        // ตรวจสอบว่าแต่ละคำจาก searchTerms มีอยู่ในชื่อหรือคำอธิบายของสินค้า
+                        return Arrays.stream(searchTerms)
+                                .allMatch(term -> {
+                                    // ตรวจสอบว่าแต่ละคำใน searchTerms พบใน name หรือ description
+                                    boolean nameMatch = name.contains(term);
+                                    boolean descMatch = desc.contains(term);
 
-                        // Fuzzy matching: ใช้ Levenshtein Ratio
-                        int nameScore = FuzzySearch.ratio(search, name);
-                        int descScore = FuzzySearch.ratio(search, desc);
+                                    // Fuzzy matching: ใช้ Levenshtein Ratio สำหรับตรวจสอบคำที่สะกดผิด
+                                    int nameScore = FuzzySearch.ratio(term, name);
+                                    int descScore = FuzzySearch.ratio(term, desc);
 
-                        // threshold ต่ำ 20 → ตัวอักษรเดียวก็ match
-                        return nameScore >= 20 || descScore >= 20;
+                                    return nameMatch || descMatch || nameScore >= 20 || descScore >= 20;
+                                });
                     })
                     .collect(Collectors.toList());
         }
