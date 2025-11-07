@@ -1,6 +1,7 @@
 package aekkasit.prodev.backend.order.service;
 
 import aekkasit.prodev.backend.cart.model.Cart;
+import aekkasit.prodev.backend.coupon.service.CouponService;
 import aekkasit.prodev.backend.order.model.Order;
 import aekkasit.prodev.backend.order.repository.OrderRepository;
 import aekkasit.prodev.backend.cart.service.CartService;
@@ -33,6 +34,7 @@ public class OrderService {
     private final CartService cartService;
     private final ProductRepository productRepository;
     private final CartItemRepository cartItemRepository;
+    private final CouponService couponService;
 
     @Transactional
     public Order createOrder(Order order) {
@@ -71,7 +73,7 @@ public class OrderService {
     }
 
     @Transactional
-    public Map<String, Object> checkout(User user) {
+    public Map<String, Object> checkout(User user, String couponCode) {
         Cart cart = cartService.getCart(user);
         List<CartItem> cartItems = cartItemRepository.findByCartId(cart.getId());
 
@@ -79,22 +81,29 @@ public class OrderService {
             throw new RuntimeException("Cart is empty");
         }
 
-        // 1️⃣ ลด stock
+        // ลด stock
         List<Product> updatedProducts = reduceStock(cartItems);
 
-        // 2️⃣ สร้าง order
+        // คำนวณคูปอง
+        double couponDiscount = 0;
+        if (couponCode != null && !couponCode.isEmpty()) {
+            // ดึงคูปองจาก couponService
+            couponDiscount = couponService.getCouponDiscount(couponCode, user.getId());
+        }
+
+        // สร้าง order
         List<Order> orders = createOrders(user, cartItems);
 
-        // 3️⃣ สร้าง PDF จาก cartItems ปัจจุบัน
-        byte[] pdfBytes = generateOrderPdfFromCartItems(cartItems, user);
+        // สร้าง PDF จาก cartItems
+        byte[] pdfBytes = generateOrderPdfFromCartItems(cartItems, user, couponDiscount, couponCode);
 
-        // 4️⃣ เคลียร์ cart
+        // เคลียร์ cart
         cartService.clearCart(user);
 
         return Map.of(
                 "orders", orders,
                 "updatedProducts", updatedProducts,
-                "pdfBytes", Base64.getEncoder().encodeToString(pdfBytes) // เพิ่มตรงนี้ให้ frontend โหลด PDF ได้ทันที
+                "pdfBytes", Base64.getEncoder().encodeToString(pdfBytes)
         );
     }
 
@@ -165,8 +174,7 @@ public class OrderService {
         return cartService.addToCart(user, product.getId(), qty);
     }
 
-    @Transactional
-    public byte[] generateOrderPdfFromCartItems(List<CartItem> cartItems, User user) {
+    public byte[] generateOrderPdfFromCartItems(List<CartItem> cartItems, User user, double couponDiscount, String couponCode) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             Document document = new Document(PageSize.A4, 36, 36, 54, 36);
             PdfWriter.getInstance(document, baos);
@@ -234,8 +242,20 @@ public class OrderService {
 
             document.add(table);
 
-            // Total
-            Paragraph totalPara = new Paragraph("Total: ฿" + String.format("%.2f", totalAmount), totalFont);
+            // Discount
+            if (couponDiscount > 0) {
+                Paragraph discountPara = new Paragraph(
+                        "Coupon (" + couponCode + ") Discount: ฿" + String.format("%.2f", totalAmount * (couponDiscount / 100)),
+                        totalFont
+                );
+                discountPara.setAlignment(Element.ALIGN_RIGHT);
+                discountPara.setSpacingBefore(10);
+                document.add(discountPara);
+            }
+
+            // Total after discount
+            double totalAfterDiscount = totalAmount - (totalAmount * (couponDiscount / 100));
+            Paragraph totalPara = new Paragraph("Total after discount: ฿" + String.format("%.2f", totalAfterDiscount), totalFont);
             totalPara.setAlignment(Element.ALIGN_RIGHT);
             totalPara.setSpacingBefore(10);
             document.add(totalPara);
