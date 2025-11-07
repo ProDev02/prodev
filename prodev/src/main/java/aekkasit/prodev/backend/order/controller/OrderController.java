@@ -1,6 +1,5 @@
 package aekkasit.prodev.backend.order.controller;
 
-import aekkasit.prodev.backend.cart.model.CartItem;
 import aekkasit.prodev.backend.order.model.Order;
 import aekkasit.prodev.backend.order.service.OrderService;
 import aekkasit.prodev.backend.cart.dto.CartResponse;

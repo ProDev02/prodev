@@ -46,6 +46,7 @@ public class SecurityConfig {
                         .hasRole("USER")
                         .requestMatchers("/api/orders/*/reorder").hasRole("USER")
                         .requestMatchers("/api/orders/**").hasRole("ADMIN") // ที่เหลือเป็น admin
+                        .requestMatchers("/api/orders/pdf/**").hasRole("USER")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
