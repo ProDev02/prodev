@@ -89,6 +89,7 @@ public class OrderService {
         if (couponCode != null && !couponCode.isEmpty()) {
             // ดึงคูปองจาก couponService
             couponDiscount = couponService.getCouponDiscount(couponCode, user.getId());
+            couponService.markCouponAsUsed(couponCode, user.getId());
         }
 
         // สร้าง order
@@ -186,6 +187,7 @@ public class OrderService {
             Font rowFont = new Font(Font.HELVETICA, 12);
             Font totalFont = new Font(Font.HELVETICA, 14, Font.BOLD);
             Font userInfoFont = new Font(Font.HELVETICA, 10, Font.ITALIC, Color.DARK_GRAY);
+            Font discountFont = new Font(Font.HELVETICA, 12, Font.BOLD, Color.RED); // สีแดงสำหรับส่วนลด
 
             // Title
             Paragraph title = new Paragraph("Order Summary", titleFont);
@@ -242,23 +244,50 @@ public class OrderService {
 
             document.add(table);
 
-            // Discount
+            // Displaying Total before discount
+            Paragraph totalBeforeDiscountPara = new Paragraph(
+                    "Total (before discount): ฿" + String.format("%.2f", totalAmount),
+                    totalFont
+            );
+            totalBeforeDiscountPara.setAlignment(Element.ALIGN_LEFT);
+            totalBeforeDiscountPara.setSpacingBefore(10);
+            document.add(totalBeforeDiscountPara);
+
+            // Coupon Discount
             if (couponDiscount > 0) {
+                // Display Coupon in one line and Discount in the next with red color
+                Paragraph couponPara = new Paragraph("Coupon (" + couponCode + ")", rowFont);
+                couponPara.setAlignment(Element.ALIGN_LEFT);
+                document.add(couponPara);
+
                 Paragraph discountPara = new Paragraph(
-                        "Coupon (" + couponCode + ") Discount: ฿" + String.format("%.2f", totalAmount * (couponDiscount / 100)),
-                        totalFont
+                        "Discount: ฿" + String.format("%.2f", totalAmount * (couponDiscount / 100)),
+                        discountFont  // Set red color for the discount
                 );
-                discountPara.setAlignment(Element.ALIGN_RIGHT);
-                discountPara.setSpacingBefore(10);
+                discountPara.setAlignment(Element.ALIGN_LEFT);
+                discountPara.setSpacingBefore(5);
+                document.add(discountPara);
+            } else {
+                // If no coupon is used, display "-".
+                Paragraph couponPara = new Paragraph("Coupon: -", rowFont);
+                couponPara.setAlignment(Element.ALIGN_LEFT);
+                document.add(couponPara);
+
+                Paragraph discountPara = new Paragraph("Discount: -", rowFont);
+                discountPara.setAlignment(Element.ALIGN_LEFT);
+                discountPara.setSpacingBefore(5);
                 document.add(discountPara);
             }
 
-            // Total after discount
+            // Total after discount - Align right
             double totalAfterDiscount = totalAmount - (totalAmount * (couponDiscount / 100));
-            Paragraph totalPara = new Paragraph("Total after discount: ฿" + String.format("%.2f", totalAfterDiscount), totalFont);
-            totalPara.setAlignment(Element.ALIGN_RIGHT);
-            totalPara.setSpacingBefore(10);
-            document.add(totalPara);
+            Paragraph totalAfterDiscountPara = new Paragraph(
+                    "Total after discount: ฿" + String.format("%.2f", totalAfterDiscount),
+                    totalFont
+            );
+            totalAfterDiscountPara.setAlignment(Element.ALIGN_RIGHT);  // Align right for total
+            totalAfterDiscountPara.setSpacingBefore(10);
+            document.add(totalAfterDiscountPara);
 
             // Closing the document
             document.close();
