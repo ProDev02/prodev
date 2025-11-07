@@ -92,4 +92,27 @@ public class CouponService {
         List<UserCoupon> userCoupons = userCouponRepository.findByUserIdAndUsedFalse(userId);
         return !userCoupons.isEmpty();  // ถ้ามีคูปองที่ยังไม่ได้ใช้ก็จะคืน true
     }
+
+    // ฟังก์ชันนี้ใช้ในการทำเครื่องหมายคูปองว่าใช้แล้ว
+    public void markCouponAsUsed(String couponCode, Long userId) {
+        Optional<UserCoupon> userCouponOpt = userCouponRepository.findByUserIdAndCode(userId, couponCode);
+
+        if (userCouponOpt.isPresent()) {
+            UserCoupon userCoupon = userCouponOpt.get();
+
+            // ตรวจสอบว่าใช้คูปองไปแล้วหรือยัง
+            if (userCoupon.isUsed()) {
+                throw new RuntimeException("Coupon has already been used");
+            }
+
+            // เปลี่ยนสถานะคูปองให้ใช้แล้ว
+            userCoupon.setUsed(true);
+            userCouponRepository.save(userCoupon);
+
+            System.out.println("Coupon marked as used: " + couponCode);
+        } else {
+            throw new RuntimeException("Coupon not found or invalid");
+        }
+    }
+
 }
