@@ -26,16 +26,18 @@ public class OrderController {
     public ResponseEntity<?> checkout(@RequestBody Map<String, Object> request, Authentication authentication) {
         User user = (User) authentication.getPrincipal();
 
-        // รับ couponCode จาก request body
+        // รับ couponCode จาก request
         String couponCode = (String) request.get("couponCode");
 
         try {
+            // ส่ง couponCode ไปให้ service
             Map<String, Object> result = orderService.checkout(user, couponCode);
             return ResponseEntity.ok(result);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
 
     @GetMapping("/my")
     public ResponseEntity<List<Order>> getMyOrders(@AuthenticationPrincipal User user) {
