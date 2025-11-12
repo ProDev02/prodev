@@ -57,15 +57,16 @@ public class CouponService {
     public String collectCouponForUser(CouponRequest request, User user) {
         String couponCode = request.getCouponCode();
 
+        // ✅ ตรวจสอบเฉพาะคูปองที่ยังไม่ได้ใช้
         boolean alreadyCollected = userCouponRepository
-                .findByUserId(user.getId())
-                .stream()
-                .anyMatch(uc -> uc.getCode().equals(couponCode));
+                .findByUserIdAndCodeAndUsedFalse(user.getId(), couponCode)
+                .isPresent();
 
         if (alreadyCollected) {
             throw new RuntimeException("You already collected this coupon");
         }
 
+        // สร้าง UserCoupon ใหม่
         UserCoupon userCoupon = UserCoupon.builder()
                 .code(couponCode)
                 .user(user)
@@ -79,6 +80,7 @@ public class CouponService {
 
         return "Coupon collected successfully";
     }
+
 
     public List<UserCoupon> getUserCoupons(Long userId) {
         return userCouponRepository.findByUserId(userId);

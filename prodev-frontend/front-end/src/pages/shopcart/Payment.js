@@ -295,6 +295,7 @@ export default function CheckoutPage() {
                         <h3 className="font-medium mb-2">Choose a Coupon</h3>
                         <div className="relative">
                             <select
+                                data-testid="coupon-select"
                                 className="w-full p-2 border rounded appearance-none pr-10"
                                 value={selectedCoupon?.code || ""}
                                 onChange={handleCouponSelect}

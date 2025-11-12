@@ -201,6 +201,7 @@ export default function CartSidebar({
                                             <button
                                                 onClick={() => removeItem(item.id)}
                                                 className="text-red-500 text-xs flex items-center mt-1"
+                                                data-testid="remove-item"
                                             >
                                                 <Trash2 size={12} className="mr-1" /> Remove
                                             </button>
