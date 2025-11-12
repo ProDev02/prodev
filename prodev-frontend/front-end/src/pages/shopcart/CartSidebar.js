@@ -148,6 +148,7 @@ export default function CartSidebar({
                                 ? "text-green-600 font-medium"
                                 : "text-gray-500"
                         }`}
+                        data-testid="shopcart-tab"
                     >
                         <List size={16} />
                         <span>ShopCart</span>
@@ -172,6 +173,7 @@ export default function CartSidebar({
                                 ? "text-green-600 font-medium"
                                 : "text-gray-500"
                         }`}
+                        data-testid="order-history-tab"
                     >
                         <List size={16} />
                         <span>Order History</span>
