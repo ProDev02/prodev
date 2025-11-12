@@ -218,10 +218,9 @@ public class ProductController {
             all = all.stream().filter(p -> p.getPrice() <= maxPrice).collect(Collectors.toList());
         }
 
-        // Fuzzy Search รองรับการแยกคำจาก keyword
+        // 🔍 Fuzzy Search รองรับคำผิดเล็กน้อยในแต่ละคำ
         if (keyword != null && !keyword.isEmpty()) {
             String search = keyword.toLowerCase();
-            // แยกคำจาก keyword
             String[] searchTerms = search.split("\\s+");
 
             all = all.stream()
@@ -229,24 +228,29 @@ public class ProductController {
                         String name = p.getName() != null ? p.getName().toLowerCase() : "";
                         String desc = p.getDescription() != null ? p.getDescription().toLowerCase() : "";
 
-                        // ตรวจสอบว่าแต่ละคำจาก searchTerms มีอยู่ในชื่อหรือคำอธิบายของสินค้า
+                        // แยกคำในชื่อและคำอธิบาย
+                        List<String> nameWords = Arrays.asList(name.split("\\W+"));
+                        List<String> descWords = Arrays.asList(desc.split("\\W+"));
+
+                        // ให้ผ่านถ้าทุกคำใน searchTerms เจอ match อย่างน้อย 1 ที่
                         return Arrays.stream(searchTerms)
                                 .allMatch(term -> {
-                                    // ตรวจสอบว่าแต่ละคำใน searchTerms พบใน name หรือ description
-                                    boolean nameMatch = name.contains(term);
-                                    boolean descMatch = desc.contains(term);
+                                    // 1️⃣ ตรวจคำตรง
+                                    boolean exact = nameWords.contains(term) || descWords.contains(term);
 
-                                    // Fuzzy matching: ใช้ Levenshtein Ratio สำหรับตรวจสอบคำที่สะกดผิด
-                                    int nameScore = FuzzySearch.ratio(term, name);
-                                    int descScore = FuzzySearch.ratio(term, desc);
+                                    // 2️⃣ ตรวจ fuzzy ทีละคำ (ระยะห่างไม่เกิน 1-2 ตัวอักษร)
+                                    boolean fuzzyMatch = nameWords.stream()
+                                            .anyMatch(w -> FuzzySearch.ratio(term, w) >= 70)
+                                            || descWords.stream()
+                                            .anyMatch(w -> FuzzySearch.ratio(term, w) >= 70);
 
-                                    return nameMatch || descMatch || nameScore >= 20 || descScore >= 20;
+                                    return exact || fuzzyMatch;
                                 });
                     })
                     .collect(Collectors.toList());
         }
 
-        // กรองเฉพาะสินค้าที่มี quantity > 0
+        // เฉพาะสินค้าที่มีของใน stock
         all = all.stream().filter(p -> p.getQuantity() > 0).collect(Collectors.toList());
 
         int total = all.size();
@@ -261,6 +265,7 @@ public class ProductController {
                 "items", items
         ));
     }
+
 
     //week report
     @GetMapping("/reports/weekly-stock")

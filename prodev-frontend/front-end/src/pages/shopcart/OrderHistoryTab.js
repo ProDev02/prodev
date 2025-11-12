@@ -67,7 +67,11 @@ export default function OrderHistoryTab() {
     return (
         <div className="space-y-4">
             {orders.map((order) => (
-                <div key={order.id} className="flex items-center justify-between border-b pb-2">
+                <div
+                    key={order.id}
+                    className="flex items-center justify-between border-b pb-2"
+                    data-testid="order-row"
+                >
                     <div className="flex items-center space-x-3">
                         <img
                             src={

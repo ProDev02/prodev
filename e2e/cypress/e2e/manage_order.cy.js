@@ -67,6 +67,7 @@ describe("WholeCart E2E Flow (Real DB + Mocked Cart) - Complete", () => {
             products.forEach((product) => {
                 cy.visit(`${BASE_URL}/product/detail/${product.id}`);
                 cy.get("h1", { timeout: 10000 }).should("contain", product.name);
+                cy.get("button").contains("+").click().click();
                 cy.get("button")
                     .contains(/Add to cart/i, { timeout: 10000 })
                     .should("be.visible")
@@ -81,6 +82,33 @@ describe("WholeCart E2E Flow (Real DB + Mocked Cart) - Complete", () => {
                     });
                 });
         });
+    });
+
+    it("Collect a coupon from the gift button", () => {
+        cy.visit(BASE_URL + "/");
+        cy.wait(1000);
+
+        // กดปุ่มของขวัญมุมขวาล่าง
+        cy.get('button[title="สุ่มคูปอง"]', { timeout: 10000 }).click();
+        cy.wait(500);
+
+        // เลือก coupon ใบแรกและกด "เก็บ"
+        cy.get('div.w-80')
+            .find('div.flex.justify-between.items-center.p-3')
+            .first()
+            .within(() => {
+                cy.get('button').contains('เก็บ').click();
+            });
+
+        // รอ alert
+        cy.on('window:alert', (text) => {
+            expect(text).to.match(/✅ เก็บคูปองเรียบร้อยแล้ว/);
+        });
+
+        // ปิด popup → เจาะจง header ของ popup
+        cy.get('div.w-80')
+            .find('div.flex.justify-between.items-center.mb-3 button')
+            .click();
     });
 
     it("Opens CartSidebar and verifies real DB cart items", () => {
@@ -104,15 +132,56 @@ describe("WholeCart E2E Flow (Real DB + Mocked Cart) - Complete", () => {
         });
     });
 
-    it("Checkout from CartSidebar (real DB order creation)", () => {
+    it("Checkout from CartSidebar (real DB order creation) with coupon", () => {
         cy.intercept("POST", "**/api/orders/checkout").as("checkoutReal");
+
         cy.visit(BASE_URL + "/");
+
+        // เปิด CartSidebar
         cy.get("[data-testid='cart-button']").click();
+
+        // กด Payment จาก sidebar
         cy.get("[data-testid='cart-sidebar']").contains("Payment").click();
+
+        // ตรวจสอบว่าไปหน้า /payment
         cy.url().should("include", "/payment");
+
+        // รอให้ dropdown coupon แสดง
+        cy.get("[data-testid='coupon-select']")
+            .should("exist")
+            .find("option")
+            .should("have.length.greaterThan", 1) // ต้องมีตัวเลือกมากกว่าหนึ่ง (เพราะอันแรกคือ 'Select a coupon')
+            .then(($options) => {
+                // หาคูปองที่ไม่ใช่ตัวเลือกว่าง
+                const firstValidOption = [...$options].find(o => o.value !== "");
+
+                if (firstValidOption) {
+                    // เลือกคูปองที่พบ
+                    cy.get("[data-testid='coupon-select']").select(firstValidOption.value);
+                    cy.log(`🎟 Selected coupon: ${firstValidOption.value}`);
+
+                    // ตรวจสอบว่าเลือกคูปองถูกต้อง
+                    cy.get("[data-testid='coupon-select']")
+                        .should("have.value", firstValidOption.value)
+                        .and("contain", firstValidOption.text); // ตรวจสอบว่า value และ text ของ option ตรงกับตัวเลือกที่เลือก
+                } else {
+                    cy.log("⚠️ No valid coupon option found");
+                }
+            });
+
+
+        // ตรวจสอบว่าไม่มี error ของคูปอง
+        cy.get("p.text-red-500").should("not.exist");
+
+        // กด Pay Now!!
         cy.get("button").contains("Pay Now!!").should("be.visible").click();
+
+        // รอ checkout API
         cy.wait("@checkoutReal").its("response.statusCode").should("eq", 200);
+
         cy.wait(1000);
+
+        // ตรวจสอบ order ที่ backend
         cy.request({
             method: "GET",
             url: `${API_BASE}/api/orders/my`,
@@ -123,6 +192,8 @@ describe("WholeCart E2E Flow (Real DB + Mocked Cart) - Complete", () => {
             const lastOrder = res.body[res.body.length - 1];
             cy.log(`✅ Order created successfully: ${lastOrder.name}`);
         });
+
+        // ตรวจสอบ modal success
         cy.contains("Payment Successful!").should("exist");
     });
 
