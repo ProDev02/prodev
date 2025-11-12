@@ -91,6 +91,7 @@ export default function OrderHistoryTab() {
                     <button
                         onClick={() => handleReorder(order.id)}
                         className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
+                        data-testid="reorder-btn"
                     >
                         <Repeat size={14} /> สั่งซ้ำ
                     </button>
