@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: prodev-frontend-service
+  namespace: prodev-app
+spec:
+  selector:
+    app: prodev-frontend
+  ports:
+    - port: 80
+      targetPort: 3000
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prodev-frontend-deployment
+  namespace: prodev-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prodev-frontend
+  template:
+    metadata:
+      labels:
+        app: prodev-frontend
+    spec:
+      containers:
+        - name: prodev-frontend
+          image: armmer/prodev-frontend:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NEXT_PUBLIC_API_URL
+              value: "https://muict.app/prodev-backend"

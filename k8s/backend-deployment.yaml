@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: prodev-backend-service
+  namespace: prodev-app
+spec:
+  type: ClusterIP
+  selector:
+    app: prodev-backend
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prodev-backend-deployment
+  namespace: prodev-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prodev-backend
+  template:
+    metadata:
+      labels:
+        app: prodev-backend
+    spec:
+      containers:
+        - name: prodev-backend
+          image: armmer/prodev-backend:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SERVER_PORT
+              value: "8080"
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://muict-db.prodev-db.svc.cluster.local:3306/prodev_db"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "root"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "ict555!!!"
