@@ -30,6 +30,7 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
 
     implementation 'com.github.librepdf:openpdf:1.4.1'
     implementation 'me.xdrop:fuzzywuzzy:1.3.1'
@@ -37,7 +38,15 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    // เพิ่มบรรทัดนี้
+    jvmArgs += [
+            "--add-opens", "java.base/java.lang=ALL-UNNAMED",
+            "--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED",
+            "--add-opens", "java.base/java.io=ALL-UNNAMED",
+            "--add-opens", "java.base/java.util=ALL-UNNAMED"
+    ]
 }
+
 
 // เพิ่มส่วนนี้เพื่อบอก Gradle ว่า Main Class อยู่ที่ไหน
 springBoot {
