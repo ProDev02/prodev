@@ -62,8 +62,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
                 "http://localhost:3000",  // dev server port
-                "http://localhost:30030", // K8s NodePort frontend));
-                "http://10.62.104.68:30030"
+                "http://localhost:30030" // K8s NodePort frontend));
         ));
         config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
