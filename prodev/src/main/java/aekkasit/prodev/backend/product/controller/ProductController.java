@@ -185,7 +185,6 @@ public class ProductController {
     }
 
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
         return productRepository.findById(id).map(product -> {
             productRepository.delete(product);
