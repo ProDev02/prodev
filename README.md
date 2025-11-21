@@ -1,14 +1,12 @@
 # E-commerce Website for a Food Store
 
 ### Table of Contents
-1. User Story
-2. Set up enviroment
-3. a รอเพิ่ม
-4. b
-5. c
-6. d
-7. e
-8. f
+- [1. User Story](#User-Stories)
+- [2. Clone Project](#Clone-Project)
+- [3. Run docker compose](#Run-docker-compose)
+- [4. Set up database](#Set-up-database)
+- [5. Frontend port](#Fronted-port)
+- [6. ตรวจสอบ log ของแต่ละ service](#ตรวจสอบ-log-ของแต่ละ-service)
 
 ### User Stories
 1. สำหรับผู้ซื้อ (Customer)
@@ -41,16 +39,15 @@
          * ในฐานะผู้ขายจะต้องสามารถดูรายงานสรุปข้อมูลสินค้าทั้งหมดที่มีในระบบเพื่อดูว่ามีสินค้าไหนจำนวนน้อยลงในแต่ละสัปดาห์ โดยกดปุ่ม “weekly stock report” เพื่อดูรายงานข้อมูลสินค้า หลัง login สำเร็จ
 
 
-### Set up enviroment
-1. Clone projects
-    เปิด Terminal แล้วรัน
+### Clone Projects
+เปิด Terminal แล้วรัน:
 ```bash
 git clone https://github.com/ProDev02/prodev
 git checkout main
 ```
 
-2. run docker compose
-    รันคำสั่งที่ root ของโปรเจ็ค:
+## Run docker compose
+รันคำสั่งที่ root ของโปรเจ็ค:
 ```bash
  docker-compose up --build -d
 ```
@@ -66,8 +63,91 @@ git checkout main
  ✔ Container ideaprojects-frontend-1  Started                                                                                                                                 0.3s
 ```
 
-3. Set up database
+## Set up database
 ```bash
  component       port   user  password   host
 MySQL Database  3306   root  ict555!!!  localhost
+```
+
+## Backend port
+สามารถเข้าถึง API ของระบบ Backend ได้ผ่าน URL:
+[http://localhost:8080/api/*](http://localhost:8080/api/*)
+ตัว api จะอยู่ใน folder prodev
+
+ตัวอย่างทดสอบ
+[http://localhost:8080/api/products/all](http://localhost:8080/api/products/all)
+
+
+ตัวอย่าง Dockerfile (อยู่ที่ root ของ folder prodev):
+```
+# Stage 1: Build the Spring Boot JAR
+FROM gradle:8.8-jdk21-alpine AS build
+WORKDIR /app
+
+# Copy source code
+COPY . .
+
+# Build jar (skip tests for speed)
+RUN gradle clean build -x test
+
+# Stage 2: Run the application
+FROM eclipse-temurin:21-jdk-alpine
+WORKDIR /app
+
+# Copy built JAR from stage 1
+COPY --from=build /app/build/libs/*.jar app.jar
+
+# Map folder uploads
+VOLUME /app/uploads
+
+# Expose port
+EXPOSE 8080
+
+# Run Spring Boot
+ENTRYPOINT ["java", "-jar", "app.jar"]
+```
+
+## Frontend port
+[http://localhost:3000](http://localhost:3000)
+code UI จะอยู่ที่ path prodev-frontend/front-end
+
+ตัวอย่าง Dockerfile (อยู่ที่ root ของ front-end):
+```
+# =================== Base Image ===================
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package.json และ package-lock.json
+COPY package*.json ./
+
+# ติดตั้ง dependencies
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# เปิด port ของ app (ตาม package.json start)
+EXPOSE 3000
+
+ENV HOST=0.0.0.0
+# รัน app ด้วย npm start
+CMD ["npm", "start"]
+```
+
+## ตรวจสอบ log ของแต่ละ service
+```
+docker ps:
+PS C:\Users\ADMIN\IdeaProjects> docker ps
+CONTAINER ID   IMAGE                           COMMAND                  CREATED             STATUS             PORTS                                         NAMES
+843720dbc464   ideaprojects-backend            "java -jar app.jar"      About an hour ago   Up About an hour   0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp   ideaprojects-backend-1
+c11dcda3753f   ideaprojects-frontend           "docker-entrypoint.s…"   6 hours ago         Up About an hour   0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp   ideaprojects-frontend-1
+9e6894720dc7   mysql:8.0                       "docker-entrypoint.s…"   3 weeks ago         Up About an hour   0.0.0.0:3307->3306/tcp, [::]:3307->3306/tcp   prodev_db
+```
+
+ดูแต่ละ log (ตัวอย่าง):
+```
+docker-compose log ideaprojects-backend
+docker-compose log ideaprojects-frontend
+docker-compose log prodev_db
 ```
