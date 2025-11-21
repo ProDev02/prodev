@@ -1,20 +1,23 @@
-# DockerFile ของ frontend
-FROM node:20-alpine
+# =================== Build Stage ===================
+FROM node:20-alpine AS build
 
 WORKDIR /app
 
 # Copy package.json ก่อนเพื่อติดตั้ง dependencies
 COPY package*.json ./
-
 RUN npm install
 
-# Copy source code
+# Copy source code และ build
 COPY . .
-
-# Build frontend
 RUN npm run build
 
-EXPOSE 3000
+# =================== Serve Stage ===================
+FROM nginx:alpine
 
-# Start frontend dev server
-CMD ["npm", "start"]
+# Copy build output ไปที่ nginx html directory
+COPY --from=build /app/build /usr/share/nginx/html
+
+# ใช้ nginx default config แล้ว expose port 80
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

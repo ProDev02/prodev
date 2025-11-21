@@ -1,0 +1,205 @@
+# ===================== MySQL ConfigMap =====================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-init-config
+data:
+  prodev.sql: |
+    CREATE DATABASE IF NOT EXISTS prodev_db;
+
+# ===================== Backend PVC =====================
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backend-uploads-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+# ===================== MySQL StatefulSet =====================
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: prodev-db
+spec:
+  serviceName: prodev-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prodev-db
+  template:
+    metadata:
+      labels:
+        app: prodev-db
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: "ict555!!!"
+            - name: MYSQL_DATABASE
+              value: "prodev_db"
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+            - name: mysql-init
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: mysql-init
+          configMap:
+            name: mysql-init-config
+            items:
+              - key: prodev.sql
+                path: prodev.sql
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi
+
+# ===================== MySQL Service =====================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prodev-db
+spec:
+  selector:
+    app: prodev-db
+  ports:
+    - port: 3306
+      targetPort: 3306
+  clusterIP: None
+
+# ===================== Backend Deployment =====================
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: armmer/prodev-backend:latest
+          imagePullPolicy: Always
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://prodev-db:3306/prodev_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+            - name: SPRING_DATASOURCE_USERNAME
+              value: root
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: ict555!!!
+            - name: JWT_EXPIRATION
+              value: "86400000"
+            - name: UPLOAD_DIR
+              value: /app/uploads/products
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: backend-uploads
+              mountPath: /app/uploads/products
+      volumes:
+        - name: backend-uploads
+          persistentVolumeClaim:
+            claimName: backend-uploads-pvc
+
+# ===================== Backend Service =====================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  selector:
+    app: backend
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: LoadBalancer
+
+# ===================== Frontend Deployment =====================
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: armmer/prodev-frontend:latest
+          imagePullPolicy: Always
+          env:
+            - name: REACT_APP_BACKEND_URL
+              value: "/api"
+          ports:
+            - containerPort: 80
+
+# ===================== Frontend Service =====================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+spec:
+  selector:
+    app: frontend
+  ports:
+    - port: 80
+      targetPort: 80
+  type: LoadBalancer
+
+# ===================== Ingress =====================
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: 192-168-49-2.nip.io   # <-- ใส่ External IP ของ minikube tunnel
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend-service
+                port:
+                  number: 8080
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-service
+                port:
+                  number: 80
