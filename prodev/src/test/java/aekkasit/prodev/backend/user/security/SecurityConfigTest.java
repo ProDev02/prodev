@@ -29,7 +29,7 @@ class SecurityConfigTest {
     void testCorsConfigurationSource() {
         UrlBasedCorsConfigurationSource source = securityConfig.corsConfigurationSource();
         assertNotNull(source);
-        assertEquals(2, source.getCorsConfigurations().get("/**").getAllowedOrigins().size());
+        assertEquals(3, source.getCorsConfigurations().get("/**").getAllowedOrigins().size());
     }
 
     @Test

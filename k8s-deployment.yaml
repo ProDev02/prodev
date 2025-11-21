@@ -159,7 +159,7 @@ spec:
           imagePullPolicy: Always
           env:
             - name: REACT_APP_BACKEND_URL
-              value: "/api"
+              value: "http://192-168-49-2.nip.io/api"
           ports:
             - containerPort: 80
 

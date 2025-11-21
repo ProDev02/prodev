@@ -1,23 +1,20 @@
-# =================== Build Stage ===================
-FROM node:20-alpine AS build
+# =================== Base Image ===================
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package.json ก่อนเพื่อติดตั้ง dependencies
+# Copy package.json และ package-lock.json
 COPY package*.json ./
+
+# ติดตั้ง dependencies
 RUN npm install
 
-# Copy source code และ build
+# Copy source code
 COPY . .
-RUN npm run build
 
-# =================== Serve Stage ===================
-FROM nginx:alpine
+# เปิด port ของ app (ตาม package.json start)
+EXPOSE 3000
 
-# Copy build output ไปที่ nginx html directory
-COPY --from=build /app/build /usr/share/nginx/html
-
-# ใช้ nginx default config แล้ว expose port 80
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+ENV HOST=0.0.0.0
+# รัน app ด้วย npm start
+CMD ["npm", "start"]
