@@ -66,7 +66,7 @@ git checkout main
 ```
 
 
-## Set up database
+### Set up database
 ```bash
  component       port   user  password   host
 MySQL Database  3306   root  ict555!!!  localhost
@@ -111,7 +111,7 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 ```
 
 
-## Frontend port
+### Frontend port
 [http://localhost:3000](http://localhost:3000)
 code UI จะอยู่ที่ path prodev-frontend/front-end
 
@@ -140,7 +140,7 @@ CMD ["npm", "start"]
 ```
 
 
-## ตรวจสอบ log ของแต่ละ service
+### ตรวจสอบ log ของแต่ละ service
 ```
 docker ps:
 PS C:\Users\ADMIN\IdeaProjects> docker ps
