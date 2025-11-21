@@ -40,4 +40,32 @@
     5) รายงานสต็อกสินค้ารายสัปดาห์
          * ในฐานะผู้ขายจะต้องสามารถดูรายงานสรุปข้อมูลสินค้าทั้งหมดที่มีในระบบเพื่อดูว่ามีสินค้าไหนจำนวนน้อยลงในแต่ละสัปดาห์ โดยกดปุ่ม “weekly stock report” เพื่อดูรายงานข้อมูลสินค้า หลัง login สำเร็จ
 
+
 ### Set up enviroment
+1.Clone projects
+    เปิด Terminal แล้วรัน
+```bash
+git clone https://github.com/ProDev02/prodev
+git checkout main
+```
+
+2.run docker compose
+    รันคำสั่งที่ root ของโปรเจ็ค:
+```bash
+ docker-compose up --build -d
+```
+    เมื่อรันเสร็จจะพบสถานะดังนี้
+```
+[+] Running 5/5
+ ✔ ideaprojects-backend               Built                                                                                                                                   0.0s 
+ ✔ ideaprojects-frontend              Built                                                                                                                                   0.0s 
+ ✔ Container ideaprojects-backend-1   Started                                                                                                                                 0.8s 
+ ✔ Container prodev_db                Started                                                                                                                                 0.3s 
+ ✔ Container ideaprojects-frontend-1  Started                                                                                                                                 0.3s
+```
+
+3. Set up database
+```bash
+ component       port   user  password   host
+MySQL Database  3306   root  ict555!!!  localhost
+```
