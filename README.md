@@ -55,7 +55,7 @@ git checkout main
  docker-compose up --build -d
 ```
 
-    เมื่อรันเสร็จจะพบสถานะดังนี้
+เมื่อรันเสร็จจะพบสถานะดังนี้
 
 ```bash
 [+] Running 5/5
