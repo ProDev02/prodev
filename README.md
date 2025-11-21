@@ -8,6 +8,7 @@
 - [5. Frontend port](#Fronted-port)
 - [6. ตรวจสอบ log ของแต่ละ service](#ตรวจสอบ-log-ของแต่ละ-service)
 
+
 ### User Stories
 1. สำหรับผู้ซื้อ (Customer)
     1) สมัครสมาชิก / เข้าสู่ระบบ
@@ -46,6 +47,7 @@ git clone https://github.com/ProDev02/prodev
 git checkout main
 ```
 
+
 ## Run docker compose
 รันคำสั่งที่ root ของโปรเจ็ค:
 ```bash
@@ -62,6 +64,7 @@ git checkout main
  ✔ Container prodev_db                Started                                                                                                                                 0.3s 
  ✔ Container ideaprojects-frontend-1  Started                                                                                                                                 0.3s
 ```
+
 
 ## Set up database
 ```bash
@@ -107,6 +110,7 @@ EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
 ```
 
+
 ## Frontend port
 [http://localhost:3000](http://localhost:3000)
 code UI จะอยู่ที่ path prodev-frontend/front-end
@@ -134,6 +138,7 @@ ENV HOST=0.0.0.0
 # รัน app ด้วย npm start
 CMD ["npm", "start"]
 ```
+
 
 ## ตรวจสอบ log ของแต่ละ service
 ```
