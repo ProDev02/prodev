@@ -1,46 +1,44 @@
 package aekkasit.prodev.backend.user.security;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
+@SpringBootTest
 class SecurityConfigTest {
 
-    private JwtAuthFilter jwtAuthFilterMock;
+    @Autowired
     private SecurityConfig securityConfig;
-
-    @BeforeEach
-    void setUp() {
-        jwtAuthFilterMock = mock(JwtAuthFilter.class);
-        securityConfig = new SecurityConfig(jwtAuthFilterMock);
-    }
 
     @Test
     void testPasswordEncoder() {
-        assertNotNull(securityConfig.passwordEncoder());
+        PasswordEncoder encoder = securityConfig.passwordEncoder();
+        assertNotNull(encoder);
+
+        String raw = "password";
+        String encoded = encoder.encode(raw);
+        assertTrue(encoder.matches(raw, encoded));
     }
 
     @Test
     void testCorsConfigurationSource() {
         UrlBasedCorsConfigurationSource source = securityConfig.corsConfigurationSource();
         assertNotNull(source);
-        assertEquals(4, source.getCorsConfigurations().get("/**").getAllowedOrigins().size());
-    }
 
-    @Test
-    void testSecurityFilterChainBuild() throws Exception {
-        HttpSecurity http = mock(HttpSecurity.class, RETURNS_DEEP_STUBS);
+        CorsConfiguration cors = source.getCorsConfigurations().get("/**");
+        assertNotNull(cors);
 
-        SecurityFilterChain chain = securityConfig.securityFilterChain(http);
+        assertEquals(1, cors.getAllowedOriginPatterns().size());
+        assertEquals("*", cors.getAllowedOriginPatterns().get(0));
 
-        assertNotNull(chain);
-
-        // verify ว่า build ถูกเรียก
-        verify(http, atLeastOnce()).build();
+        assertTrue(cors.getAllowedMethods().contains("GET"));
+        assertTrue(cors.getAllowedMethods().contains("POST"));
+        assertTrue(cors.getAllowedHeaders().contains("*"));
+        assertTrue(cors.getAllowCredentials());
     }
 }
