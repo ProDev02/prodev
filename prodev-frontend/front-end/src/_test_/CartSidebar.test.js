@@ -1,55 +1,47 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
-import CartSidebar from "../pages/shopcart/CartSidebar"; // ปรับ path ตามจริง
+import { render, screen, fireEvent, within } from "@testing-library/react";
+import CartSidebar from "../pages/shopcart/CartSidebar";
 import { useNavigate } from "react-router-dom";
 
-// ✅ Mock useNavigate
+// Mock navigate
 const mockNavigate = jest.fn();
 jest.mock("react-router-dom", () => ({
     useNavigate: () => mockNavigate,
 }));
 
-// ✅ Mock lucide-react icons (ไม่ต้อง render จริง)
+// Mock lucide-react icons
 jest.mock("lucide-react", () => {
     const React = require("react");
     return {
-        X: (props) => <span>X</span>,
-        Minus: (props) => <span>-</span>,
-        Plus: (props) => <span>+</span>,
-        Trash2: (props) => <span>Trash</span>,
-        List: (props) => <span>List</span>,
-        CreditCard: (props) => <span>Card</span>,
-        AlertTriangle: (props) => <span>!</span>,
+        X: () => <span>X</span>,
+        Minus: () => <span>-</span>,
+        Plus: () => <span>+</span>,
+        Trash2: () => <span>Remove</span>,
+        List: () => <span>List</span>,
+        CreditCard: () => <span>Card</span>,
+        AlertTriangle: () => <span>!</span>,
+        Gift: () => <span>Gift</span>,
     };
 });
 
 // Mock OrderTab
 jest.mock("../pages/shopcart/OrderSidebar", () => () => <div>OrderTab Mock</div>);
 
-describe("CartSidebar", () => {
+// Mock OrderHistoryTab
+jest.mock("../pages/shopcart/OrderHistoryTab", () => () => <div>OrderHistory Mock</div>);
+
+describe("CartSidebar Component", () => {
     const cartItems = [
         { id: 1, productName: "Product 1", quantity: 2, price: 50, stock: 3, image: "/img1.png" },
         { id: 2, productName: "Product 2", quantity: 1, price: 100, stock: 1, image: "/img2.png" },
     ];
 
-    // ✅ Mock functions
-    const mockIncrease = jest.fn((productId) => {
-        const item = cartItems.find((c) => c.id === productId);
-        if (!item) return;
-        if (item.quantity >= item.stock) {
-            // แทน alert ด้วยการ append div ลง DOM
-            const warning = document.createElement("div");
-            warning.textContent = "Cannot exceed available stock";
-            document.body.appendChild(warning);
-            return;
-        }
-        item.quantity += 1;
-    });
+    const mockIncrease = jest.fn();
     const mockDecrease = jest.fn();
     const mockRemove = jest.fn();
 
-    const setup = (props = {}) => {
-        return render(
+    const setup = (customProps = {}) =>
+        render(
             <CartSidebar
                 isCartOpen={true}
                 onClose={jest.fn()}
@@ -60,73 +52,96 @@ describe("CartSidebar", () => {
                 activeTab="shopcart"
                 setActiveTab={jest.fn()}
                 total={200}
-                {...props}
+                user={{ userId: 1 }}
+                {...customProps}
             />
         );
-    };
 
     beforeEach(() => {
         jest.clearAllMocks();
-        // เคลียร์ warning DOM
-        document.body.querySelectorAll("div").forEach((el) => {
-            if (el.textContent === "Cannot exceed available stock") el.remove();
-        });
     });
 
-    test("renders cart items and total", () => {
+    test("renders cart items correctly", () => {
         setup();
-        expect(screen.getByText("Product 1")).toBeInTheDocument();
-        expect(screen.getByText("Product 2")).toBeInTheDocument();
 
-        // ใช้ getAllByText สำหรับราคาที่ซ้ำ
-        const prices = screen.getAllByText(/฿\d+/);
-        expect(prices.length).toBeGreaterThanOrEqual(2);
-        expect(prices[0]).toHaveTextContent("฿100");
-        expect(prices[1]).toHaveTextContent("฿100");
+        // เจาะแต่ละ cart item
+        const product1Item = screen.getByText("Product 1").closest("div.flex.flex-col");
+        const product2Item = screen.getByText("Product 2").closest("div.flex.flex-col");
 
+        expect(product1Item).toBeInTheDocument();
+        expect(product2Item).toBeInTheDocument();
+
+        // ราคาสินค้าแต่ละชิ้น
+        expect(within(product1Item).getByText("฿100")).toBeInTheDocument(); // 2*50
+        expect(within(product2Item).getByText("฿100")).toBeInTheDocument(); // 1*100
+
+        // ตรวจปุ่ม Payment
         expect(screen.getByText(/Payment ฿200/)).toBeInTheDocument();
     });
 
-    test("increase quantity with stock warning", () => {
+    test("increase quantity cannot exceed stock -> shows stock warning", () => {
         setup();
 
-        const product2Plus = screen.getAllByText("+")[1];
-        fireEvent.click(product2Plus);
+        const plusButtons = screen.getAllByText("+");
+        fireEvent.click(plusButtons[1]); // Product 2 (stock = 1)
 
-        expect(screen.getByText(/Cannot exceed available stock/)).toBeInTheDocument();
+        expect(
+            screen.getByText(/Cannot exceed available stock/)
+        ).toBeInTheDocument();
     });
 
     test("decrease quantity calls decreaseQty", () => {
         setup();
 
-        const product1Minus = screen.getAllByText("-")[0];
-        fireEvent.click(product1Minus);
+        const minusButtons = screen.getAllByText("-");
+        fireEvent.click(minusButtons[0]);
+
         expect(mockDecrease).toHaveBeenCalledWith(1);
     });
 
-    test("remove item calls removeItem", () => {
+    test("remove item triggers removeItem", () => {
         setup();
 
         const removeButtons = screen.getAllByText("Remove");
         fireEvent.click(removeButtons[0]);
+
         expect(mockRemove).toHaveBeenCalledWith(1);
     });
 
-    test("payment button navigates with state", () => {
+    test("payment button navigates with correct state", () => {
         setup();
 
-        const paymentButton = screen.getByText(/Payment ฿200/);
-        fireEvent.click(paymentButton);
-        expect(mockNavigate).toHaveBeenCalledWith("/payment", { state: { cartItems, total: 200 } });
+        const payBtn = screen.getByText(/Payment ฿200/);
+        fireEvent.click(payBtn);
+
+        expect(mockNavigate).toHaveBeenCalledWith("/payment", {
+            state: { cartItems, total: 200 },
+        });
     });
 
-    test("shows empty cart message", () => {
+    test("shows empty cart message when cartItems = []", () => {
         setup({ cartItems: [] });
+
         expect(screen.getByText(/Your cart is empty/)).toBeInTheDocument();
     });
 
-    test("renders Order tab correctly", () => {
+    test("renders Order tab", () => {
         setup({ activeTab: "order" });
+
         expect(screen.getByText("OrderTab Mock")).toBeInTheDocument();
+    });
+
+    test("renders Order History tab", () => {
+        setup({ activeTab: "history" });
+
+        expect(screen.getByText("OrderHistory Mock")).toBeInTheDocument();
+    });
+
+    test("coupon popup opens when clicking gift button", () => {
+        setup();
+
+        fireEvent.click(screen.getByText("Gift"));
+
+        expect(screen.getByText("🎁 สุ่มคูปองพิเศษ")).toBeInTheDocument();
     });
 });

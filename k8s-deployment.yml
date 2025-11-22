@@ -170,7 +170,7 @@ spec:
           image: armmer/prodev-frontend:latest
           env:
             - name: REACT_APP_BACKEND_URL
-              value: http://localhost:8080
+              value: http://localhost:30080
           ports:
             - containerPort: 3000
           stdin: true
@@ -190,3 +190,5 @@ spec:
     - port: 3000
       targetPort: 3000
       nodePort: 30030
+
+
