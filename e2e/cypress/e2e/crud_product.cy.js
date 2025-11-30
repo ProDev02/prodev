@@ -1,7 +1,7 @@
 /// <reference types="cypress" />
 import 'cypress-file-upload';
 
-const BACKEND_URL = Cypress.env("BACKEND_URL") || "http://localhost:8080";
+const BACKEND_URL = Cypress.env("BACKEND_URL") || "https://muict.app/prodev-backend";
 
 // ---------- helper function ----------
 function findProductById(productId) {

@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fivetuay10bath-fe-ingress
+  namespace: fivetuay10bath-app
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - muict.app
+      secretName: muict-app-tls
+  rules:
+    - host: muict.app
+      http:
+        paths:
+          - path: /fivetuay10bath-frontend(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: fivetuay10bath-frontend-service
+                port:
+                  number: 80

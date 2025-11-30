@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-app  # <--- ชื่อนี้ต้องตรงกับที่ Nginx เรียกหา
+  namespace: burrrtongg-app
+spec:
+  selector:
+    app: burrrtongg-backend  # <--- !!สำคัญ!! นี่คือ label ของ Pods ใน Backend Deployment
+  ports:
+    - protocol: TCP
+      port: 80             # <--- Port ที่ Service นี้จะเปิด
+      targetPort: 8080        # <--- Port จริงๆ ที่ Backend App ของคุณรันอยู่ (แก้ตามจริง)

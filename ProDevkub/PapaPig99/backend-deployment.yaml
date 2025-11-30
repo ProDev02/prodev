@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: papapig99-backend-service
+  namespace: papapig99-app
+spec:
+  type: ClusterIP
+  selector:
+    app: papapig99-backend
+  ports:
+    - port: 8080
+      targetPort: 8080
+
+
+---
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: papapig99-backend-deployment
+  namespace: papapig99-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: papapig99-backend
+  template:
+    metadata:
+      labels:
+        app: papapig99-backend
+    spec:
+      initContainers:
+        - name: fix-permissions
+          image: busybox
+          command: ["sh", "-c", "chmod -R 777 /app/images"]
+          volumeMounts:
+            - name: images-storage
+              mountPath: "/app/images"
+      containers:
+        - name: papapig99-backend
+          image: pornpatmu/papapig99-backend:1.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SERVER_PORT
+              value: "8080"
+            - name: APP_UPLOAD_DIR
+              value: "/app/images"
+          
+
+      
+            
+            # ========= เลือกใช้ อันที่ Porject เราใช้ =========
+
+            # PostgreSQL (Service name = muict, namespace = db-postgres)
+            # - name: SPRING_DATASOURCE_URL
+            #   value: "jdbc:postgresql://muict.db-postgres.svc.cluster.local:5432/<groupname>_db"
+
+            # MySQL (Service name = muict-mysql, namespace = db-mysql)
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://muict-mysql.db-mysql.svc.cluster.local:3306/papapig99_db"
+
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "papapig99_user"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "itds323"
+
+          volumeMounts:
+            - mountPath: "/app/images"  
+              name: images-storage
+
+      volumes:
+        - name: images-storage           
+          persistentVolumeClaim:
+            claimName: papapig99-images-pvc
+
+
+

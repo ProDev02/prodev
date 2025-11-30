@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: muict-db-mysql-deployment 
+  namespace: db-mysql            
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: muict-db-mysql-server 
+  template:
+    metadata:
+      labels:
+        app: muict-db-mysql-server 
+    spec:
+      containers:
+        - name: mysql 
+          image: mysql:8.0 
+          ports:
+            - containerPort: 3306 
+          envFrom:
+            - secretRef:
+                name: muict-db-mysql-admin-secret 
+          volumeMounts:
+            - name: db-mysql-storage
+              mountPath: /var/lib/mysql 
+      volumes:
+        - name: db-mysql-storage
+          persistentVolumeClaim:
+            claimName: muict-db-mysql-pvc 

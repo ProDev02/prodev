@@ -19,7 +19,7 @@ import UpdateProduct from "./pages/admin/updateProduct/UpdateProduct";
 
 function App() {
     return (
-        <BrowserRouter>
+        <BrowserRouter basename="/prodev-frontend">
             <Routes>
                 {/* Public Pages */}
                 <Route path="/signin" element={<SignInPage />} />

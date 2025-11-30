@@ -192,7 +192,7 @@ export default function CartSidebar({
                                             src={
                                                 item.image.startsWith("http")
                                                     ? item.image
-                                                    : `http://localhost:8080${item.image}`
+                                                    : `${BACKEND_URL}${item.image}`
                                             }
                                             alt={item.name}
                                             className="w-16 h-16 border rounded object-cover"

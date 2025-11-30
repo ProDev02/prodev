@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pmm-fe-deployment
+  namespace: salad-pirate-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pmm-fe
+  template:
+    metadata:
+      labels:
+        app: pmm-fe
+    spec:
+      containers:
+        - name: pmm-fe
+          image: chitipatpangma/pmm_fe:8cf48b6
+          ports:
+            - containerPort: 3000
+          env:
+          - name: GOOGLE_API_KEY      
+            valueFrom:
+              secretKeyRef:
+                name: my-app-secrets  
+                key: GOOGLE_API_KEY
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pmm-fe-service
+  namespace: salad-pirate-app
+spec:
+  selector:
+    app: pmm-fe
+  ports:
+    - port: 80
+      targetPort: 3000

@@ -1,6 +1,7 @@
 {
   "name": "prodev-frontend",
   "version": "0.1.0",
+  "homepage": "/prodev-frontend",
   "private": true,
   "dependencies": {
     "fuse.js": "^7.1.0",

@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: salad-pirate-fe-ingress
+  namespace: salad-pirate-app
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - muict.app
+      secretName: muict-app-tls
+  rules:
+    - host: muict.app
+      http:
+        paths:
+          - path: /salad-pirate-frontend
+            pathType: Prefix
+            backend:
+              service:
+                name: pmm-fe-service
+                port:
+                  number: 80

@@ -1,0 +1,250 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 32px; /* Removed vertical padding */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  gap: 20px;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 100;
+}
+
+.logo {
+  width: 100px;
+  height: 100px;
+}
+
+.logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Ensure aspect ratio is maintained */
+  display: block;
+}
+
+.search-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  border: 2px solid #ccc;
+  border-radius: 50px;
+  padding: 6px 14px;
+  background-color: #fff;
+  max-width: 500px;
+  margin: 0 40px;
+}
+
+.search-box {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  width: 100%;
+}
+
+.search-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  font-size: 18px;
+}
+
+/* Links */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.nav-links a {
+  color: #333;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+/* Avatar */
+.avatar-wrapper {
+  position: relative;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #eee;
+  border: 2px solid #ccc;
+  color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Dropdown (desktop avatar) */
+.dropdown {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  min-width: 200px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  overflow: hidden;
+  z-index: 50;
+  font-size: 14px;
+}
+
+.dropdown-item {
+  padding: 10px 14px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+}
+
+.dropdown-item:hover {
+  background: #f5f5f5;
+}
+
+.dropdown-label {
+  font-weight: 600;
+  cursor: default;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+}
+
+.dropdown-item.danger {
+  color: #b91c1c;
+}
+
+.dropdown-item.danger:hover {
+  background: #fee2e2;
+}
+
+/* ---------- Mobile add-ons ---------- */
+.mobile-menu-wrap { position: relative; }
+
+.hamburger {
+  display: none;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  line-height: 0;
+  box-shadow: 0 2px 6px rgba(0,0,0,.08);
+}
+
+.hamburger:focus {
+  outline: 2px solid #94a3b8;
+  outline-offset: 2px;
+}
+
+.mobile-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: clamp(240px, 70vw, 320px);
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0,0,0,.16);
+  z-index: 60;
+  overflow: auto;
+  max-height: min(70vh, 520px);
+  animation: pop .14s ease-out;
+}
+
+@keyframes pop {
+  from { transform: translateY(-4px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+.mobile-menu::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  right: 16px;
+  width: 14px; height: 14px;
+  background: #fff;
+  border-left: 1px solid #e5e7eb;
+  border-top: 1px solid #e5e7eb;
+  transform: rotate(45deg);
+}
+
+.mobile-menu .section-title {
+  padding: 12px 16px;
+  font-weight: 800;
+  font-size: 14px;
+  color: #111827;
+  text-align: center;
+  background: #fff;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.mobile-menu a,
+.mobile-menu button {
+  display: block;
+  width: 100%;
+  padding: 14px 16px;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  color: #111827;
+}
+
+.mobile-menu a:hover,
+.mobile-menu button:hover { background: #f8fafc; }
+
+.mobile-menu .danger { color: #b91c1c; }
+.mobile-menu .danger:hover { background: #fee2e2; }
+
+/* =============== Breakpoint =============== */
+@media (max-width: 960px) {
+  .navbar {
+    flex-wrap: nowrap;          /* ห้ามพับบรรทัด */
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .logo {
+    width: 80px; /* Adjust for mobile */
+    height: 80px;
+  }
+
+  .search-container {
+    flex: 1;                    /* กินพื้นที่ที่เหลือ */
+    margin: 0 8px;              /* เว้นข้างนิดนึง */
+    border-radius: 50px;        /* กลมเหมือนเดิม */
+    padding: 6px 12px;
+    max-width: none;            /* ให้ยืดได้เต็ม */
+  }
+
+  .nav-links,
+  .avatar-wrapper { display: none; }
+
+  .mobile-menu-wrap {
+    flex: 0 0 auto;
+  }
+
+  .hamburger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,.08);
+  }
+}

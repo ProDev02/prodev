@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: muict # <--- ชื่อ Service คือ 'muict'
+  namespace: db-postgres # <--- ในบ้าน 'db'
+spec:
+  ports:
+    - port: 5432
+  selector:
+    app: muict-db-postgres-server # <--- ชี้ไปที่ Pod ที่มี label นี้
+  type: ClusterIP

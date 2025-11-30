@@ -13,6 +13,6 @@ module.exports = defineConfig({
         video: false,
     },
     env: {
-        API_BASE: "http://localhost:8080"
+        API_BASE: "https://muict.app/prodev-backend"
     }
 });

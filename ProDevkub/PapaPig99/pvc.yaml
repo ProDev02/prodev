@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: papapig99-images-pvc  
+  namespace: papapig99-app    
+spec:
+  accessModes:
+    - ReadWriteOnce           
+  resources:
+    requests:
+      storage: 5Gi           

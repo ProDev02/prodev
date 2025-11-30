@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: muict-mysql # <--- (แนะนำ) เปลี่ยนชื่อ Service
+  namespace: db-mysql # <--- (แนะนำ) อัปเดต namespace
+spec:
+  ports:
+    - port: 3306        # <--- 2. MySQL ใช้พอร์ต 3306
+      targetPort: 3306  # <--- (แนะนำ) ระบุ targetPort ให้ชัดเจน
+  selector:
+    app: muict-db-mysql-server # <--- 3. ต้องตรงกับ label ใหม่ของ Pod
+  type: ClusterIP

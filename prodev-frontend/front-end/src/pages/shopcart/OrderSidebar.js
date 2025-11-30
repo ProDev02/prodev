@@ -83,7 +83,7 @@ export default function OrderTab() {
                         </span>
 
                         <img
-                            src={order.image ? `http://localhost:8080${order.image}` : "/no-image.png"}
+                            src={order.image ? `${BACKEND_URL}${order.image}` : "/no-image.png"}
                             alt={order.name}
                             className="w-16 h-16 border rounded object-cover"
                         />

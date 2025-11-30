@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: chiphaifamily-backend-service
+  namespace: chiphaifamily-app
+spec:
+  type: ClusterIP
+  selector:
+    app: chiphaifamily-backend
+  ports:
+    - port: 8080
+      targetPort: 8080
+
+
+---
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chiphaifamily-backend-deployment
+  namespace: chiphaifamily-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chiphaifamily-backend
+  template:
+    metadata:
+      labels:
+        app: chiphaifamily-backend
+    spec:
+      containers:
+        - name: chiphaifamily-backend
+          image: kbtr/apartment-backend:20971d726086b55961a82679259c0d4f57e39d15
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SERVER_PORT
+              value: "8080"
+
+            # ========= เลือกใช้ อันที่ Porject เราใช้ =========
+
+            # PostgreSQL (Service name = muict, namespace = db-postgres)
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://muict.db-postgres.svc.cluster.local:5432/chiphaifamily_db"
+
+            # MySQL (Service name = muict-mysql, namespace = db-mysql)
+            # - name: SPRING_DATASOURCE_URL
+            #   value: "jdbc:mysql://muict-mysql.db-mysql.svc.cluster.local:3306/<groupname>_db"
+
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "chiphaifamily_user"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "chiphaifamily_pass"
+
+
+

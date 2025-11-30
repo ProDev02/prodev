@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: papapig99-fe-ingress
+  namespace: papapig99-app
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - muict.app
+      secretName: muict-app-tls
+  rules:
+    - host: muict.app
+      http:
+        paths:
+          - path: /papapig99-frontend(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: papapig99-frontend-service
+                port:
+                  number: 80

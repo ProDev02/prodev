@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: muict-db-postgres-deployment
+  namespace: db-postgres 
+spec:
+  replicas: 1 # (DB ต้องมี 1 pod เท่านั้นสำหรับ storage แบบนี้)
+  selector:
+    matchLabels:
+      app: muict-db-postgres-server
+  template:
+    metadata:
+      labels:
+        app: muict-db-postgres-server
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:14-alpine
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - secretRef:
+                name: muict-db-postgres-admin-secret # 1. ดึงรหัส Admin
+          env:
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: db-postgres-storage
+              mountPath: /var/lib/postgresql/data # 2. ต่อ GKE Disk
+      volumes:
+        - name: db-postgres-storage
+          persistentVolumeClaim:
+            claimName: muict-db-postgres-pvc # 2. อ้างอิง PVC ที่เราสร้าง

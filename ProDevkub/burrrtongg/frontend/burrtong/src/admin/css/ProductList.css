@@ -1,0 +1,678 @@
+.dashboard {
+  display: flex;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-logo {
+  padding: 20px 0;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.sidebar-logo img {
+  max-width: 80%;
+  height: auto;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar li {
+  margin: 10px 0;
+}
+
+.sidebar a {
+  color: #e0e0e0;
+  text-decoration: none;
+  display: block;
+  padding: 12px 16px;
+  border-radius: 6px;
+  transition: background-color 0.3s ease;
+}
+
+.sidebar a:hover, .sidebar a.active {
+  background-color: #162447;
+  color: #ffffff;
+}
+
+/* Main Section */
+.main {
+  flex: 1;
+  padding: 32px;
+  background: #f0f2f5;
+}
+
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.main-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0;
+}
+
+.breadcrumb {
+  color: #6c757d;
+  font-size: 14px;
+  margin: 0;
+}
+
+.new-product-btn {
+  background-color: #162447;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.new-product-btn:hover {
+  background-color: #1f4068;
+}
+
+/* Table */
+.product-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.product-table th,
+.product-table td {
+  padding: 16px;
+  border-bottom: 1px solid #e0e0e0;
+  text-align: left;
+}
+
+.product-thumbnail {
+  max-width: 100px;
+  max-height: 100px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+
+.product-table th,
+.product-table td {
+  padding: 16px;
+  border-bottom: 1px solid #e0e0e0;
+  text-align: left;
+}
+
+.product-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #343a40;
+}
+
+.product-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.status {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-available {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-out-of-stock {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.status-pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-confirmed {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.status-cancelled {
+  background-color: #e2e3e5;
+  color: #383d41;
+}
+
+/* Action Buttons */
+.action-btn {
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-right: 8px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-confirm {
+  background-color: #28a745;
+  color: white;
+}
+
+.btn-confirm:hover {
+  background-color: #218838;
+}
+
+.btn-cancel {
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn-cancel:hover {
+  background-color: #c82333;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 32px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.modal-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #6c757d;
+  padding: 0;
+  line-height: 1;
+}
+
+.modal-close-btn:hover {
+  color: #1a1a2e;
+}
+
+.modal-body .form-group {
+  margin-bottom: 20px;
+}
+
+.modal-body label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #343a40;
+}
+
+.modal-body input,
+.modal-body select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.modal-body input:focus,
+.modal-body select:focus {
+  outline: none;
+  border-color: #162447;
+}
+
+.modal-submit-btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 16px;
+}
+
+/* Added Logout Styles */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Pushes footer to the bottom */
+}
+
+.sidebar-footer {
+  padding: 10px 16px;
+  border-top: 1px solid #30304a; 
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px; /* Add some space between items */
+}
+
+.user-info {
+  flex-shrink: 1; /* Allow this container to shrink */
+  min-width: 0; /* Crucial for text-overflow to work in flexbox */
+}
+
+.user-info .username {
+  font-weight: bold;
+  color: #eee;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block; /* Make it a block to contain it */
+}
+
+.logout-btn {
+  background: none;
+  border: 1px solid #e94560;
+  color: #e94560;
+  padding: 6px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+  flex-shrink: 0; /* Prevent the button from shrinking */
+}
+
+.logout-btn:hover {
+  background: #e94560;
+  color: #fff;
+}
+
+.edit-product-btn {
+  background-color: #007bff; /* Blue color */
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+  margin-right: 8px; /* Add some space between buttons */
+}
+
+.edit-product-btn:hover {
+  background-color: #0056b3; /* Darker blue on hover */
+}
+
+.delete-product-btn {
+  background-color: #dc3545; /* Red color */
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.delete-product-btn:hover {
+  background-color: #c82333; /* Darker red on hover */
+}
+
+/* Coupon Usage Styling */
+.usage-limit {
+  color: #007bff;
+  font-weight: 600;
+}
+
+.unlimited {
+  color: #28a745;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.times-used {
+  color: #333;
+  font-weight: 500;
+}
+
+.usage-percentage {
+  color: #6c757d;
+  font-size: 0.85em;
+  margin-left: 4px;
+}
+
+/* Usage Progress Bar */
+.usage-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.usage-progress-bar {
+  width: 100%;
+  height: 4px;
+  background-color: #e9ecef;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.usage-progress-fill {
+  height: 100%;
+  background-color: #007bff;
+  transition: width 0.3s ease, background-color 0.3s ease;
+  border-radius: 2px;
+}
+
+.usage-progress-fill.medium-usage {
+  background-color: #ffc107;
+}
+
+.usage-progress-fill.high-usage {
+  background-color: #dc3545;
+}
+
+/* Expiry Date Styling */
+.expiry-date {
+  font-weight: 500;
+}
+
+.expiry-date.expired {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.expiry-date.expiring-soon {
+  color: #ffc107;
+  font-weight: 600;
+}
+
+.expiry-label {
+  font-size: 0.8em;
+  font-style: italic;
+}
+
+.expired-row {
+  background-color: #fff5f5;
+  opacity: 0.8;
+}
+
+.expired-row:hover {
+  background-color: #fee2e2;
+}
+
+/* Product-specific Statistics */
+.product-stats {
+  display: flex;
+  gap: 2rem;
+  background: #f8f9fa;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e9ecef;
+}
+
+/* Stock Level Styling */
+.stock-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.stock-value {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.stock-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stock-value.in-stock,
+.stock-label.in-stock {
+  color: #28a745;
+}
+
+.stock-value.low-stock,
+.stock-label.low-stock {
+  color: #ffc107;
+}
+
+.stock-value.out-of-stock,
+.stock-label.out-of-stock {
+  color: #dc3545;
+}
+
+/* Price Styling */
+.price-value {
+  font-weight: 600;
+  color: #007bff;
+  font-size: 1.05rem;
+}
+
+/* Category Text */
+.category-text {
+  color: #495057;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+/* Date Styling */
+.date-value {
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+/* Row Styling */
+.out-of-stock-row {
+  background-color: #fff5f5;
+  opacity: 0.8;
+}
+
+.out-of-stock-row:hover {
+  background-color: #fee2e2;
+}
+
+/* Responsive adjustments for product stats */
+@media (max-width: 768px) {
+  .product-stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .stat-item {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+  }
+  
+  .stock-container {
+    align-items: flex-start;
+  }
+  
+  .category-badge {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+  }
+}
+
+/* Results Count */
+.results-count {
+  margin-left: auto;
+  color: #6c757d;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.6;
+}
+
+.empty-state h3 {
+  color: #495057;
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+}
+
+.empty-state p {
+  color: #6c757d;
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+}
+
+.reset-filter-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.reset-filter-btn:hover {
+  background: #0056b3;
+}
+
+/* Style for high usage (warning when > 80%) */
+.high-usage {
+  color: #dc3545 !important;
+  font-weight: 600;
+}
+
+/* Style for medium usage (caution when > 60%) */
+.medium-usage {
+  color: #ffc107 !important;
+  font-weight: 600;
+}
+
+/* Coupon Statistics */
+.coupon-stats {
+  display: flex;
+  gap: 2rem;
+  background: #f8f9fa;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e9ecef;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #6c757d;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #007bff;
+}
+
+/* Responsive design for stats */
+@media (max-width: 768px) {
+  .coupon-stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .stat-item {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+  }
+}
+
+/* Print PDF Button */
+.print-pdf-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.print-pdf-btn:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+.print-pdf-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #6c757d;
+}

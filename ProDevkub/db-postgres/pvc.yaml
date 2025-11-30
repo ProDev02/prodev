@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: muict-db-postgres-pvc
+  namespace: db-postgres
+spec:
+  accessModes:
+    - ReadWriteOnce # GKE Standard Disk
+  resources:
+    requests:
+      storage: 10Gi # ขอ 10GB สำหรับ DB กลาง

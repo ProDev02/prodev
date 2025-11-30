@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pmm-be-service
+  namespace: salad-pirate-app
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+  selector:
+    app: pmm-be
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pmm-be-deployment
+  namespace: salad-pirate-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pmm-be
+  template:
+    metadata:
+      labels:
+        app: pmm-be
+    spec:
+      containers:
+        - name: pmm-be
+          image: chitipatpangma/pmm_be:latest
+          ports:
+            - containerPort: 8080
+
+          env:
+            - name: SERVER_PORT
+              value: "8080"
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://muict.db-postgres.svc.cluster.local:5432/saladpirate_db"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "saladpirate_user"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "saladpirate_pass"
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: "none"
+            - name: SPRING_JPA_SHOW_SQL
+              value: "true"
+            - name: SPRING_JPA_DATABASE_PLATFORM
+              value: "org.hibernate.dialect.PostgreSQLDialect"

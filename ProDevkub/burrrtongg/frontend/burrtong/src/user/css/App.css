@@ -1,0 +1,97 @@
+/* =========================
+   HERO (Slider Version)
+   ========================= */
+
+/* ระยะห่างจาก Navbar */
+.hero {
+  margin-top: 104px !important;   /* ปรับได้ 88–120px ตามชอบ */
+  margin-bottom: 32px;
+  padding: 0 24px;                 /* กันชิดขอบซ้าย/ขวา */
+  box-sizing: border-box;
+}
+
+/* โครงสร้าง slick ให้จัดกึ่งกลางสวย ๆ */
+.hero .slick-track {
+  display: flex;
+  align-items: center;
+}
+
+.hero .slick-slide {
+  display: flex !important;
+  justify-content: center;
+}
+
+/* รูปคอลลอสซอล (แต่ละสไลด์) */
+.hero .colossal-image {
+  display: block;
+  width: 100%;
+  max-width: 360px;                /* ขนาดรูปต่อสไลด์ (320–420 ได้) */
+  height: 180px;                   /* ความสูงคงที่ให้ไม่ยุบ */
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.2);
+}
+
+/* จุดเลื่อน (ไม่ให้ลอยกลางจอ) */
+.hero .slick-dots {
+  position: relative;
+  bottom: auto;
+  margin-top: 10px;
+}
+
+/* ปุ่มลูกศร (ถ้าเปิดไว้) ให้ชิดขอบภาพพอดี */
+.hero .slick-prev,
+.hero .slick-next {
+  z-index: 1;
+}
+.hero .slick-prev { left: 8px; }
+.hero .slick-next { right: 8px; }
+
+/* =========================
+   Hot Products
+   ========================= */
+.hot-products {
+  padding: 24px 0;
+}
+
+.hot-products h2 {
+  font-size: 24px;
+  margin-bottom: 16px;
+}
+
+.hot-products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Use auto-fit */
+  gap: 2rem;
+  max-width: 1200px; /* Limit overall width */
+  margin: 0 auto; /* Center the grid */
+}
+
+@media (min-width: 992px) { /* For larger screens, limit to 3 columns */
+  .hot-products-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) { /* For medium screens, 2 columns */
+  .hot-products-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 576px) { /* For small screens, 1 column */
+  .hot-products-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}
+
+/* =========================
+   Responsive
+   ========================= */
+/* อย่ากำหนด grid ให้ .hero เมื่อใช้ Slider */
+@media (max-width: 640px) {
+  .hero .colossal-image {
+    max-width: 100%;
+    height: 160px;                 /* ลดสูงลงบนจอเล็ก */
+  }
+}

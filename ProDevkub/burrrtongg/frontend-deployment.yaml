@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: burrrtongg-frontend-service
+  namespace: burrrtongg-app
+spec:
+  selector:
+    app: burrrtongg-frontend
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: burrrtongg-frontend-deployment
+  namespace: burrrtongg-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: burrrtongg-frontend
+  template:
+    metadata:
+      labels:
+        app: burrrtongg-frontend
+    spec:
+      containers:
+        - name: burrrtongg-frontend
+          image: kittikhun108/burrrtongg-frontend:v1.1
+          ports:
+            - containerPort: 80
+          # env:
+
+            # ------------------------------------------------------
+            # Option: 1 — ถ้า frontend ใช้ env API
+            # ให้ uncomment ตัวนี้ แล้วแก้เป็น path ของกลุ่มตามนี้
+            # ------------------------------------------------------
+            # - name: NEXT_PUBLIC_API_URL
+            #   value: "https://muict.app/<group-name>-backend"
+
+            # - name: VITE_API_URL
+              #  value: "https://muict.app/burrrtongg-backend"
+
+          
+
+        
+
+
+

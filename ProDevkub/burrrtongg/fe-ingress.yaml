@@ -1,0 +1,73 @@
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: burrrtongg-fe-ingress
+#   namespace: burrrtongg-app
+#   annotations:
+#     cert-manager.io/cluster-issuer: "letsencrypt-prod"
+#     nginx.ingress.kubernetes.io/use-regex: "true"
+#     nginx.ingress.kubernetes.io/rewrite-target: /$2
+# spec:
+#   ingressClassName: nginx
+#   tls:
+#     - hosts:
+#         - muict.app
+#       secretName: muict-app-tls
+#   rules:
+#     - host: muict.app
+#       http:
+#         paths:
+#           - path: /burrrtongg-frontend(/|$)(.*)
+#             pathType: ImplementationSpecific
+#             backend:
+#               service:
+#                 name: burrrtongg-frontend-service
+#                 port:
+#                   number: 80
+                  
+#           - path: /assets(/|$)(.*)
+#             pathType: ImplementationSpecific
+#             backend:
+#               service:
+#                 name: burrrtongg-frontend-service
+#                 port:
+#                   number: 80
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: burrrtongg-fe-ingress
+  namespace: burrrtongg-app
+  annotations:
+    # เรายังเก็บ 2 อันนี้ไว้
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"networking.k8s.io/v1","kind":"Ingress","metadata":{"annotations":{"cert-manager.io/cluster-issuer":"letsencrypt-prod"},"name":"burrrtongg-fe-ingress","namespace":"burrrtongg-app"},"spec":{"ingressClassName":"nginx","rules":[{"host":"muict.app","http":{"paths":[{"backend":{"service":{"name":"burrrtongg-frontend-service","port":{"number":80}}},"path":"/burrrtongg-frontend","pathType":"Prefix"}]}}],"tls":[{"hosts":["muict.app"],"secretName":"muict-app-tls"}]}}
+    
+    # !! ลบ 2 บรรทัดนี้ทิ้ง !!
+    # nginx.ingress.kubernetes.io/rewrite-target: /$2
+    # nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: muict.app
+    http:
+      paths:
+      # !! แก้ไข path ให้เป็นแบบ Prefix ธรรมดา !!
+      - path: /burrrtongg-frontend
+        pathType: Prefix # ระบุ type ว่าเป็น Prefix
+        backend:
+          service:
+            name: burrrtongg-frontend-service
+            port:
+              number: 80
+      
+      # !! ลบ path /assets ทิ้ง เพราะไม่จำเป็น !!
+      # - backend:
+      #   ...
+      #   path: /assets(/|$)(.*)
+      #   ...
+  tls:
+  - hosts:
+    - muict.app
+    secretName: muict-app-tls

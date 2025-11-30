@@ -1,0 +1,28 @@
+/* ===== Global Reset & Base ===== */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+  color: #111;
+  background-color: #fff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Layout helper */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-inline: 16px; /* เผื่อระยะขอบจอเล็ก */
+}
+
+/* Link base */
+a { color: inherit; text-decoration: none; }
+
+/* Focus visible เพื่อ a11y */
+:focus-visible {
+  outline: 2px solid #1e90ff;
+  outline-offset: 2px;
+}

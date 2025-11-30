@@ -74,11 +74,11 @@ MySQL Database  3306   root  ict555!!!  localhost
 
 ## Backend port
 สามารถเข้าถึง API ของระบบ Backend ได้ผ่าน URL:
-[http://localhost:8080/api/*](http://localhost:8080/api/*)
+[https://muict.app/prodev-backend/api/*](https://muict.app/prodev-backend/api/*)
 ตัว api จะอยู่ใน folder prodev
 
 ตัวอย่างทดสอบ
-[http://localhost:8080/api/products/all](http://localhost:8080/api/products/all)
+[https://muict.app/prodev-backend/api/products/all](https://muict.app/prodev-backend/api/products/all)
 
 
 ตัวอย่าง Dockerfile (อยู่ที่ root ของ folder prodev):

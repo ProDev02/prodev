@@ -129,7 +129,7 @@ export default function OrderProduct() {
                                 <td className="p-2">{o.user?.email}</td>
                                 <td className="p-2">
                                     <img
-                                        src={`http://localhost:8080${o.image}`}
+                                        src={`https://muict.app/prodev-backend${o.image}`}
                                         alt={o.name}
                                         className="w-12 h-12 object-contain"
                                     />

@@ -199,7 +199,7 @@ describe("WholeCart E2E Flow (Real DB + Mocked Cart) - Complete", () => {
 
     //order
     describe("Admin Dashboard - Orders (Real Backend)", () => {
-        const BACKEND_URL = Cypress.env("BACKEND_URL") || "http://localhost:8080";
+        const BACKEND_URL = Cypress.env("BACKEND_URL") || "https://muict.app/prodev-backend";
 
         before(() => {
             cy.request("POST", `${BACKEND_URL}/api/auth/login`, {
